@@ -133,7 +133,7 @@ ENDC = '\033[0m'
 def banner():
 	os.system('clear')
 	print GREEN+base64.b64decode("PC0uIChgLScpXyAoYC0nKSAgXyAoYC0nKS4tPiAKICAgXCggT08pICkoIE9PKS4tLyAoIE9PKV8gICAKLC0tLi8gLC0tLygsLS0tLS0tLihfKS0tXF8pICAKfCAgIFwgfCAgfCB8ICAuLS0tJy8gICAgXyAvICAKfCAgLiAnfCAgfHx8ICAnLS0uIFxfLi5gLS0uICAKfCAgfFwgICAgfCB8ICAuLS0nIC4tLl8pICAgXCAKfCAgfCBcICAgfCB8ICBgLS0tLlwgICAgICAgLyAKYC0tJyAgYC0tJyBgLS0tLS0tJyBgLS0tLS0n")
-	print WHITE + "     [Version 1.9.3]\n"+\
+	print WHITE + "     [Version 1.9.4]\n"+\
 	RED + "  Created by NeonEggplant\n"+\
 	WHITE+"\niOS/OSX System Remote Control\nCreate DEB, SHELL, and Arduino Payloads\n"+\
 	WHITE + "http://neoneegplants.com\n"+\
@@ -664,7 +664,7 @@ def createdebfile(host,port):
 	time.sleep(0.5)
 	strinfo("Preparing Files")
 	time.sleep(0.5)
-	
+	strinfo("Creating file \""+nme+".deb\"")
 	#create deb
 	os.makedirs(nme);os.chdir(nme)
 	os.makedirs("DEBIAN")
