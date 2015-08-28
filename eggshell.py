@@ -845,6 +845,7 @@ if not os.path.exists("/usr/local/share/NES/agree"):
 	
 	if not os.path.exists("/usr/local/share/NES/"):
 		os.makedirs("/usr/local/share/NES/")
+		showagreement()
 		if raw_input(WHITE+"Do you accept [y/n]:"+ENDC) == "y":
 			os.system("touch /usr/local/share/NES/agree")
 	else:
