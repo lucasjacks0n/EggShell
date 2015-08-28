@@ -849,7 +849,7 @@ if not os.path.exists("/usr/local/share/NES/agree"):
 		showagreement()
 		if raw_input(WHITE+"Do you accept [y/n]:"+ENDC) == "y":
 			os.system("touch /usr/local/share/NES/agree")
-	else:
-		exit()
+		else:
+			exit()
 
 mainmenu(1)
