@@ -17,6 +17,7 @@ NeonEggShell is for demonstration purposes only. Not intended for illegal purpos
 * **prompt** – spoof icloud password prompt
 * **frontcam** – take photo with front camera
 * **backcam** – take photo with back/rear camera
+* **launch** – launch apps
 * **getlocation** – retrieve gps coordinates if locationservices are enabled
 * **getpower** – retrieve battery life
 * **getsms** – download the sms database
