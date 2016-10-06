@@ -223,6 +223,7 @@ def showHelp(CDA):
         showCommand("getvol","view mediaplayer volume")
         showCommand("isplaying","view mediaplayer info")
         showCommand("openurl","open url on device")
+        showCommand("listapps","list bundle identifiers")
         showCommand("installpro","installs eggshellpro to device")
         print "\n"+WHITEBU+"eggshellPro Commands:"+"\n"+ENDC
         showCommand("lock","simulate lock button press")

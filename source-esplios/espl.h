@@ -62,6 +62,7 @@ extern int sockfd;
 -(void)setVolume:(NSArray *)args;
 -(void)getVolume;
 -(void)isplaying;
+-(void)listapps;
 
 //eggshell pro
 -(void)mcSendNoReply:(NSString *)message;

