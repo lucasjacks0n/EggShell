@@ -78,8 +78,8 @@ python eggshell.py
 * **clear**          : clears terminal
 
 ##Notes
-* **Supports Python 2.7.x**
-* **Expect Updates :)
+* Supports Python 2.7.x
+* Expect Updates :)
 
 ##New in 2.0
 * Rewritten for encrypted communication/optimization
