@@ -11,9 +11,7 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 ##Getting Started
 ```sh
 git clone https://github.com/neoneggplant/EggShell
-
 cd EggShell
-
 python eggshell.py
 ```
 
@@ -80,8 +78,8 @@ python eggshell.py
 * **clear**          : clears terminal
 
 ##Notes
-**Supports Python 2.7.x**
-**Expect Updates :)
+* **Supports Python 2.7.x**
+* **Expect Updates :)
 
 ##New in 2.0
 * Rewritten for encrypted communication/optimization
