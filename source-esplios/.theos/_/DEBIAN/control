@@ -1,0 +1,11 @@
+Package: com.lucas.py.eggshell
+Name: Eggshell Payload iOS
+Depends: 
+Architecture: iphoneos-arm
+Description: eggshell iOS
+Maintainer: lucas.py
+Author: Lucas Jackson
+Section: System
+Tag: role::hacker
+Version: 0.0.1-5+debug
+Installed-Size: 100

@@ -1,0 +1,9 @@
+Package: com.lucas.py.eggshellPro
+Name: eggshellPro
+Depends: mobilesubstrate
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: EggshellPro
+Maintainer: lucas.py
+Author: Lucas Jackson
+Section: Tweaks

