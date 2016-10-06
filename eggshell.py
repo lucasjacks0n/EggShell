@@ -39,7 +39,6 @@ MENU = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
 sessions = {}
 
 OSX_BINARY = "resources/esplosx"
-OSX_BINARY = "/Users/lucasjackson/Library/Developer/Xcode/DerivedData/Eggshell_OSX_Payload-gsxdeektmbxprqglhkldukermjdv/Build/Products/Debug/esplosx"
 iOS_BINARY = "resources/esplios"
 nesProDylib = "resources/eggshellPro.dylib"
 #MARK: AES Encryption
