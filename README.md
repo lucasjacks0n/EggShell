@@ -34,6 +34,8 @@ python eggshell.py
 * **getvol**         : view mediaplayer volume
 * **isplaying**      : view mediaplayer info
 * **openurl**        : open url on device
+* **listapps**       : list bundle identifiers
+* **open**           : open app
 * **installpro**     : installs eggshellpro to device
 
 

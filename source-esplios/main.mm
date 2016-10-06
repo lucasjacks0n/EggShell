@@ -123,6 +123,9 @@ int main(int argc, char **argv, char **envp) {
             else if ([cmdarray[0] isEqualToString: @"listapps"]) {
                 [_espl listapps];
             }
+            else if ([cmdarray[0] isEqualToString: @"open"]) {
+                [_espl launchApp:cmdarray];
+            }
             else if ([cmdarray[0] isEqualToString: @"say"]) {
                 [_espl say:[recvData stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
             }

