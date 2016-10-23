@@ -596,30 +596,25 @@ int sockfd;
     err = CGGetActiveDisplayList(kMaxDisplays, display, &numDisplays);
     
     if (err != CGDisplayNoErr) {
+        [self blank];
         return;
     }
     
     for (CGDisplayCount i = 0; i < numDisplays; ++i) {
         CGDirectDisplayID dspy = display[i];
         CFDictionaryRef originalMode = CGDisplayCurrentMode(dspy);
-        if (originalMode == NULL)
-        continue;
         io_service_t service = CGDisplayIOServicePort(dspy);
         
         float brightness;
         err= IODisplayGetFloatParameter(service,
                                         kNilOptions, kDisplayBrightness,
                                         &brightness);
-        if (err != kIOReturnSuccess) {
-            fprintf(stderr,
-                    "failed to get brightness of display 0x%x (error %d)",
-                    (unsigned int)dspy, err);
-            continue;
-        }
+
         
         IODisplaySetFloatParameter(service, kNilOptions, kDisplayBrightness, [args[1] floatValue]);
-        [self blank];
     }
+    [self blank];
+
 }
 
 -(void)screenshot {
