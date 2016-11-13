@@ -7,7 +7,7 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 
 ## Preview
 
-[![Preview](http://lucasjackson.me/eggshell/images/preview1.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/wp-content/uploads/2016/10/Screen-Shot-2016-10-13-at-12.43.52-PM.png)](http://lucasjackson.me/eggshell)
 
 
 ##Getting Started
@@ -70,6 +70,8 @@ python eggshell.py
 * **mic**            : record microphone
 * **brightness**     : adjust screen brightness
 * **exec**           : execute command
+* **encrypt**        : encrypt file
+* **decrypt**        : decrypt file
 * **persistence**    : attempts to connect back every 60 seconds
 * **rmpersistence**  : removes persistence
 
