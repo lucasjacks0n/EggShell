@@ -11,6 +11,7 @@
 		548DA8C71DA60DA30043052F /* FBEncryptorAES.m in Sources */ = {isa = PBXBuildFile; fileRef = 548DA8C21DA60DA30043052F /* FBEncryptorAES.m */; };
 		548DA8C81DA60DA30043052F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 548DA8C31DA60DA30043052F /* main.m */; };
 		548DA8C91DA60DA30043052F /* NSData+AESCrypt.m in Sources */ = {isa = PBXBuildFile; fileRef = 548DA8C51DA60DA30043052F /* NSData+AESCrypt.m */; };
+		54A852301DDA953D00A211BE /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A8522F1DDA953D00A211BE /* AppKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,7 @@
 		548DA8C31DA60DA30043052F /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		548DA8C41DA60DA30043052F /* NSData+AESCrypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+AESCrypt.h"; sourceTree = "<group>"; };
 		548DA8C51DA60DA30043052F /* NSData+AESCrypt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+AESCrypt.m"; sourceTree = "<group>"; };
+		54A8522F1DDA953D00A211BE /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				54A852301DDA953D00A211BE /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +55,7 @@
 			children = (
 				548DA8A11DA60D100043052F /* esplosx */,
 				548DA8A01DA60D100043052F /* Products */,
+				54A8522E1DDA953D00A211BE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -75,6 +79,14 @@
 				548DA8C51DA60DA30043052F /* NSData+AESCrypt.m */,
 			);
 			path = esplosx;
+			sourceTree = "<group>";
+		};
+		54A8522E1DDA953D00A211BE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				54A8522F1DDA953D00A211BE /* AppKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,6 +269,7 @@
 				548DA8A81DA60D100043052F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

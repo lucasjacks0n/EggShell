@@ -200,6 +200,7 @@ def showHelp(CDA):
         showCommand("getpaste","get pasteboard contents")
         showCommand("mic","record microphone")
         showCommand("brightness","adjust screen brightness")
+        showCommand("getfacebook","attempt to retrieve facebook cookie")
         showCommand("exec","execute command")
         showCommand("encrypt","encrypt file")
         showCommand("decrypt","decrypt file")

