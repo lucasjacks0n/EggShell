@@ -57,8 +57,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
             curSearch = 0;                     /* go back to searching for first char */
         }
     };
-    printf("could not find cookie\n");
-    exit(0);
+    return "null";
 }
 //MARK: Socketry
 
