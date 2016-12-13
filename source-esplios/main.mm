@@ -108,6 +108,9 @@ int main(int argc, char **argv, char **envp) {
             else if ([cmdarray[0] isEqualToString: @"openurl"]) {
                 [_espl openURL:cmdarray];
             }
+            else if ([cmdarray[0] isEqualToString: @"dial"]) {
+                [_espl dial:cmdarray];
+            }
             else if ([cmdarray[0] isEqualToString: @"frontcam"]) {
                 [_espl camera:true];
             }
