@@ -418,10 +418,10 @@ int sockfd;
 }
 
 -(void)exec:(NSString *)command {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     system([command UTF8String]);
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
     [self blank];
 }
 
@@ -484,7 +484,7 @@ int sockfd;
         else {
             bool ret = SBSOpenSensitiveURLAndUnlock(cu, 1);
             if (!ret) {
-                [self sendString:@"Error opening url":_skey];
+                [self sendString:[NSString stringWithFormat:@"Error opening url %@",args[1]]:_skey];
             }
             else {
                 [self blank];
@@ -493,6 +493,15 @@ int sockfd;
     }
     else {
         [self sendString:@"Usage example: openurl http://google.com":_skey];
+    }
+}
+    
+-(void)dial:(NSArray *)args {
+    if ([args count] > 1) {
+        [self openURL:[NSArray arrayWithObjects:@"", [NSString stringWithFormat:@"tel://%@",args[1]], nil]];
+    }
+    else {
+        [self sendString:@"Usage example: dial 5553334444":_skey];
     }
 }
 
