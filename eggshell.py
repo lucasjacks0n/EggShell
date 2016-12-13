@@ -1,16 +1,10 @@
 #NeonEggShell 2.0.1
 #Created By lucas.py 8-18-16
 import os,base64,random,string,socket,sys,time,binascii
+from Crypto import Random
+from Crypto.Cipher import AES
 from StringIO import StringIO
 from threading import Thread
-RED = '\033[1;91m'
-ENDC = '\033[0m'
-try:
-    from Crypto import Random
-    from Crypto.Cipher import AES
-except:
-    print RED+"Make sure you have pycrypto installed\nTry running 'easy_instal pycrypto'"+ENDC
-    exit()
 
 debug = 0
 TERM = "EOF6D2ONE"
@@ -19,6 +13,8 @@ UNDERLINE_GREEN = '\033[4;92m'
 GREEN = '\033[1;92m'
 WHITE = '\033[0;97m'
 WHITEBU = '\033[1;4m'
+RED = '\033[1;91m'
+ENDC = '\033[0m'
 COLOR_INFO = '\033[0;36m'
 NES = '\033[4;32m'+"NES"+WHITE+"> "
 BANNER_ART_TEXT = GREEN+"""
@@ -31,7 +27,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.3\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.2\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -231,7 +227,6 @@ def showHelp(CDA):
         showCommand("getvol","view mediaplayer volume")
         showCommand("isplaying","view mediaplayer info")
         showCommand("openurl","open url on device")
-        showCommand("dial","dial number on device")
         showCommand("listapps","list bundle identifiers")
         showCommand("open","open app")
         showCommand("installpro","installs eggshellpro to device")
