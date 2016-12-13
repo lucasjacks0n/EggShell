@@ -63,6 +63,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)alert:(NSArray *)cmdarray;
 -(void)getPid;
 -(void)openURL:(NSArray *)args;
+-(void)dial:(NSArray *)args;
 -(void)setVolume:(NSArray *)args;
 -(void)getVolume;
 -(void)isplaying;
