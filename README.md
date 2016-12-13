@@ -13,6 +13,7 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 ##Getting Started
 ```sh
 git clone https://github.com/neoneggplant/EggShell
+easy_install pycrypto
 cd EggShell
 python eggshell.py
 ```
