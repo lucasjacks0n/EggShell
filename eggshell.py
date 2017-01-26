@@ -280,7 +280,13 @@ def lpwd():
 
 def initSHELL(name,conn,host,port,CDA):
     while 1:
-        command = raw_input(name) #raw
+        command = ""
+        try:
+            command = raw_input(name) #raw
+        except KeyboardInterrupt:
+            print ""
+            return -1
+        
         args = command.split() #split
 
         try: #fixed crash if you type " "
@@ -473,11 +479,16 @@ def getip():
 
 def singleServer(host,port):
     session = SessionHandler()
-    session.listen(1,host,port)
-    if initSHELL(session.name,session.conn,session.host,session.port,session.CDA) == -1:
-        print strinfo("closing connection")
-        session.conn.close
-        time.sleep(0.5)
+    try:
+        session.listen(1,host,port)
+    except KeyboardInterrupt:
+        return
+    if session.conn and initSHELL(session.name,session.conn,session.host,session.port,session.CDA) == -1:
+            print strinfo("closing connection")
+            session.conn.close
+            time.sleep(0.5)
+    else:
+        raw_input("")
 
 def promptHostPort():
     lhost = getip()
@@ -529,8 +540,6 @@ def menuCreateScript(): #3
 def menuExit(): #4
     exit()
 
-
-#MARK: MultiServer
 class SessionHandler:
     def __init__(self):
         self.name = ""
@@ -610,7 +619,7 @@ class SessionHandler:
                 print strinfo("device unrecognized")
                 print CDA
             conn.close();
-
+            return
         
         if verbose:
             print strinfo("Waiting For Target...")
@@ -633,8 +642,9 @@ class SessionHandler:
             s.close()
             return [name,conn,host,port,CDA]
 
+#MARK: MultiServer
+
 def multiServer(host,port):
-    global eggsessions
     x = 1
     strinfo("Starting Background Multi Server on "+str(port)+"...")
     print "type \"help\" for MultiServer commands"
@@ -681,7 +691,7 @@ def multiServerExit(bgserver):
             except:
                 pass
     sessions.clear()
-    bgserver.exit()
+    exit()
 
 
 def multiServerHelp():
