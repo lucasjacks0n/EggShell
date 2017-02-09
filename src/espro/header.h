@@ -20,7 +20,8 @@
 -(void)lockAndDimDevice;
 -(void)handleMenuDoubleTap;
 -(void)clickedMenuButton;
-
+-(bool)handleHomeButtonSinglePressUp;
+-(bool)handleHomeButtonDoublePressDown;
 @end
 
 

