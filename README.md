@@ -37,6 +37,7 @@ python eggshell.py
 * **isplaying**      : view mediaplayer info
 * **openurl**        : open url on device
 * **dial**           : dial number on device
+* **battery**        : get battery level
 * **listapps**       : list bundle identifiers
 * **open**           : open app
 * **persistence**    : installs LaunchDaemon - tries to connect every 30 seconds
@@ -54,6 +55,9 @@ python eggshell.py
 * **pause**          : pause music
 * **next**           : next track
 * **prev**           : previous track
+* **togglemute**     : programatically toggles silence switch
+* **ismuted**        : check if we are silenced or not
+* **islocked**       : check if device is locked
 * **getpasscode**    : log successfull passcode attempts
 * **unlock**         : unlock with passcode
 * **keylog**         : log keystrokes

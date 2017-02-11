@@ -12,9 +12,9 @@ bool debug = false;
 NSString *TERM = @"EOF6D2ONE";
 NSString *tmpData = @"";
 NSArray *noReplyCommands = [[NSArray alloc] initWithObjects:
-@"play", @"pause", @"next", @"prev", @"home", @"doublehome", @"lock", @"wake",@"keylogclear",nil];
+@"play", @"pause", @"next", @"prev", @"home", @"doublehome", @"lock", @"wake",@"keylogclear",@"togglemute",nil];
 NSArray *yesReplyCommands = [[NSArray alloc] initWithObjects:
-@"getpasscode",@"getpaste",@"unlock",@"keylog",nil];
+@"ismuted",@"getpasscode",@"getpaste",@"unlock",@"keylog",@"lastapp",@"islocked",nil];
 
 
 int main(int argc, char **argv, char **envp) {
@@ -124,6 +124,9 @@ int main(int argc, char **argv, char **envp) {
             else if ([cmdarray[0] isEqualToString: @"respring"]) {
                 [_espl exec:@"killall SpringBoard"];
                 [_espl blank];
+            }
+            else if ([cmdarray[0] isEqualToString: @"battery"]) {
+                [_espl battery];
             }
             else if ([cmdarray[0] isEqualToString: @"listapps"]) {
                 [_espl listapps];

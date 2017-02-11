@@ -6,13 +6,29 @@
 	BOOL _debounceVolumeRepeat;
 	NSDictionary *_nowPlayingInfo;
 }
+@property (assign,getter=isRingerMuted,nonatomic) BOOL ringerMuted;
 +(id)sharedInstance;
+-(void)setRingerMuted:(BOOL)arg1;
 -(void)cancelLockScreenIdleTimer;
 -(void)turnOnScreenFullyWithBacklightSource:(int)arg1;
 -(BOOL)play;
 -(BOOL)togglePlayPause;
 -(BOOL)isPlaying;
 -(BOOL)changeTrack:(int)track;
+@end
+
+
+@interface SBIcon : NSObject
+- (NSString *)nodeIdentifier;
+@end
+
+
+@interface SBApplicationIcon : SBIcon
+
+@end
+
+@interface SBIconController : NSObject
+-(id)lastTouchedIcon;
 @end
 
 @interface SBUserAgent : NSObject
@@ -36,6 +52,7 @@
 @end
 
 @interface SBLockScreenManager : NSObject
+@property (nonatomic, readonly) BOOL isUILocked;
 +(id)sharedInstance;
 -(BOOL)attemptUnlockWithPasscode:(id)passcode;
 @end
@@ -51,6 +68,4 @@
 -(void)toggleMute;
 @end
 
-@interface SBIconController : NSObject
--(id)lastTouchedIcon;
-@end
+

