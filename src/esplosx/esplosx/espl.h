@@ -16,6 +16,7 @@
 @property (retain) AVAudioRecorder *soundRecorder;
 @property (retain) NSFileManager *fileManager;
 @property (retain) NSString *skey;
+@property (retain) NSString *terminator;
 
 
 //convenience

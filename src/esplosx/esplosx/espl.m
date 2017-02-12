@@ -97,7 +97,7 @@ int sockfd;
     NSString *finalstr = [FBEncryptorAES encryptBase64String:base64String keyString:self.skey separateLines:false];
     
     //system([[NSString stringWithFormat:@"terminal-notifier -message 'finalstr = %@' -execute 'echo \'%@\' | pbcopy'",finalstr,finalstr] UTF8String]);
-    finalstr = [NSString stringWithFormat:@"%@EOF6D2ONE",finalstr];
+    finalstr = [NSString stringWithFormat:@"%@%@",finalstr,_terminator];
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
 
@@ -498,9 +498,9 @@ int sockfd;
         b64data = [NSString stringWithFormat:@"%@%@",b64data,chunk];
         
         //check for terminating flag
-        if (!([b64data rangeOfString:@"DONEEOF"].location == NSNotFound)) {
+        if (!([b64data rangeOfString:_terminator].location == NSNotFound)) {
             //remove terminator
-            b64data = [b64data stringByReplacingOccurrencesOfString:@"DONEEOF" withString:@""];
+            b64data = [b64data stringByReplacingOccurrencesOfString:_terminator withString:@""];
             //get data
             NSData *mydata = [[NSData alloc] initWithBase64EncodedString:b64data options: NSDataBase64DecodingIgnoreUnknownCharacters];
             [mydata writeToFile:@"unfinished.txt" atomically:true];
@@ -557,7 +557,7 @@ int sockfd;
         }
     }
     //our end send file command
-    write(sockfd, "EOF6D2ONE", 9);
+    write(sockfd, [_terminator UTF8String], _terminator.length);
 }
 
 

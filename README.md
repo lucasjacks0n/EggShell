@@ -19,6 +19,7 @@ python eggshell.py
 ```
 
 ##iOS Commands:
+* **sysinfo**        : get system information
 * **ls**             : list contents of directory
 * **cd**             : change directories
 * **rm**             : delete file

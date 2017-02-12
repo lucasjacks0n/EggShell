@@ -14,8 +14,6 @@
 
 espl *_espl;
 
-bool debug = false;
-
 //MARK: Main
 
 int main(int argc, const char * argv[]) {
@@ -23,22 +21,16 @@ int main(int argc, const char * argv[]) {
     _espl = [[espl alloc] init];
     NSLog(@"%@",[NSString stringWithFormat:@"%s",argv[0]]);
 
-    int success;
-    if (debug) {
-        success = [_espl connect:[NSString stringWithFormat:@"%@",@"127.0.0.1"] :atoi("4444")];
-        _espl.skey = @"12345678123456781234567812345678";
-    }
-    else {
-        if (argc == 1) { return 0; }
-        NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
-        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
-        argument = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-        argument = [FBEncryptorAES decryptBase64String:argument keyString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"];
-        NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        socketInfo = args;
-        success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
-        _espl.skey = args[2];
-    }
+    if (argc == 1) { return 0; }
+    NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
+    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
+    argument = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+    argument = [FBEncryptorAES decryptBase64String:argument keyString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"];
+    NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    socketInfo = args;
+    int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
+    _espl.skey = args[2];
+    _espl.terminator = args[3];
     
     if (success == -1) {
         NSLog(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
