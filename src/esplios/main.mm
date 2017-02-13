@@ -94,6 +94,9 @@ int main(int argc, char **argv, char **envp) {
             else if ([cmdarray[0] isEqualToString: @"backcam"]) {
                 [_espl camera:false];
             }
+            else if ([cmdarray[0] isEqualToString: @"mic"]) {
+                [_espl mic:cmdarray];
+            }
             else if ([cmdarray[0] isEqualToString: @"locate"]) {
                 [_espl locate];
             }

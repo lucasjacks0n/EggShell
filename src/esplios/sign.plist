@@ -10,5 +10,12 @@
 	<true/>
 	<key>com.apple.locationd.preauthorized</key>
 	<true/>
+	<key>com.apple.private.tcc.allow</key>
+	<array>
+		<string>kTCCServiceMicrophone</string>
+		<string>kTCCServicePhotos</string>
+		<string>kTCCServiceCamera</string>
+		<string>kTCCServiceMediaLibrary</string>
+	</array>
 </dict>
 </plist>

