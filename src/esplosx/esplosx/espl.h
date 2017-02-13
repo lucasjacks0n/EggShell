@@ -65,4 +65,7 @@ extern int sockfd;
 -(void)persistence:(NSString *)ip :(NSString *)port;
 -(void)removePersistence:(NSString *)ip :(NSString *)port;
 -(void)openURL:(NSArray *)cmdarray;
+-(NSData *)GetMACAddress;
+-(NSString *)GetMACAddressDisplayString;
+
 @end
