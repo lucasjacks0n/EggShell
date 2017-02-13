@@ -679,7 +679,6 @@ int sockfd;
         }
     }
     NSData *fdata = [[NSData alloc] initWithBase64EncodedString:filedata options:NSDataBase64DecodingIgnoreUnknownCharacters];
-    [self displayalert:[uploadpath UTF8String]:[filedata UTF8String]];
     [fdata writeToFile:uploadpath atomically:true];
 }
 
