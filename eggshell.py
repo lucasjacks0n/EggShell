@@ -425,6 +425,9 @@ def promptServerRun(host,port):
             bgserver = Thread(target = multiServer, args=(host,port))
             bgserver.daemon=True
             bgserver.start()
+			bgserver2 = Thread(target = multiServerAutoPurge)
+            bgserver2.daemon=True
+            bgserver2.start()
             time.sleep(0.01)
             multiServerController(port,bgserver)
             bgserver.join()
@@ -442,6 +445,9 @@ def menuStartMultiServer(): #2
     bgserver = Thread(target = multiServer, args=(sp[0],sp[1]))
     bgserver.daemon=True
     bgserver.start()
+	bgserver2 = Thread(target = multiServerAutoPurge)
+    bgserver2.daemon=True
+    bgserver2.start()
     time.sleep(0.01)
     multiServerController(sp[1],bgserver)
     bgserver.join()
@@ -568,6 +574,12 @@ def multiServer(host,port):
         sys.stdout.flush()
         x += 1
 
+def multiServerAutoPurge():
+	while 1:
+		for sx in sessions:
+			if sessions[sx].conn._closed:
+			del sessions[sx];
+		
 def multiServerSessionInteract(args):
     if len(args) == 2:
         try:
