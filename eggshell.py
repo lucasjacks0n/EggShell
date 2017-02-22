@@ -278,7 +278,7 @@ def receiveString(conn):
         while 1:
             data += conn.recv(2048)
             if not data:
-                return "we fucked up"
+                return "we fucked up, disconnecting (please type 'back' to leave this page)"
             #terminator to notify when we are done receiving data
             #useful for getting however much data we want
             if terminator in data:
@@ -323,7 +323,7 @@ def downloadFile(command,conn):
     try:
         sizeofFile = int(receiveString(conn))
     except:
-        print "oops, couldnt get file size"
+        print "oops, couldnt get file size ( maybe user doesn't have a camera? well rip you just got disconnected :( )"
         return
     if sizeofFile == -1:
         print "file does not exist"
@@ -413,7 +413,7 @@ def promptHostPort():
     print strinfo("LHOST = " + lhost)
     portChoice = raw_input("SET LPORT (Leave blank for "+str(lport)+")>")
     if portChoice != "":
-        lport = portChoice
+		lport = portChoice
     print strinfo("LPORT = " + str(lport))
     return [lhost,lport]
 
@@ -572,6 +572,11 @@ def multiServerSessionInteract(args):
     if len(args) == 2:
         try:
             s = sessions[int(args[1])]
+            try:
+                s.conn.getpeername()[0]
+            except:
+                del sessions[int(args[1])]
+            
             if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
                 multiServerSessionClose(args)
         except:
@@ -591,6 +596,10 @@ def multiServerSessionClose(args):
 def multiServerListSessions():
     for key,value in sessions.iteritems():
         if value.name:
+            try:
+                value.conn.getpeername()[0]
+            except:
+                del sessions[key]
             print "Session [" + str(key) + "] | " + value.name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + value.conn.getpeername()[0]
 
 #TODO: finish this function lol
@@ -622,19 +631,22 @@ def multiServerController(port,bgserver):
             continue
         cmd = input.split()
         #commands
-        if cmd[0] == "interact":
-            multiServerSessionInteract(cmd)
-        elif cmd[0] == "sessions":
-            multiServerListSessions()
-        elif cmd[0] == "close":
-            multiServerSessionClose(cmd)
-        elif cmd[0] == "help":
-            multiServerHelp()
-        elif cmd[0] == "exit":
-            multiServerExit(bgserver)
-            break
-        else:
-            print "invalid command"
+        try:
+            if cmd[0] == "interact":
+                multiServerSessionInteract(cmd)
+            elif cmd[0] == "sessions":
+                multiServerListSessions()
+            elif cmd[0] == "close":
+                    multiServerSessionClose(cmd)
+            elif cmd[0] == "help":
+                multiServerHelp()
+            elif cmd[0] == "exit":
+                multiServerExit(bgserver)
+                break
+            else:
+                print "invalid command"
+        except:
+            print "error executing command!"
     interactiveMenu()
 
 def main():
