@@ -646,7 +646,7 @@ def multiServerController(port,bgserver):
             else:
                 print "invalid command"
         except:
-            print "error executing command!"
+            print "error executing command! please try again!"
     interactiveMenu()
 
 def main():
