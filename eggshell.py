@@ -20,6 +20,7 @@ from src.encryption.ESEncryptor import ESEncryptor
 shellKey = ''.join((random.choice(string.letters+string.digits+"*")) for x in range(32))
 terminator = ''.join((random.choice(string.letters+string.digits+"*")) for x in range(16))
 escrypt = ESEncryptor(shellKey,16)
+datadir = "data"
 sessions = {}
 
 #MARK: UI
@@ -342,6 +343,8 @@ def downloadFile(command,conn):
     print strinfo("file size: "+str(sizeofFile))
 
     #filename to write to
+    if not os.path.exists(datadir):
+        os.makedirs(datadir)
     filename = ""
     dateFormat = "%Y%m%d%H%M%S"
     if args[0] == "screenshot":
