@@ -567,20 +567,20 @@ def multiServer(host,port):
                          WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
         sys.stdout.flush()
         x += 1
+
 		
 def multiServerSessionInteract(args):
     if len(args) == 2:
         try:
             s = sessions[int(args[1])]
             try:
-                s.conn.getpeername()[0]
+				s.conn.getpeername()[0]
+				if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
+					multiServerSessionClose(args)
             except:
                 del sessions[int(args[1])]
-            
-            if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
-                multiServerSessionClose(args)
         except:
-            print strinfo("Session not found")
+			print strinfo("Session not found")
 
 def multiServerSessionClose(args):
     if len(args) == 2:
