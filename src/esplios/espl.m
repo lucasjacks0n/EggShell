@@ -190,7 +190,7 @@ int sockfd;
             [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.esmic.aac", nil]];
         }
         else {
-            [self sendString:@"-1"];
+            [self sendString:@"audio file not found"];
         }
     }
     else {
@@ -326,7 +326,7 @@ int sockfd;
         BOOL isdir;
         if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
             if (isdir) {
-                [self sendString:@"-2"];
+                [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
             }
             else {
                 NSData *filedata = [_fileManager contentsAtPath:filepath];
@@ -335,7 +335,7 @@ int sockfd;
             }
         }
         else {
-            [self sendString:@"-1"];
+            [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
         }
     }
 }

