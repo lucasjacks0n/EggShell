@@ -573,12 +573,6 @@ def multiServer(host,port):
                          WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
         sys.stdout.flush()
         x += 1
-
-def multiServerAutoPurge():
-	while 1:
-		for sx in sessions:
-			if sessions[sx].conn._closed:
-			del sessions[sx];
 		
 def multiServerSessionInteract(args):
     if len(args) == 2:
