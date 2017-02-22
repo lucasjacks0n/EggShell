@@ -22,14 +22,25 @@ escrypt = ESEncryptor(shellKey,16)
 sessions = {}
 
 #MARK: UI
-RED = '\033[1;91m'
-ENDC = '\033[0m'
-UNDERLINE_GREEN = '\033[4;92m'
-GREEN = '\033[1;92m'
-WHITE = '\033[0;97m'
-WHITEBU = '\033[1;4m'
-COLOR_INFO = '\033[0;36m'
-NES = '\033[4;32m'+"NES"+WHITE+"> "
+if sys.platform.startswith('win'):
+    RED = ''
+    ENDC = ''
+    UNDERLINE_GREEN = ''
+    GREEN = ''
+    WHITE = ''
+    WHITEBU = ''
+    COLOR_INFO = ''
+    NES= "NES> "
+else:
+    RED = '\033[1;91m'
+    ENDC = '\033[0m'
+    UNDERLINE_GREEN = '\033[4;92m'
+    GREEN = '\033[1;92m'
+    WHITE = '\033[0;97m'
+    WHITEBU = '\033[1;4m'
+    COLOR_INFO = '\033[0;36m'
+    NES = '\033[4;32m'+"NES"+WHITE+"> "
+
 BANNER_ART_TEXT = GREEN+"""
 .---.          .-. .        . .       \\      `.
 |             (   )|        | |     o  \\       `.
@@ -654,6 +665,6 @@ def main():
     try:
         interactiveMenu()
     except (KeyboardInterrupt, EOFError) as e:
-        print ""
+        pass
 
 main()
