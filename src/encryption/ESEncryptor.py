@@ -7,7 +7,7 @@ try:
     from Crypto import Random
     from Crypto.Cipher import AES
 except:
-    print "Make sure you have pycrypto installed\nTry running 'easy_instal pycrypto'"
+    print "Make sure you have pycrypto installed\nTry running 'easy_install pycrypto'"
     exit()
 
 
