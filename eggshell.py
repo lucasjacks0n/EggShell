@@ -27,7 +27,7 @@ sessions = {}
 #either "single", "multi", or "none"
 AMODE = "none"
 #MARK: UI
-iswin = sys.platform.startswith('win') or sys.platform.startswith('darwin')
+iswin = sys.platform.startswith('win')
 RED = '' if iswin else '\033[1;91m'
 ENDC = '' if iswin else '\033[0m'
 UNDERLINE_GREEN = '' if iswin else '\033[4;92m'
