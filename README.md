@@ -39,6 +39,9 @@ python eggshell.py
 * **isplaying**      : view mediaplayer info
 * **openurl**        : open url on device
 * **dial**           : dial number on device
+* **getsms**         : download sms database
+* **getnotes**       : download notes database
+* **getcontacts**    : download addressbook
 * **battery**        : get battery level
 * **listapps**       : list bundle identifiers
 * **open**           : open app

