@@ -87,17 +87,8 @@ int sockfd;
 }
 
 -(void)sendString:(NSString *)string {
-    string = [string stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
-    
-    NSData *plainTextData = [string dataUsingEncoding:NSUTF8StringEncoding];
-    NSString *base64String = [plainTextData base64EncodedStringWithOptions:0];
-    
-    //system([[NSString stringWithFormat:@"terminal-notifier -message 'prefinalstr = %@' -execute 'echo \'%@\' | pbcopy'",base64String,base64String] UTF8String]);
-    
-    NSString *finalstr = [FBEncryptorAES encryptBase64String:base64String keyString:self.skey separateLines:false];
-    
-    //system([[NSString stringWithFormat:@"terminal-notifier -message 'finalstr = %@' -execute 'echo \'%@\' | pbcopy'",finalstr,finalstr] UTF8String]);
-    finalstr = [NSString stringWithFormat:@"%@%@",finalstr,_terminator];
+    NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
+//    system([[NSString stringWithFormat:@"echo 'sending:->%@<-' >> /tmp/esplog",finalstr] UTF8String]);
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
 

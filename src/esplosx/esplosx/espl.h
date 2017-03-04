@@ -2,10 +2,9 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #include <arpa/inet.h>
-#import "FBEncryptorAES.h"
 #import "NSData+AESCrypt.h"
 #import <Appkit/Appkit.h>
-
+#import "escryptor.h"
 
 @interface espl : NSObject {
     NSFileManager *fileManager;

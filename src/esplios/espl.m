@@ -38,10 +38,7 @@ int sockfd;
 }
 
 -(void)sendString:(NSString *)string {
-    string = [string stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
-    NSString *base64String = [[string dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
-    //send string as encrypted base64 string with our generated key from our encrypted argument
-    NSString *finalstr = [FBEncryptorAES encryptBase64String:base64String keyString:_skey separateLines:false];
+    NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
     write (sockfd, [[NSString stringWithFormat:@"%@%@",finalstr,_terminator] UTF8String], finalstr.length + _terminator.length);
 }
 

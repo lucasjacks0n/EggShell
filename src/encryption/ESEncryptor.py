@@ -18,34 +18,24 @@ class ESEncryptor:
         self.pkcs7 = PKCS7Encoder()
         self.BS = (BS if BS else None)
     
-    def decode(self, encodedEncrypted, BS=16):
-        if self.key is None:
-            raise ValueError("key is required")
-        
-        BS = (self.BS if self.BS else BS)
-        cipher = AES.new(self.key)
-        
-        decrypted = cipher.decrypt(base64.b64decode(encodedEncrypted))[:BS]
-        #decode 16 bytes at a time
-        for i in range(1, len(base64.b64decode(encodedEncrypted)) / BS):
-            cipher = AES.new(self.key, AES.MODE_CBC,
-                             base64.b64decode(encodedEncrypted)[(i - 1) * BS:i * BS])
-            decrypted += cipher.decrypt(base64.b64decode(encodedEncrypted)[i * BS:])[:BS]
-        
-        return self.pkcs7.decode(decrypted)
+    def _pad(self, s):
+        return s + (self.BS - len(s) % self.BS) * chr(self.BS - len(s) % self.BS)
+    
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
 
-    #encode bytes
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = "\x00" * 16
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return self._unpad(cipher.decrypt(enc).decode('utf-8'))
+    
     def encode(self, raw, BS=16):
-        if self.key is None:
-            raise ValueError("key is required")
-        
-        BS = (self.BS if self.BS else BS)
-        
-        cipher = AES.new(self.key)
-        encoded = self.pkcs7.encode(raw)
-        encrypted = cipher.encrypt(encoded)
-        return base64.b64encode(encrypted)
-
+        raw = self._pad(raw)
+        iv = "\x00" * 16
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(cipher.encrypt(raw))
+    
     #file handling
     def decryptFile(self, filein, fileout, password, fileSize, key_length=16):
 

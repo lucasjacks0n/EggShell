@@ -6,7 +6,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreLocation/CoreLocation.h>
 #import <CoreFoundation/CFUserNotification.h>
-#import "FBEncryptorAES.h"
+#import "escryptor.h"
 #import <MediaPlayer/MediaPlayer.h>
 #include "NSData+AESCrypt.h"
 #include "SpringBoardServices/SpringBoardServices.h"
