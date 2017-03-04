@@ -104,7 +104,7 @@ def bbde(data):
     return base64.b64decode(data)
 
 def showLocalHelp():
-    print WHITEBU+"Local Commands (Do not work on windows):"+"\n"+ENDC
+    print WHITEBU+"Local Commands:"+"\n"+ENDC
     if AMODE == "multi":
         showCommand("back", "detach from session")
         showCommand("exit", "detach and close session")
