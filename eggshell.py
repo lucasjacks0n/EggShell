@@ -558,6 +558,7 @@ class SessionHandler:
         if verbose:
             print strinfo("Waiting For Connection...")
         conn, hostAddress = s.accept()
+        s.settimeout(5)
         data = receiveString(conn)
         if data:
             self.uid = data.split(" ")[0]
