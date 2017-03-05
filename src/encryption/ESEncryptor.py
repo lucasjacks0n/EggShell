@@ -14,6 +14,7 @@ except:
 #decode bytes
 class ESEncryptor:
     def __init__(self, key=None, BS=None):
+        self.iv = "\x00" * 16
         self.key = key
         self.pkcs7 = PKCS7Encoder()
         self.BS = (BS if BS else None)
@@ -26,30 +27,27 @@ class ESEncryptor:
 
     def decrypt(self, enc):
         enc = base64.b64decode(enc)
-        iv = "\x00" * 16
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
         return self._unpad(cipher.decrypt(enc).decode('utf-8'))
     
     def encode(self, raw, BS=16):
         raw = self._pad(raw)
-        iv = "\x00" * 16
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
         return base64.b64encode(cipher.encrypt(raw))
     
+    def encryptString(self, string):
+        return self.encode(string)
+    
     #file handling
-    def decryptFile(self, filein, fileout, password, fileSize, key_length=16):
-
-        iv = "\x00" * 16
-        aes = AES.new(password, AES.MODE_CBC, iv)
-        
-        #encodepadding
+    def decryptFile(self, filein, fileout, fileSize,password=0):
+        password = self.key if password == 0 else password
+        aes = AES.new(password, AES.MODE_CBC, self.iv)
         in_file = open(filein,"rb")
         encryptedData = in_file.read()
-        pad_text = self.pkcs7.encode(encryptedData)
         in_file.close()
         
         #decrypt,get length
-        decryptedData = aes.decrypt(pad_text)
+        decryptedData = aes.decrypt(encryptedData)
         dataSize = len(decryptedData)
         
         offset = dataSize - fileSize
