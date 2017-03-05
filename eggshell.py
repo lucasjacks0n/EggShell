@@ -55,12 +55,6 @@ BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
 
 CMD_CLEAR = 'cls' if iswin else 'clear'
 
-iosshortcuts = {
-    "getsms":"download /var/mobile/Library/SMS/sms.db",
-    "getnotes":"download /var/mobile/Library/Notes/notes.sqlite",
-    "getcontacts":"download /var/mobile/Library/AddressBook/AddressBook.sqlitedb"
-}
-
 def interactiveMenu():
     while 1:
         os.system(CMD_CLEAR)

