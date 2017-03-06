@@ -6,7 +6,6 @@ import sys
 from src.helper.helper import Helper
 
 class ESShell:
-    localCMDS = ["alert","installpro"]
     def __init__(self):
         self.iswin = sys.platform.startswith('win')
         self.CMD_CLEAR = 'cls' if self.iswin else 'clear'

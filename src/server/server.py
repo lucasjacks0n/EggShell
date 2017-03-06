@@ -257,41 +257,44 @@ class ESServer:
         try:
             data = self.receiveString(conn)
             if data != "": print data
-        except:
-            print "connection was reset"
-            conn.close()
-            exit()
+        except Exception as e:
+            print e
 
     def receiveString(self,conn):
         data = ""
-        waslive = 0;
+        islivestream = 0;
         while 1:
-            data += conn.recv(1024)
-            if not data:
-                return "something went wrong"
-            #terminator when we are done receiving data
-            if self.terminator in data:
-                if waslive:
-                    return ""
-                data = data.split(self.terminator)[0]
-                try:
-                    result = self.escryptor.decrypt(data)
-                    if result == "-1":
-                        result = "invalid command"
-                    return result
-                except Exception as e:
-                    return str(e)
-            elif self.liveterminator in data:
-                waslive = 1
-                #split from live terminator
-                splitdata = data.split(self.liveterminator)
-                #decrypt data before last self.liveterminator
-                try:
-                    tmpdata = self.escryptor.decrypt(splitdata[len(splitdata) - 2])
-                    if tmpdata:
-                        print tmpdata.rstrip("\n")
-                except Exception as e:
-                    print splitdata+" "+str(e)
+            try:
+                data += conn.recv(1024)
+                if not data:
+                    return "something went wrong"
+                #terminator when we are done receiving data
+                if self.terminator in data:
+                    if islivestream:
+                        return ""
+                    data = data.split(self.terminator)[0]
+                    try:
+                        result = self.escryptor.decrypt(data)
+                        if result == "-1":
+                            result = "invalid command"
+                        return result
+                    except Exception as e:
+                        print str(e)
+                elif self.liveterminator in data:
+                        islivestream = 1
+                        #split from live terminator
+                        splitdata = data.split(self.liveterminator)
+                        #decrypt data before last self.liveterminator
+                        try:
+                            tmpdata = self.escryptor.decrypt(splitdata[len(splitdata) - 2])
+                            if tmpdata:
+                                print tmpdata.rstrip("\n")
+                        except Exception as e:
+                            print splitdata[len(splitdata) - 2] + " " + str(e)
+            #if we are live send kill task
+            except KeyboardInterrupt:
+                print ""
+                conn.send(self.escryptor.encryptString("endtask"))
 
 
     def uploadFile(self,fileName,location,conn):

