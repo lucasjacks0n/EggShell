@@ -13,18 +13,18 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 ##Creating And Running A Payload
 
 Eggshell gives us a 1 convenient 1 line payload and listener on our local machine
-[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell | width=400)
 
 On the target machine, after the payload is run, we will get a connection back
-[![Preview](http://lucasjackson.me/images/eggshell/payloadrun.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadrun.png)](http://lucasjackson.me/eggshell | width=400)
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell | width=400)
 
 
 ##Interacting With Multiple Sessions
 
 MultiSession gives us easy access to interacting and managing multiple sessions
-[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell | width=400)
 
 
 
