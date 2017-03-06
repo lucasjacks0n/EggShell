@@ -29,12 +29,22 @@ MultiSession gives us easy access to interacting and managing multiple sessions
 
 
 ##Getting Started
+
+### Windows
+Undocumented, clone the repo, install pycrypto and python, and run the python script.
+
+### OSX and MacOS
 ```sh
 git clone https://github.com/neoneggplant/EggShell
 easy_install pycrypto
 cd EggShell
 python eggshell.py
 ```
+
+## Issues
+* You must have root access or most stuff will not work.
+* No local commands on Windows
+* No colors on windows
 
 ##iOS Commands:
 * **sysinfo**        : get system information
