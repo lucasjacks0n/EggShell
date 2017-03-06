@@ -10,13 +10,15 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 [![Preview](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
 
 
-##Running A Payload
+##Creating And Running A Payload
 
-Eggshell gives us a 1 convenient 1 line payload
-
+Eggshell gives us a 1 convenient 1 line payload and listener on our local machine
 [![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell)
 
+On the target machine, after the payload is run, we will get a connection back
 [![Preview](http://lucasjackson.me/images/eggshell/payloadrun.png)](http://lucasjackson.me/eggshell)
+
+[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell)
 
 
 ##Interacting With Multiple Sessions
