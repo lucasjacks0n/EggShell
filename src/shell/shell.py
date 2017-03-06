@@ -124,13 +124,13 @@ class ESShell:
                 if args[0] == "alert":
                     title = bben(raw_input("Set title: "))
                     message = bben(raw_input("Set message: "))
-                    sendCMD(args[0] + " " + title + " " + message,session.conn)
+                    server.sendCommand(args[0] + " " + title + " " + message,session.conn)
                     continue
                 elif args[0] in iosshortcuts:
                     if iosshortcuts[args[0]].split()[0] == "download":
-                        downloadFile(iosshortcuts[args[0]],session.conn)
+                        server.downloadFile(iosshortcuts[args[0]],session.conn)
                     else:
-                        sendCMD(iosshortcuts[args[0]],session.conn)
+                        server.sendCommand(iosshortcuts[args[0]],session.conn)
                     continue
                 elif args[0] == "installpro":
                     server.uploadFile("src/binaries/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/nespro.dylib",session.conn)

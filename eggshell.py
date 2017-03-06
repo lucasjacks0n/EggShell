@@ -32,7 +32,8 @@ NES = ('' if iswin else '\033[4;32m')+"NES"+WHITE+"> "
 h = Helper()
 shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(32))
 terminator = ''.join((random.choice(string.letters)) for x in range(16))
-server = ESServer(ESEncryptor(shellKey,16),terminator,h)
+liveterminator = ''.join((random.choice(string.letters)) for x in range(16))
+server = ESServer(ESEncryptor(shellKey,16),terminator,liveterminator,h)
 
 BANNER_ART_TEXT = GREEN+"""
 .---.          .-. .        . .       \\      `.
@@ -44,7 +45,7 @@ BANNER_ART_TEXT = GREEN+"""
  _._._._._._._._._._|"""+COLOR_INFO+"______________________________________________."+RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+COLOR_INFO+"_____________________________________________/"+RED+"""
                     l
-"""+WHITE+"\nVersion: 2.0.9.5\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
+"""+WHITE+"\nVersion: 2.0.9.6\nCreated By Lucas Jackson (@neoneggplant)\n"+ENDC
 BANNER_MENU_TEXT = WHITE + "-"*40 + "\n" + """ Menu:
     1): Start Server
     2): Start Multi Session

