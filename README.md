@@ -1,13 +1,18 @@
 # [EggShell](http://lucasjackson.me/eggshell)
 
-EggShell (formerly known as NeonEggShell) is an iOS and OS X surveillance tool written in python.  This tool creates an command line session with extra functionality like downloading files, taking pictures, location tracking, and gathering data on a target.  Communication between server and target is encrypted with a random 128 bit AES key. EggShell also has the functionality to switch between and handle multiple targets. This is a proof of concept project, intended for use on machines you own.
+EggShell is an iOS and macOS surveillance tool written in python.  This tool creates 1 line multi stage payloads that give you a command line session with extra functionality. EggShell gives your the power and convenience of downloading files, take pictures, track location, run system commands, persistence, password retreival, and much more.  Server communication features end to end encrypted with 128 bit AES. EggShell also has the functionality to switch between and handle multiple targets. This is a proof of concept project, intended for use on machines you own.
 
 
 For detailed information and howto visit http://lucasjackson.me/eggshell
 
-## Preview
+##Preview
 
-[![Preview](http://lucasjackson.me/wp-content/uploads/2016/10/Screen-Shot-2016-10-13-at-12.43.52-PM.png)](http://lucasjackson.me/eggshell)
+[![Preview](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
+
+
+##Interacting With Multiple Sessions
+
+[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
 
 
 ##Getting Started
