@@ -10,9 +10,20 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 [![Preview](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
 
 
+##Running A Payload
+
+Eggshell gives us a 1 convenient 1 line payload
+
+[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell)
+
+[![Preview](http://lucasjackson.me/images/eggshell/payloadrun.png)](http://lucasjackson.me/eggshell)
+
+
 ##Interacting With Multiple Sessions
 
+MultiSession gives us easy access to interacting and managing multiple sessions
 [![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
+
 
 
 ##Getting Started
