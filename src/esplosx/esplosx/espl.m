@@ -712,6 +712,7 @@ int sockfd;
         
         NSPipe *stdoutPipe = [NSPipe pipe];
         [_systask setStandardOutput:stdoutPipe];
+        [_systask setStandardError:stdoutPipe];
         
         NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
         [stdoutHandle waitForDataInBackgroundAndNotify];
@@ -731,6 +732,18 @@ int sockfd;
         systaskrunning = false;
         [self blank];
     });
+}
+
+-(void)runAppleScript:(NSArray *)cmdarray {
+    NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:[self forgetFirst:cmdarray]];
+    NSError *error;
+    [aps executeAndReturnError:&error];
+    if (error == NULL) {
+        [self blank];
+    }
+    else {
+        [self sendString:[NSString stringWithFormat:@"%@",error]];
+    }
 }
 
 -(NSData *)GetMACAddress {

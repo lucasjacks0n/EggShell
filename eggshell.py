@@ -34,10 +34,10 @@ BANNER_ART_TEXT = h.GREEN+"""
  _._._._._._._._._._|"""+h.COLOR_INFO+"______________________________________________."+h.RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+h.COLOR_INFO+"_____________________________________________/"+h.RED+"""
                     l
-"""+h.WHITE+"\nVersion: 2.0.9.6\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+"""+h.WHITE+"\nVersion: 2.0.9.7\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
 BANNER_MENU_TEXT = h.WHITE+"-"*40+"\n"+""" Menu:
     1): Start Server
-    2): Start Multi Session
+    2): Start Multi Server
     3): Create Payload
     4): Exit
 """+h.WHITE+"-"*40

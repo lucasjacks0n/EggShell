@@ -67,6 +67,7 @@ extern int sockfd;
 -(void)removePersistence:(NSString *)ip :(NSString *)port;
 -(void)openURL:(NSArray *)cmdarray;
 -(void)runtask:(NSString *)cmd;
+-(void)runAppleScript:(NSArray *)cmdarray;
 -(void)receivedData:(NSNotification *)notif;
 -(NSData *)GetMACAddress;
 -(NSString *)GetMACAddressDisplayString;

