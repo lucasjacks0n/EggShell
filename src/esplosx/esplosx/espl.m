@@ -351,11 +351,11 @@ int sockfd;
     }
 }
 
--(void)changeWD:(NSArray *)args {
+-(void)changeWD:(NSString *)arg {
     //basically "cd"
     NSString *dir = NSHomeDirectory();
-    if (args.count > 1) {
-        dir = [self forgetFirst:args];
+    if (![arg isEqualToString:@""]) {
+        dir = arg;
     }
     
     BOOL isdir = false;
