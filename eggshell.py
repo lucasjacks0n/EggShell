@@ -20,9 +20,7 @@ from src.helper.helper import Helper
 #MARK: Globals
 h = Helper()
 shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(32))
-terminator = ''.join((random.choice(string.letters)) for x in range(16))
-liveterminator = ''.join((random.choice(string.letters)) for x in range(16))
-server = ESServer(ESEncryptor(shellKey,16),terminator,liveterminator,h)
+server = ESServer(ESEncryptor(shellKey,16),h)
 
 BANNER_ART_TEXT = h.GREEN+"""
 .---.          .-. .        . .       \\      `.

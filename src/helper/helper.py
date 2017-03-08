@@ -2,6 +2,7 @@
 #created by lucas.py
 #3-5-17
 import sys
+import base64
 
 class Helper:
     
@@ -25,3 +26,6 @@ class Helper:
     
     def strinfoGet(self,string):
         return self.COLOR_INFO+"[*]  "+self.WHITE+string
+
+    def bben(self,s):
+        return base64.b64encode(s)

