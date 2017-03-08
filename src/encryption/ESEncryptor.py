@@ -26,6 +26,8 @@ class ESEncryptor:
         return s[:-ord(s[len(s)-1:])]
 
     def decrypt(self, enc):
+        if len(enc) == 0:
+            return ""
         enc = base64.b64decode(enc)
         cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
         return self._unpad(cipher.decrypt(enc).decode('utf-8'))
