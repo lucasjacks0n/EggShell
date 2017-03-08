@@ -374,23 +374,22 @@ int sockfd;
 }
 
 -(void)rmFile:(NSString *)arg {
-    NSString *file = @"";
     if ([arg isEqualToString:@""]) {
         [self sendString:@"Usage: rm filename"];
         return;
     }
     BOOL isdir = false;
-    if ([fileManager fileExistsAtPath:file isDirectory:&isdir]) {
+    if ([fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@: is a directory",file]];
+            [self sendString:[NSString stringWithFormat:@"%@: is a directory",arg]];
         }
         else {
-            [fileManager removeItemAtPath:file error:NULL];
+            [fileManager removeItemAtPath:arg error:NULL];
             [self sendString:@""];
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",file]];
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",arg]];
     }
 }
 
