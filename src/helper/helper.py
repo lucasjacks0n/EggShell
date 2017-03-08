@@ -20,6 +20,8 @@ class Helper:
         self.NES = ('' if iswin else '\033[4;32m')+"NES"+self.WHITE+"> "
         #cmds
         self.CMD_CLEAR = 'cls' if iswin else 'clear'
+        self.CMD_PWD = 'cd' if iswin else 'pwd'
+        self.CMD_LS = 'dir' if iswin else 'ls'
 
     def strinfo(self,string):
         print self.strinfoGet(string)
