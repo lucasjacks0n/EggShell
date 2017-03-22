@@ -14,6 +14,31 @@
 
 extern int OPENSSL_cleanse(void *ptr, size_t len);
 
++(NSData *)encryptNSData:(NSString*)key :(NSData*)data {
+    //add padding
+    int padlen = AES_BLOCK_SIZE - (data.length % AES_BLOCK_SIZE);
+    NSMutableData *paddedData = [[NSMutableData data] initWithData:data];
+    for (int i = 0; i < padlen; i++) {
+        char bytesToAppend[1] = {(char)padlen};
+        [paddedData appendBytes:bytesToAppend length:1];
+    }
+    const unsigned char* aeskey = (const unsigned char*)[key cStringUsingEncoding:NSASCIIStringEncoding];
+    OPENSSL_cleanse(NULL, 0);
+    /* Initialization vector */
+    unsigned char iv[AES_BLOCK_SIZE];
+    //outputbuffer
+    unsigned char output[paddedData.length];
+    /* AES-128 bit CBC Encryption */
+    AES_KEY enc_key;
+    //encrypt
+    memset(iv, 0, AES_BLOCK_SIZE);
+    AES_set_encrypt_key(aeskey, (int)strlen((const char*)aeskey) * 8, &enc_key);
+    //input, output, inputlength, key, iv, operation
+    AES_cbc_encrypt([paddedData bytes], output, paddedData.length, &enc_key, iv, AES_ENCRYPT);
+    //decrypt
+    return [NSData dataWithBytes:output length:paddedData.length];
+}
+
 +(NSString *)encryptNSStringToB64:(NSString*)key :(NSString*)data {
     //add padding
     int padlen = AES_BLOCK_SIZE - (data.length % AES_BLOCK_SIZE);

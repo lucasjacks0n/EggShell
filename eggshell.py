@@ -13,10 +13,10 @@ import sys
 import time
 from StringIO import StringIO
 from threading import Thread
-from src.encryption.ESEncryptor import ESEncryptor
-from src.server.server import ESServer
-from src.helper.helper import Helper
-
+sys.dont_write_bytecode = True
+from modules.encryption.ESEncryptor import ESEncryptor
+from modules.server.server import ESServer
+from modules.helper.helper import Helper
 #MARK: Globals
 h = Helper()
 shellKey = ''.join((random.choice(string.letters+string.digits)) for x in range(32))
@@ -32,7 +32,7 @@ BANNER_ART_TEXT = h.GREEN+"""
  _._._._._._._._._._|"""+h.COLOR_INFO+"______________________________________________."+h.RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+h.COLOR_INFO+"_____________________________________________/"+h.RED+"""
                     l
-"""+h.WHITE+"\nVersion: 2.1.0.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+"""+h.WHITE+"\nVersion: 2.2.0.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
 BANNER_MENU_TEXT = h.WHITE+"-"*40+"\n"+""" Menu:
     1): Start Server
     2): Start Multi Server

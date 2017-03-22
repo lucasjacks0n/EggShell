@@ -17,7 +17,7 @@ class Helper:
         self.UNDERLINE_GREEN = '' if iswin else '\033[4;92m'
         self.WHITEBU = '' if iswin else '\033[1;4m'
         self.COLOR_INFO = '' if iswin else '\033[0;36m'
-        self.NES = ('' if iswin else '\033[4;32m')+"NES"+self.WHITE+"> "
+        self.NES = ('SELECT' if iswin else '\033[0;32m')+"EggShell"+self.WHITE+"> "
         #cmds
         self.CMD_CLEAR = 'cls' if iswin else 'clear'
         self.CMD_PWD = 'cd' if iswin else 'pwd'

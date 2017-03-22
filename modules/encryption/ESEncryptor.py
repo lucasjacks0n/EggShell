@@ -1,7 +1,6 @@
 #ESEncryptor
 #created by lucas.py
 import base64
-from PKCS7Encoder import PKCS7Encoder
 
 try:
     from Crypto import Random
@@ -16,7 +15,6 @@ class ESEncryptor:
     def __init__(self, key=None, BS=None):
         self.iv = "\x00" * 16
         self.key = key
-        self.pkcs7 = PKCS7Encoder()
         self.BS = (BS if BS else None)
     
     def _pad(self, s):
@@ -41,25 +39,22 @@ class ESEncryptor:
         return self.encode(string)
     
     #file handling
-    def decryptFile(self, filein, fileout, fileSize,password=0):
+    def decryptFile(self, fileinname, fileoutname, fileSize,password=0):
         password = self.key if password == 0 else password
         aes = AES.new(password, AES.MODE_CBC, self.iv)
-        in_file = open(filein,"rb")
+        in_file = open(fileinname,"rb")
         encryptedData = in_file.read()
+        #trim
+        offset = len(encryptedData) - fileSize
+        encryptedData = encryptedData[offset:]
         in_file.close()
         
         #decrypt,get length
-        decryptedData = aes.decrypt(encryptedData)
-        dataSize = len(decryptedData)
-        
-        offset = dataSize - fileSize
-        
-        if offset < 0:
-            return False
+        decryptedData = self._unpad(aes.decrypt(encryptedData))
         
         #write data subtracting the offset
-        out_file = open(fileout,'a+b')
-        out_file.write(decryptedData[:-offset])
+        out_file = open(fileoutname,'a+b')
+        out_file.write(decryptedData)
         out_file.close()
         return True
 
