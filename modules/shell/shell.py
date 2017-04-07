@@ -133,7 +133,7 @@ class ESShell:
             #MARK: Target command handling
             elif "arm" in session.CDA and cmd in self.MODULES_IOS:
                 #tell module to execute()/prepare command
-                command = self.MODULES_IOS[cmd].run(session.conn,server,cmdraw)
+                command = self.MODULES_IOS[cmd].run(session,server,cmdraw)
                 if command == "":
                     continue
                 cmdtype = self.MODULES_IOS[cmd].type
@@ -144,7 +144,7 @@ class ESShell:
                 continue
             elif "i386" in session.CDA and cmd in self.MODULES_MACOS:
                 #tell module to execute()/prepare command
-                command = self.MODULES_MACOS[cmd].run(session.conn,server,cmdraw)
+                command = self.MODULES_MACOS[cmd].run(session,server,cmdraw)
                 if command == "":
                     continue
                 cmdtype = self.MODULES_MACOS[cmd].type

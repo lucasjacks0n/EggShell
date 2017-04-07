@@ -32,7 +32,7 @@ BANNER_ART_TEXT = h.GREEN+"""
  _._._._._._._._._._|"""+h.COLOR_INFO+"______________________________________________."+h.RED+"""
 |_#_#_#_#_#_#_#_#_#_|"""+h.COLOR_INFO+"_____________________________________________/"+h.RED+"""
                     l
-"""+h.WHITE+"\nVersion: 2.2.0.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+"""+h.WHITE+"\nVersion: 2.2.1\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
 BANNER_MENU_TEXT = h.WHITE+"-"*40+"\n"+""" Menu:
     1): Start Server
     2): Start Multi Server
@@ -59,14 +59,27 @@ def menu():
 
 def promptHostPort():
     lhost = server.getip()
-    lport = 4444
+    lport = None
     hostChoice = raw_input("SET LHOST (Leave blank for "+lhost+")>")
     if hostChoice != "":
         lhost = hostChoice
     h.strinfo("LHOST = " + lhost)
-    portChoice = raw_input("SET LPORT (Leave blank for "+str(lport)+")>")
-    if portChoice != "":
-        lport = portChoice
+    #validate int
+    while 1:
+        try:
+            lport = raw_input("SET LPORT (Leave blank for 4444)>")
+            if not lport:
+                lport = 4444
+            lport = int(lport)
+            if lport < 1024:
+                h.strinfo("invalid port, please enter a value >= 1024")
+                continue
+            break
+        except KeyboardInterrupt:
+            return
+        except:
+            h.strinfo("invalid port, please enter a valid integer")
+
     h.strinfo("LPORT = " + str(lport))
     return [lhost,lport]
 
@@ -83,6 +96,8 @@ def promptServerRun(host,port):
 
 def menuStartServer(): #1
     sp = promptHostPort()
+    if not sp:
+        return
     server.singleServer(sp[0],sp[1])
 
 def menuStartMultiServer(): #2
@@ -100,9 +115,10 @@ def menuExit(): #4
 
 def main():
     #main menu options
-    try:
-        menu()
-    except (KeyboardInterrupt, EOFError) as e:
-        pass
+    while 1:
+        try:
+            menu()
+        except (KeyboardInterrupt, EOFError) as e:
+            pass
 
 main()

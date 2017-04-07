@@ -5,8 +5,8 @@ class payload:
         self.type = "native"
         self.id = 111
     
-    def run(self,conn,server,command):
+    def run(self,session,server,command):
         if len(command.split()) < 2:
             print "Usage: brightness 0.X"
-            return -1
+            return ""
         return self.name

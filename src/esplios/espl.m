@@ -36,7 +36,7 @@ int sockfd;
 
 -(void)receiveFileData:(NSString *)saveToPath :(long)fileSize {
     [self blank];
-    long bsize = fileSize;
+    long bsize = 1024;
     char buffer[bsize];
     NSMutableData *data = [NSMutableData alloc];
     //we use both chunks to make sure we never check an incomplete terminator string
@@ -45,18 +45,18 @@ int sockfd;
     while(read (sockfd, &buffer, sizeof(buffer))) {
         //append data
         thischunk = [NSString stringWithFormat:@"%s",buffer];
-        [data appendBytes:[thischunk UTF8String] length:thischunk.length];
+        [data appendBytes:buffer length:sizeof(buffer)];
         //detect terminator, decrypt data, write to file
-        memset(buffer,'\0',bsize);
         if (!([[NSString stringWithFormat:@"%@%@",lastchunk,thischunk] rangeOfString:_terminator].location == NSNotFound)) {
-            //fuck this
-            NSString *datastr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            datastr = [datastr substringToIndex:[datastr length] - 16];
-            NSData *nsdataDecoded = [data initWithBase64EncodedString:datastr options:NSDataBase64DecodingIgnoreUnknownCharacters];
-            [nsdataDecoded writeToFile:saveToPath atomically:true];
+            //base64 decode file data
+            data = [[NSMutableData alloc] initWithBase64EncodedData:
+                    [data subdataWithRange:NSMakeRange(0, fileSize)] options:0];
+            //decrypt nsdata and write to file
+            [[escryptor decryptNSData:_skey :data] writeToFile:saveToPath atomically:true];
             break;
         }
         lastchunk = [NSString stringWithFormat:@"%s",buffer];
+        memset(buffer,'\0',sizeof(buffer));
     }
     [self blank];
 }
@@ -69,8 +69,9 @@ int sockfd;
 }
 
 -(void)sendString:(NSString *)string {
+    string = [string stringByReplacingOccurrencesOfString:@"’" withString:@"'"];
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
-    write (sockfd, [[NSString stringWithFormat:@"%@%@",finalstr,_terminator] UTF8String], finalstr.length + _terminator.length);
+    write (sockfd, [finalstr UTF8String], finalstr.length);
 }
 
 -(void)liveSendString:(NSString *)string {
@@ -84,7 +85,7 @@ int sockfd;
     
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",
                           [escryptor encryptNSStringToB64:self.skey :string],reversed];
-    write (sockfd, [finalstr UTF8String], finalstr.length + 11);
+    write (sockfd, [finalstr UTF8String], finalstr.length);
 }
 
 //MARK: Convenience

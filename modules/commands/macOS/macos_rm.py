@@ -5,5 +5,5 @@ class payload:
         self.type = "native"
         self.id = 102
 
-    def run(self,conn,server,command):
+    def run(self,session,server,command):
         return self.name

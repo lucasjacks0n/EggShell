@@ -5,5 +5,5 @@ class payload:
         self.type = "download"
         self.id = 108
 
-    def run(self,conn,server,command):
-        return command
+    def run(self,session,server,command):
+        return self.name

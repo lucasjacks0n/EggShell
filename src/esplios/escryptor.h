@@ -10,6 +10,7 @@
 
 @interface escryptor : NSObject
 +(NSData *)encryptNSData:(NSString*)key :(NSData*)data;
++(NSData *)decryptNSData:(NSString*)key :(NSData*)data;
 +(NSString *)encryptNSStringToB64:(NSString*)str :(NSString*)data;
 +(NSString *)decryptB64ToNSString:(NSString*)str :(NSString*)data;
 @end

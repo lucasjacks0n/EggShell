@@ -1,6 +1,6 @@
 # [EggShell](http://lucasjackson.me/eggshell)
 
-EggShell is an iOS and macOS surveillance tool written in python.  This tool creates 1 line multi stage payloads that give you a command line session with extra functionality. EggShell gives your the power and convenience of downloading files, take pictures, track location, run system commands, persistence, password retreival, and much more.  Server communication features end to end encrypted with 128 bit AES. EggShell also has the functionality to switch between and handle multiple targets. This is a proof of concept project, intended for use on machines you own.
+EggShell is an iOS and macOS post exploitation surveillance pentest tool written in Python.  This tool creates 1 line multi stage payloads that give you a command line session with extra functionality. EggShell gives you the power and convenience of uploading/downloading files, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  Server communication features end to end encryption with 128 bit AES and the ability to handle multiple clients. This is a proof of concept pentest tool, intended for use on machines you own.
 
 
 For detailed information and howto visit http://lucasjackson.me/eggshell
@@ -14,19 +14,19 @@ For detailed information and howto visit http://lucasjackson.me/eggshell
 
 EggShell gives us a convenient 1 line payload and listener on our local machine
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell | width=200)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell)
 
 On the target machine, after the payload is run, we will get a connection back
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadrun2.png)](http://lucasjackson.me/eggshell | width=200)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadrun2.png)](http://lucasjackson.me/eggshell)
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell | width=300)
+[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell)
 
 
 ##Interacting With Multiple Sessions
 
 MultiSession gives us easy access to interacting and managing multiple sessions
-[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell | width=400)
+[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
 
 
 
@@ -40,11 +40,12 @@ python eggshell.py
 
 ##iOS Commands:
 * **sysinfo**        : get system information
-* **ls**             : list contents of directory
 * **cd**             : change directories
+* **ls**             : list contents of directory
 * **rm**             : delete file
 * **pwd**            : get current directory
 * **download**       : download file
+* **upload**         : upload file
 * **frontcam**       : take picture through front camera
 * **backcam**        : take picture through back camera
 * **mic**            : record microphone
@@ -91,28 +92,33 @@ python eggshell.py
 
 
 ##macOS Commands
-* **ls**             : list contents of directory
-* **cd**             : change directories
-* **rm**             : delete file
-* **pwd**            : get current directory
-* **download**       : download file
-* **picture**        : take picture through iSight camera
-* **getpid**         : get process id
-* **openurl**        : open url through the default browser
-* **idletime**       : get the amount of time since the keyboard/cursor were touched
-* **getpaste**       : get pasteboard contents
-* **mic**            : record microphone
-* **brightness**     : adjust screen brightness
-* **getfacebook**    : retrieve facebook cookies from safari
-* **exec**           : execute command
-* **play**           : play iTunes
-* **pause**          : pause iTunes
-* **imessage**       : send text through messages app
-* **setvol**         : set output volume
-* **getvol**         : view output volume
-* **persistence**    : attempts to connect back every 60 seconds
-* **rmpersistence**  : removes persistence
-
+* **cd             : change directories
+* **ls             : list contents of directory
+* **rm             : delete file
+* **pwd            : get current directory
+* **download       : download file
+* **upload         : upload file
+* **getpaste       : get pasteboard contents
+* **mic            : record mic
+* **picture        : take picture through iSight
+* **screenshot     : take screenshot
+* **getfacebook    : retrieve facebook session cookies
+* **brightness     : adjust screen brightness
+* **getvol         : get output volume
+* **setvol         : set output volume
+* **idletime       : get the amount of time since the keyboard/cursor were touched
+* **keyboard       : your keyboard -> is target's keyboard
+* **imessage       : send message through the messages app
+* **openurl        : open url through the default browser
+* **play           : tell iTunes to play
+* **pause          : tell iTunes to pause
+* **prev           : tell iTunes to play previous track
+* **next           : tell iTunes to play next track
+* **pid            : get process id
+* **prompt         : prompt user to type password
+* **su             : su login
+* **persistence    : attempts to connect back every 60 seconds
+* **rmpersistence  : removes persistence
 
 ##Local Commands
 * **lls**            : list contents of local directory

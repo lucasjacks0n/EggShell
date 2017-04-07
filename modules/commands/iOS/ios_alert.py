@@ -6,9 +6,9 @@ class payload:
         self.type = "native"
         self.id = 119
 
-    def run(self,conn,server,command):
+    def run(self,session,server,command):
         title = base64.b64encode(raw_input("title: "))
         message = base64.b64encode(raw_input("message: "))
-        server.sendCommand(self.name,title+" "+message,self.type,conn)
+        server.sendCommand(self.name,title+" "+message,self.type,session.conn)
         print title+" "+message;
         return ""

