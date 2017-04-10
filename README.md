@@ -1,44 +1,63 @@
 # [EggShell](http://lucasjackson.me/eggshell)
 
+### About EggShell
+
 EggShell is an iOS and macOS post exploitation surveillance pentest tool written in Python.  This tool creates 1 line multi stage payloads that give you a command line session with extra functionality. EggShell gives you the power and convenience of uploading/downloading files, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  Server communication features end to end encryption with 128 bit AES and the ability to handle multiple clients. This is a proof of concept pentest tool, intended for use on machines you own.
 
 
 For detailed information and howto visit http://lucasjackson.me/eggshell
 
-##Preview
-
-[![Preview](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
+## Preview
 
 
-##Creating And Running A Payload
+![](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
+
+
+## Creating And Running A Payload
 
 EggShell gives us a convenient 1 line payload and listener on our local machine
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadcreate.png)](http://lucasjackson.me/eggshell)
+[![](http://lucasjackson.me/images/eggshell/2.2.1/startup1.png)](http://lucasjackson.me/eggshell)
 
 On the target machine, after the payload is run, we will get a connection back
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadrun2.png)](http://lucasjackson.me/eggshell)
+[![](http://lucasjackson.me/images/eggshell/2.2.1/runpayload.png)](http://lucasjackson.me/eggshell)
 
-[![Preview](http://lucasjackson.me/images/eggshell/payloadconversion.png)](http://lucasjackson.me/eggshell)
+[![](http://lucasjackson.me/images/eggshell/2.2.1/connectback.png)](http://lucasjackson.me/eggshell)
 
+## Taking Pictures
+Eggshell has the command functionality of taking pictures on both iOS(frontcam/backcam) and macOS(picture)
+[![](http://lucasjackson.me/images/eggshell/2.2.1/osxpicture.png)](http://lucasjackson.me/eggshell)
 
-##Interacting With Multiple Sessions
+## Password Prompt / Root Privileges
+With the prompt command, we can have a password pop up information retrieval + built in privilege escalation
+[![](http://lucasjackson.me/images/eggshell/2.2.1/osxprompt.png)](http://lucasjackson.me/eggshell)
+
+[![](http://lucasjackson.me/images/eggshell/2.2.1/escalateosx.png)](http://lucasjackson.me/eggshell)
+
+## Sending SMS through iMessage
+  [![](http://lucasjackson.me/images/eggshell/2.2.1/osximessage.png)](http://lucasjackson.me/eggshell)
+
+## Interacting With Multiple Sessions
 
 MultiSession gives us easy access to interacting and managing multiple sessions
-[![Preview](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
+[![](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
 
+## Featured
+Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnerability used to run EggShell
+[![EverythingApplePro](http://lucasjackson.me/images/eggshell/2.2.1/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
 
+## DISCLAMER
+By using EggShell, you agree to the GNU General Public License v2.0 included in the repository. For more details at http://www.gnu.org/licenses/gpl-2.0.html. Using EggShell for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
 
-##Getting Started
+## Installation
 ```sh
-git clone https://github.com/neoneggplant/EggShell
+git clone https://github.com/neoneggplant/EggShell && cd EggShell
 easy_install pycrypto
-cd EggShell
 python eggshell.py
 ```
 
-##iOS Commands:
+## iOS Commands:
 * **sysinfo**        : get system information
 * **cd**             : change directories
 * **ls**             : list contents of directory
@@ -72,7 +91,7 @@ python eggshell.py
 * **installpro**     : installs eggshellpro to device
 
 
-##EggShell Pro Commands
+## EggShell Pro Commands (iOS)
 * **lock**           : simulate lock button press
 * **wake**           : wake device from sleeping state
 * **home**           : simulate home button press
@@ -91,7 +110,7 @@ python eggshell.py
 * **locationservice**: turn on or off location services
 
 
-##macOS Commands
+## macOS Commands
 * **cd             : change directories
 * **ls             : list contents of directory
 * **rm             : delete file
@@ -120,13 +139,13 @@ python eggshell.py
 * **persistence    : attempts to connect back every 60 seconds
 * **rmpersistence  : removes persistence
 
-##Local Commands
+## Local Commands
 * **lls**            : list contents of local directory
 * **lcd**            : change local directories
 * **lpwd**           : get current local directory
 * **lopen**          : open local directory
 * **clear**          : clears terminal
 
-##Notes
+## Notes
 * Supports Python 2.7.x
 * Expect Updates :)
