@@ -7,14 +7,7 @@ EggShell is an iOS and macOS post exploitation surveillance pentest tool written
 
 For detailed information and howto visit http://lucasjackson.me/eggshell
 
-## Preview
-
-
-![](http://lucasjackson.me/images/eggshell/main.png)](http://lucasjackson.me/eggshell)
-
-
 ## Creating And Running A Payload
-
 EggShell gives us a convenient 1 line payload and listener on our local machine
 
 [![](http://lucasjackson.me/images/eggshell/2.2.1/startup1.png)](http://lucasjackson.me/eggshell)
@@ -27,24 +20,27 @@ On the target machine, after the payload is run, we will get a connection back
 
 ## Taking Pictures
 Eggshell has the command functionality of taking pictures on both iOS(frontcam/backcam) and macOS(picture)
+
 [![](http://lucasjackson.me/images/eggshell/2.2.1/osxpicture.png)](http://lucasjackson.me/eggshell)
 
 ## Password Prompt / Root Privileges
 With the prompt command, we can have a password pop up information retrieval + built in privilege escalation
+
 [![](http://lucasjackson.me/images/eggshell/2.2.1/osxprompt.png)](http://lucasjackson.me/eggshell)
 
 [![](http://lucasjackson.me/images/eggshell/2.2.1/escalateosx.png)](http://lucasjackson.me/eggshell)
 
 ## Sending SMS through iMessage
-  [![](http://lucasjackson.me/images/eggshell/2.2.1/osximessage.png)](http://lucasjackson.me/eggshell)
+[![](http://lucasjackson.me/images/eggshell/2.2.1/osximessage.png)](http://lucasjackson.me/eggshell)
 
 ## Interacting With Multiple Sessions
-
 MultiSession gives us easy access to interacting and managing multiple sessions
+
 [![](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
 
 ## Featured
 Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnerability used to run EggShell
+
 [![EverythingApplePro](http://lucasjackson.me/images/eggshell/2.2.1/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
 
 ## DISCLAMER
