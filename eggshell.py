@@ -40,9 +40,11 @@ BANNER_MENU_TEXT = h.WHITE+"-"*40+"\n"+""" Menu:
     4): Exit
 """+h.WHITE+"-"*40
 BANNER = BANNER_ART_TEXT+""+BANNER_MENU_TEXT+"\n"+h.NES
-
+ONMENU = 1
 def menu():
+    global ONMENU
     while 1:
+        ONMENU = 1
         os.system(h.CMD_CLEAR)
         option = raw_input(BANNER)
         choose = {
@@ -52,9 +54,11 @@ def menu():
             "4" : menuExit
         }
         try:
+            ONMENU = 0
             choose[option]()
             os.system(h.CMD_CLEAR)
         except KeyError:
+            ONMENU = 1
             continue
 
 def promptHostPort():
@@ -114,11 +118,13 @@ def menuExit(): #4
     exit()
 
 def main():
-    #main menu options
+    global ONMENU
     while 1:
         try:
             menu()
-        except (KeyboardInterrupt, EOFError) as e:
-            pass
+        except KeyboardInterrupt:
+            if ONMENU == 1:
+                print ""
+                exit()
 
 main()

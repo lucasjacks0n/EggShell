@@ -3,7 +3,7 @@ import os
 class payload:
     def __init__(self):
         self.name = "lazagne"
-        self.description = "lazagne password retrieval | (https://github.com/AlessandroZ/LaZagne/wiki)"
+        self.description = "firefox password retrieval | (https://github.com/AlessandroZ/LaZagne/wiki)"
         self.type = "custom"
         self.id = 128
     

