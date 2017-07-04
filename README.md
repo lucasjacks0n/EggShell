@@ -107,33 +107,33 @@ python eggshell.py
 
 
 ## macOS Commands
-* **cd             : change directories
-* **ls             : list contents of directory
-* **rm             : delete file
-* **pwd            : get current directory
-* **download       : download file
-* **upload         : upload file
-* **getpaste       : get pasteboard contents
-* **mic            : record mic
-* **picture        : take picture through iSight
-* **screenshot     : take screenshot
-* **getfacebook    : retrieve facebook session cookies
-* **brightness     : adjust screen brightness
-* **getvol         : get output volume
-* **setvol         : set output volume
-* **idletime       : get the amount of time since the keyboard/cursor were touched
-* **keyboard       : your keyboard -> is target's keyboard
-* **imessage       : send message through the messages app
-* **openurl        : open url through the default browser
-* **play           : tell iTunes to play
-* **pause          : tell iTunes to pause
-* **prev           : tell iTunes to play previous track
-* **next           : tell iTunes to play next track
-* **pid            : get process id
-* **prompt         : prompt user to type password
-* **su             : su login
-* **persistence    : attempts to connect back every 60 seconds
-* **rmpersistence  : removes persistence
+* **cd**             : change directories
+* **ls**             : list contents of directory
+* **rm**             : delete file
+* **pwd**            : get current directory
+* **download**       : download file
+* **upload**         : upload file
+* **getpaste**       : get pasteboard contents
+* **mic**            : record mic
+* **picture**        : take picture through iSight
+* **screenshot**     : take screenshot
+* **getfacebook**    : retrieve facebook session cookies
+* **brightness**     : adjust screen brightness
+* **getvol**         : get output volume
+* **setvol**         : set output volume
+* **idletime**       : get the amount of time since the keyboard/cursor were touched
+* **keyboard**       : your keyboard -> is target's keyboard
+* **imessage**       : send message through the messages app
+* **openurl**        : open url through the default browser
+* **play**           : tell iTunes to play
+* **pause**          : tell iTunes to pause
+* **prev**           : tell iTunes to play previous track
+* **next**           : tell iTunes to play next track
+* **pid**            : get process id
+* **prompt**         : prompt user to type password
+* **su**             : su login
+* **persistence**    : attempts to connect back every 60 seconds
+* **rmpersistence**  : removes persistence
 
 ## Local Commands
 * **lls**            : list contents of local directory
