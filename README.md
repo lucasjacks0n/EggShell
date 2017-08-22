@@ -7,6 +7,8 @@ EggShell is an iOS and macOS post exploitation surveillance pentest tool written
 
 For detailed information and howto visit http://lucasjackson.me/eggshell
 
+Follow me on twitter: @neoneggplant
+
 ## Creating And Running A Payload
 EggShell gives us a convenient 1 line payload and listener on our local machine
 
