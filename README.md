@@ -1,49 +1,49 @@
-# [EggShell](http://lucasjackson.me/eggshell)
+# [EggShell](http://lucas-jackson.me/eggshell)
 
 ### About EggShell
 
 EggShell is an iOS and macOS post exploitation surveillance pentest tool written in Python.  This tool creates 1 line multi stage payloads that give you a command line session with extra functionality. EggShell gives you the power and convenience of uploading/downloading files, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  Server communication features end to end encryption with 128 bit AES and the ability to handle multiple clients. This is a proof of concept pentest tool, intended for use on machines you own.
 
 
-For detailed information and howto visit http://lucasjackson.me/eggshell
+For detailed information and howto visit http://lucas-jackson.me/eggshell
 
 Follow me on twitter: @neoneggplant
 
 ## Creating And Running A Payload
 EggShell gives us a convenient 1 line payload and listener on our local machine
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/startup1.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/startup1.png)](http://lucas-jackson.me/eggshell)
 
 On the target machine, after the payload is run, we will get a connection back
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/runpayload.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/runpayload.png)](http://lucas-jackson.me/eggshell)
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/connectback.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/connectback.png)](http://lucas-jackson.me/eggshell)
 
 ## Taking Pictures
 Eggshell has the command functionality of taking pictures on both iOS(frontcam/backcam) and macOS(picture)
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/osxpicture.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/osxpicture.png)](http://lucas-jackson.me/eggshell)
 
 ## Password Prompt / Root Privileges
 With the prompt command, we can have a password pop up information retrieval + built in privilege escalation
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/osxprompt.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/osxprompt.png)](http://lucas-jackson.me/eggshell)
 
-[![](http://lucasjackson.me/images/eggshell/2.2.1/escalateosx.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/escalateosx.png)](http://lucas-jackson.me/eggshell)
 
 ## Sending SMS through iMessage
-[![](http://lucasjackson.me/images/eggshell/2.2.1/osximessage.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/2.2.1/osximessage.png)](http://lucas-jackson.me/eggshell)
 
 ## Interacting With Multiple Sessions
 MultiSession gives us easy access to interacting and managing multiple sessions
 
-[![](http://lucasjackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucasjackson.me/eggshell)
+[![](http://lucas-jackson.me/images/eggshell/multisessioninteractpictures.png)](http://lucas-jackson.me/eggshell)
 
 ## Featured
 Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnerability used to run EggShell
 
-[![EverythingApplePro](http://lucasjackson.me/images/eggshell/2.2.1/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
+[![EverythingApplePro](http://lucas-jackson.me/images/eggshell/2.2.1/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
 
 ## DISCLAMER
 By using EggShell, you agree to the GNU General Public License v2.0 included in the repository. For more details at http://www.gnu.org/licenses/gpl-2.0.html. Using EggShell for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
