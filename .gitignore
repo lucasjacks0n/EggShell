@@ -1,0 +1,5 @@
+*.pyc
+src/espro/.theos
+src/esplios/.theos
+.keys
+downloads

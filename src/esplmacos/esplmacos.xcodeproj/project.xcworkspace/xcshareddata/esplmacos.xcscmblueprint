@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "77651EDFC65662DDDC7A679A40D152E5DBC6F3D3",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "77651EDFC65662DDDC7A679A40D152E5DBC6F3D3" : 9223372036854775807,
+    "0768B16795AAA9748C7F09AE6EBD6A8C8BFB0E04" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "523E90B6-00AB-4507-808F-D4ACD3079DC2",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "77651EDFC65662DDDC7A679A40D152E5DBC6F3D3" : "EggShell3\/",
+    "0768B16795AAA9748C7F09AE6EBD6A8C8BFB0E04" : "EggShell\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "esplmacos",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "src\/esplmacos\/esplmacos.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "http:\/\/github.com\/neoneggplant\/eggshell",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0768B16795AAA9748C7F09AE6EBD6A8C8BFB0E04"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/lucasjackson\/eggshell3.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "77651EDFC65662DDDC7A679A40D152E5DBC6F3D3"
+    }
+  ]
+}

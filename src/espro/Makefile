@@ -1,8 +1,8 @@
 include $(THEOS)/makefiles/common.mk
-
-TWEAK_NAME = eggshellPro
-eggshellPro_FILES = Tweak.xm
-eggshellPro_PRIVATE_FRAMEWORKS = AppSupport
+# sudo xcode-select /Applications/xcode7.2.1.app
+TWEAK_NAME = espro
+espro_FILES = Tweak.xm
+espro_PRIVATE_FRAMEWORKS = AppSupport
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 after-install::

