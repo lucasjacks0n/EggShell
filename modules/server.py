@@ -86,7 +86,7 @@ class Server:
         if not self.port:
             raise ValueError('Server port not set')
         payload_parameter = h.b64(json.dumps({"ip":self.host,"port":self.port,"debug":1}))
-        if device == "i386a":
+        if device == "i386":
             h.info_general("Detected macOS")
             f = open("resources/esplmacos", "rb")
             payload = f.read()
