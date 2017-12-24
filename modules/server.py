@@ -188,7 +188,8 @@ class Server:
                                  certfile=".keys/server.crt",
                                  keyfile=".keys/server.key",
                                  ssl_version=ssl.PROTOCOL_SSLv23)
-        device_info = json.loads(ssl_sock.recv(256))
+        raw = ssl_sock.recv(256)
+        device_info = json.loads(raw)
         device_info.update({
             'type': device_type,
             'is_multi': is_multi,

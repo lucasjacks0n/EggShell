@@ -12,8 +12,8 @@ class Session:
 	def __init__(self,server,conn,device_info):
 		self.server = server
 		self.conn = conn
-		self.username = device_info['username']
-		self.hostname = device_info['hostname']
+		self.username = device_info['username'].encode("utf8")
+		self.hostname = device_info['hostname'].encode("utf8")
 		self.type = device_info['type']
 		self.uid = device_info['uid']
 		self.is_multi = device_info['is_multi']
@@ -216,3 +216,4 @@ class Session:
 			time.sleep(0.5)
 		if self.server.multihandler.is_running:
 			del self.server.multihandler.sessions[self.id]
+			self.server.multihandler.session_uids.remove(self.uid)
