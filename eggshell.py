@@ -74,9 +74,9 @@ def prompt_run_server():
         return
     else:
         if raw_input(h.NES+"MultiHandler? (y/N): ") == "y":
-            server.multi_handler()
+            server.start_multi_handler()
         else:
-            server.single_handler()
+            server.start_single_handler()
 
 
 def create_payload():

