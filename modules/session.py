@@ -15,6 +15,7 @@ class Session:
 		self.name = device_info['name']
 		self.type = device_info['type']
 		self.uid = device_info['uid']
+		self.is_multi = device_info['is_multi']
 		self.last_tab = None
 
 	def interact(self):
@@ -34,6 +35,8 @@ class Session:
 				# handle input
 				if cmd == "exit":
 					self.disconnect()
+					return
+				elif cmd == "back" and self.is_multi:
 					return
 				elif cmd == "help":
 					self.show_commands()
@@ -208,3 +211,5 @@ class Session:
 		h.info_general("Closing session")
 		self.conn.close()
 		time.sleep(0.5)
+		if self.server.multihandler:
+			del self.server.multihandler.sessions[self.uid]

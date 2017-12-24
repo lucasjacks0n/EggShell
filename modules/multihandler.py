@@ -7,8 +7,6 @@ class MultiHandler:
 		self.thread = None
 		self.sessions = dict()
 		self.handle = h.COLOR_INFO + "MultiHandler" + h.ENDC + "> "
-		self.start_background_server()
-		self.interact()
 
 
 	def background_worker(self):
@@ -29,9 +27,11 @@ class MultiHandler:
 
 
 	def list_sessions(self):
+		i = 1
 		for key in self.sessions:
 			session = self.sessions[key]
-			print session.uid + " " + session.name
+			print str(i) + " " + session.name + " " + session.type
+			i += 1
 
 
 	def interact_with_session(self,args):

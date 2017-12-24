@@ -19,6 +19,7 @@ class Server:
         self.modules_ios = self.import_modules("modules/commands/iOS")
         self.modules_python = self.import_modules("modules/commands/python")
         self.modules_local = self.import_modules("modules/commands/local")
+        self.multihandler = None
 
   
     def import_modules(self,path):
@@ -82,7 +83,9 @@ class Server:
 
 
     def start_multi_handler(self):
-        MultiHandler(self)
+        self.multihandler = MultiHandler(self)
+        self.multihandler.start_background_server()
+        self.multihandler.interact()
 
 
     def craft_payload(self,device,is_multi):
@@ -184,6 +187,7 @@ class Server:
                                  ssl_version=ssl.PROTOCOL_SSLv23)
         device_info = json.loads(ssl_sock.recv(256))
         device_info['type'] = device_type
+        device_info['is_multi'] = is_multi
 
         if 'name' in device_info and device_info['name'] != '':
             device_info['name'] = h.UNDERLINE_GREEN + device_info['name'] + h.ENDC + h.GREEN + "> " + h.ENDC;
