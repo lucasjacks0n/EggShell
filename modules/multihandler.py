@@ -6,6 +6,7 @@ class MultiHandler:
 		self.server = server
 		self.thread = None
 		self.sessions = dict()
+		self.session_uids = list()
 		self.handle = h.COLOR_INFO + "MultiHandler" + h.ENDC + "> "
 		self.is_running = False
 
@@ -17,13 +18,14 @@ class MultiHandler:
 			if self.is_running:
 				session = self.server.listen(True)
 				if session:
-					if session.uid in self.sessions.keys():
+					if session.uid in self.session_uids:
 						# if already connected
 						continue
+					self.session_uids.append(session.uid)
 					self.sessions[id_number] = session
 					session.id = id_number
 					id_number += 1
-					sys.stdout.write("\nnew connection!\n"+self.handle)
+					sys.stdout.write("\n{0}[*]{2} Session {1} opened{2}\n{3}".format(h.COLOR_INFO,str(session.id),h.WHITE,self.handle))
 					sys.stdout.flush()
 			else:
 				return
@@ -40,6 +42,7 @@ class MultiHandler:
 		h.info_general("Cleaning up...")
 		for key in self.sessions.keys():
 			session = self.sessions[key]
+			self.session_uids.remove(session.uid)
 			session.disconnect(False)
 
 
