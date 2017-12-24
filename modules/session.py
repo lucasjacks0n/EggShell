@@ -12,7 +12,8 @@ class Session:
 	def __init__(self,server,conn,device_info):
 		self.server = server
 		self.conn = conn
-		self.name = device_info['name']
+		self.username = device_info['username']
+		self.hostname = device_info['hostname']
 		self.type = device_info['type']
 		self.uid = device_info['uid']
 		self.is_multi = device_info['is_multi']
@@ -23,6 +24,7 @@ class Session:
 		readline.set_completer(self.tab_complete)
 		readline.parse_and_bind('tab: complete')
 		command_modules = self.server.get_modules(self)
+		self.name = h.UNDERLINE_GREEN + self.username + "@" + self.hostname + h.ENDC + h.GREEN + "> " + h.ENDC
 		while 1:
 			try:
 				#prepare command
@@ -34,7 +36,7 @@ class Session:
 
 				# handle input
 				if cmd == "exit":
-					self.disconnect()
+					self.disconnect(True)
 					return
 				elif cmd == "back" and self.is_multi:
 					return
@@ -56,7 +58,7 @@ class Session:
 				print ""
 				if readline.get_line_buffer():
 					continue
-				self.disconnect()  
+				self.disconnect(True)  
 				return
 			except Exception as e:
 				print e
@@ -207,9 +209,10 @@ class Session:
 			fdata += chunk
 
 
-	def disconnect(self):
-		h.info_general("Closing session")
+	def disconnect(self,verbose):
 		self.conn.close()
-		time.sleep(0.5)
-		if self.server.multihandler:
-			del self.server.multihandler.sessions[self.uid]
+		if verbose:
+			h.info_general("Closing session")
+			time.sleep(0.5)
+		if self.server.multihandler.is_running:
+			del self.server.multihandler.sessions[self.id]

