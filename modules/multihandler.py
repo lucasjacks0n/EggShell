@@ -5,10 +5,20 @@ class MultiHandler:
 	def __init__(self,server):
 		self.server = server
 		self.thread = None
-		self.sessions = dict()
-		self.session_uids = list()
+		self.sessions_id = dict()
+		self.sessions_uid = dict()
 		self.handle = h.COLOR_INFO + "MultiHandler" + h.ENDC + "> "
 		self.is_running = False
+
+
+	def update_session(self,current_session,new_session):
+		current_session.conn = new_session.conn
+		current_session.username = new_session.username
+		current_session.hostname = new_session.hostname
+		current_session.type = new_session.type
+		current_session.needs_refresh = False
+		sys.stdout.write("\n"+current_session.get_name())
+		sys.stdout.flush()
 
 
 	def background_worker(self):
@@ -18,15 +28,17 @@ class MultiHandler:
 			if self.is_running:
 				session = self.server.listen(True)
 				if session:
-					if session.uid in self.session_uids:
-						# if already connected
+					if session.uid in self.sessions_uid.keys():
+						if self.sessions_uid[session.uid].needs_refresh:
+							self.update_session(self.sessions_uid[session.uid],session)
 						continue
-					self.session_uids.append(session.uid)
-					self.sessions[id_number] = session
-					session.id = id_number
-					id_number += 1
-					sys.stdout.write("\n{0}[*]{2} Session {1} opened{2}\n{3}".format(h.COLOR_INFO,str(session.id),h.WHITE,self.handle))
-					sys.stdout.flush()
+					else:
+						self.sessions_uid[session.uid] = session
+						self.sessions_id[id_number] = session
+						session.id = id_number
+						id_number += 1
+						sys.stdout.write("\n{0}[*]{2} Session {1} opened{2}\n{3}".format(h.COLOR_INFO,str(session.id),h.WHITE,self.handle))
+						sys.stdout.flush()
 			else:
 				return
 
@@ -39,16 +51,16 @@ class MultiHandler:
 
 	def close_all(self):
 		h.info_general("Cleaning up...")
-		for key in self.sessions.keys():
-			session = self.sessions[key]
+		for key in self.sessions_id.keys():
+			session = self.sessions_id[key]
 			session.disconnect(False)
 
 
 	def list_sessions(self):
-		if not self.sessions:
+		if not self.sessions_id:
 			h.info_general("No active sessions")
-		for key in self.sessions:
-			session = self.sessions[key]
+		for key in self.sessions_id:
+			session = self.sessions_id[key]
 			print str(session.id) + " " + session.username + " " + session.type
 
 
@@ -57,7 +69,7 @@ class MultiHandler:
 			print "Usage: interact (session number)"
 			return
 		try:
-			self.sessions[int(args)].interact()
+			self.sessions_id[int(args)].interact()
 		except:
 			h.info_error("Invalid Session")
 
@@ -67,7 +79,7 @@ class MultiHandler:
 			print "Usage: close (session number)"
 			return
 		try:
-			session = self.sessions[int(args)]
+			session = self.sessions_id[int(args)]
 			session.disconnect(False)
 			h.info_general('Closing session ' + args)
 		except Exception as e:

@@ -196,13 +196,12 @@ class Server:
         return session.Session(self,ssl_sock,device_info)
         
 
-    def update_session(self,session):
-        #single session
-        newsession = self.listen(False,True)
-        session.is_multi = newsession.is_multi
-        session.term = newsession.term
-        session.conn = newsession.conn
-        session.name = newsession.name
-
+    def update_session(self,old_session):
+        new_session = self.listen(True)
+        old_session.conn = new_session.conn
+        old_session.hostname = new_session.hostname
+        old_session.username = new_session.username
+        old_session.name = new_session.get_name()
+        old_session.type = new_session.type
 
    

@@ -53,6 +53,19 @@ NSString *getFullCMD(NSDictionary *dict) {
     return result;
 }
 
+NSString *getUUID() {
+    io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault,IOServiceMatching("IOPlatformExpertDevice"));
+    if (!platformExpert)
+        return nil;
+    
+    CFTypeRef serialNumberAsCFString = IORegistryEntryCreateCFProperty(platformExpert,CFSTR(kIOPlatformUUIDKey),kCFAllocatorDefault, 0);
+    IOObjectRelease(platformExpert);
+    if (!serialNumberAsCFString)
+        return nil;
+    
+    return (__bridge NSString *)(serialNumberAsCFString);;
+}
+
 void connectToServer(NSDictionary *arguments) {
     if (!arguments) {
         return;
@@ -87,7 +100,7 @@ void connectToServer(NSDictionary *arguments) {
     NSDictionary *deviceInfo = [[NSMutableDictionary alloc] init];
     [deviceInfo setValue:NSUserName() forKey:@"username"];
     [deviceInfo setValue:[[NSHost currentHost] localizedName] forKey:@"hostname"];
-    [deviceInfo setValue:[[[NSUUID alloc] init] UUIDString] forKey:@"uid"];
+    [deviceInfo setValue:getUUID() forKey:@"uid"];
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:deviceInfo options:0 error:nil];
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     SSL_write(client_ssl, [jsonString UTF8String], (int)strlen([jsonString UTF8String]));

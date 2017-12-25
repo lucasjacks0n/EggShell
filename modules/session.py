@@ -18,24 +18,27 @@ class Session:
 		self.uid = device_info['uid']
 		self.is_multi = device_info['is_multi']
 		self.last_tab = None
+		self.needs_refresh = False
 
 	def interact(self):
 		readline.clear_history()
 		readline.set_completer(self.tab_complete)
 		readline.parse_and_bind('tab: complete')
 		command_modules = self.server.get_modules(self)
-		self.name = h.UNDERLINE_GREEN + self.username + "@" + self.hostname + h.ENDC + h.GREEN + "> " + h.ENDC
 		while 1:
 			try:
 				#prepare command
-				raw = raw_input(self.name)
+				raw = raw_input(self.get_name())
 				if not raw or raw.replace(" ","") == "":
 					continue
 				cmd = raw.split()[0]
 				cmd_data = {"cmd": cmd, "args":raw[len(cmd) + 1:]}
 
 				# handle input
-				if cmd == "exit":
+				# don't do anything if we are in the middle of updating session
+				if self.needs_refresh:
+					pass
+				elif cmd == "exit":
 					self.disconnect(True)
 					return
 				elif cmd == "back" and self.is_multi:
@@ -53,15 +56,20 @@ class Session:
 							print result.rstrip()
 					except KeyboardInterrupt:
 						self.send_command({"cmd":"killtask"})
-
 			except KeyboardInterrupt:
 				print ""
 				if readline.get_line_buffer():
 					continue
-				self.disconnect(True)  
+				self.disconnect(True)
 				return
 			except Exception as e:
 				print e
+
+
+	def get_name(self):
+		if self.needs_refresh:
+			return h.info_general_raw("Waiting for connection...")
+		return h.UNDERLINE_GREEN + self.username + "@" + self.hostname + h.ENDC + h.GREEN + "> " + h.ENDC
 
 
 	def tab_complete(self, text, state):
@@ -120,7 +128,7 @@ class Session:
 				else:
 					print k
 				# back to where we are
-			sys.stdout.write(self.name + current_text)		
+			sys.stdout.write(self.get_name() + current_text)		
 		except Exception as e:
 			print "\n error - " + str(e)
 
@@ -215,7 +223,7 @@ class Session:
 			h.info_general("Closing session")
 			time.sleep(0.5)
 		if self.server.multihandler.is_running:
-			del self.server.multihandler.sessions[self.id]
-			self.server.multihandler.session_uids.remove(self.uid)
+			del self.server.multihandler.sessions_id[self.id]
+			del self.server.multihandler.sessions_uid[self.uid]
 
 
