@@ -42,7 +42,6 @@ class MultiHandler:
 		h.info_general("Cleaning up...")
 		for key in self.sessions.keys():
 			session = self.sessions[key]
-			self.session_uids.remove(session.uid)
 			session.disconnect(False)
 
 
@@ -84,6 +83,22 @@ class MultiHandler:
 		time.sleep(0.5)
 
 
+	def show_command(self,name,description):
+		print name + " " * (15 - len(name)) + ": " + description
+
+
+	def show_commands(self):
+		commands = [
+			("interact","interact with session"),
+			("close","close active session"),
+			("sessions","list sessions"),
+			("exit","close all sessions and exit to menu"),
+		]
+		print h.WHITEBU+"MultiHandler Commands:"+h.ENDC
+		for command in commands:
+			self.show_command(command[0],command[1])
+
+
 	def interact(self):
 		while 1:
 			try:
@@ -98,6 +113,8 @@ class MultiHandler:
 					self.close_session(args)
 				elif cmd == "sessions":
 					self.list_sessions()
+				elif cmd == "help":
+					self.show_commands()
 				elif cmd == "exit":
 					self.stop()
 					return

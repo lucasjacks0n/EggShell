@@ -19,7 +19,7 @@ class Server:
         self.modules_ios = self.import_modules("modules/commands/iOS")
         self.modules_python = self.import_modules("modules/commands/python")
         self.modules_local = self.import_modules("modules/commands/local")
-        self.multihandler = None
+        self.multihandler = MultiHandler(self)
 
   
     def import_modules(self,path):
@@ -83,7 +83,6 @@ class Server:
 
 
     def start_multi_handler(self):
-        self.multihandler = MultiHandler(self)
         self.multihandler.start_background_server()
         self.multihandler.interact()
         print "end start multihandler"
