@@ -38,7 +38,6 @@ class MultiHandler:
 
 
 	def close_all(self):
-		sys.stdout.write("\n")
 		h.info_general("Cleaning up...")
 		for key in self.sessions.keys():
 			session = self.sessions[key]
@@ -46,6 +45,8 @@ class MultiHandler:
 
 
 	def list_sessions(self):
+		if not self.sessions:
+			h.info_general("No active sessions")
 		for key in self.sessions:
 			session = self.sessions[key]
 			print str(session.id) + " " + session.username + " " + session.type
@@ -122,6 +123,7 @@ class MultiHandler:
 					h.info_error("Invalid Command: " + cmd)
 
 			except KeyboardInterrupt:
+				sys.stdout.write("\n")
 				self.stop()
 				return
 
