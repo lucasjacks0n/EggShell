@@ -27,25 +27,28 @@ def clear():
 
 
 def info_general(string):
-    print "{0}[*]  {1}{2}".format(COLOR_INFO,WHITE,string)
+    print "{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string)
 
 
 def info_general_raw(string):
-    return "{0}[*]  {1}{2}".format(COLOR_INFO,WHITE,string)
+    return "{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string)
     
 
 def info_error(string):
-    print "{0}[*]  {1}{2}".format(RED,WHITE,string)
+    print "{0}[*] {1}{2}".format(RED,WHITE,string)
 
 
 def info_warning(string):
-    print "{0}[*]  {1}{2}".format(GREEN,WHITE,string)
+    print "{0}[*] {1}{2}".format(GREEN,WHITE,string)
+
 
 def show_command(mod):
     print mod.name + " " * (15 - len(mod.name)) + ": " + mod.description
 
+
 def b64(s):
     return base64.b64encode(s)
+
 
 def getip():
     try:

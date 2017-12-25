@@ -49,12 +49,12 @@ class Server:
         try:
             lhost = h.getip()
             lport = None
-            choice = raw_input("SET LHOST (Leave blank for "+lhost+")>")
+            choice = raw_input(h.info_general_raw("SET LHOST (Leave blank for "+lhost+")>"))
             if choice != "":
                 lhost = choice
             h.info_general("LHOST = " + lhost)
             while True:
-                lport = raw_input("SET LPORT (Leave blank for 4444)>")
+                lport = raw_input(h.info_general_raw("SET LPORT (Leave blank for 4444)>"))
                 if not lport:
                     lport = 4444
                 try:
