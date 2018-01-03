@@ -17,6 +17,7 @@ class Session:
 		self.type = device_info['type']
 		self.uid = device_info['uid']
 		self.is_multi = device_info['is_multi']
+		self.current_directory = device_info['current_directory']
 		self.last_tab = None
 		self.needs_refresh = False
 
@@ -69,7 +70,7 @@ class Session:
 	def get_name(self):
 		if self.needs_refresh:
 			return h.info_general_raw("Waiting for connection...")
-		return h.UNDERLINE_GREEN + self.username + "@" + self.hostname + h.ENDC + h.GREEN + "> " + h.ENDC
+		return h.GREEN + self.hostname + ":" + h.UNDERLINE_GREEN + self.current_directory + h.ENDC + " " + h.GREEN + self.username + "> " + h.ENDC
 
 
 	def tab_complete(self, text, state):

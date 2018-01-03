@@ -481,6 +481,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
 
 //MARK: Navigation
 -(void)changeDirectory:(NSString *)dir {
+    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
     NSString *path = NSHomeDirectory();
     if (![dir isEqual: @""]) {
         path = dir;
@@ -489,14 +490,15 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     if ([fileManager fileExistsAtPath:path isDirectory:&isdir]) {
         if (isdir) {
             [fileManager changeCurrentDirectoryPath:path];
+            [result setValue:[fileManager currentDirectoryPath] forKey:@"current_directory"];
+        } else {
+            [result setValue:[NSString stringWithFormat:@"%@: Not a directory\n",path] forKey:@"error"];
         }
-        else {
-            [self sendString:[NSString stringWithFormat:@"%@: Not a directory\n",path]];
-        }
+    } else {
+        [result setValue:[NSString stringWithFormat:@"%@: No such file or directory\n",path] forKey:@"error"];
     }
-    else {
-        [self sendString:[NSString stringWithFormat:@"%@: No such file or directory\n",path]];
-    }
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+    [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
     [self term];
 }
 
