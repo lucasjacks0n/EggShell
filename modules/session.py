@@ -12,14 +12,15 @@ class Session:
 	def __init__(self,server,conn,device_info):
 		self.server = server
 		self.conn = conn
-		self.username = device_info['username'].encode("utf8")
-		self.hostname = device_info['hostname'].encode("utf8")
+		self.username = device_info['username'].encode("utf-8")
+		self.hostname = device_info['hostname'].encode("utf-8")
 		self.type = device_info['type']
 		self.uid = device_info['uid']
 		self.is_multi = device_info['is_multi']
-		self.current_directory = device_info['current_directory']
+		self.current_directory = device_info['current_directory'].encode("utf-8")
 		self.last_tab = None
 		self.needs_refresh = False
+
 
 	def interact(self):
 		readline.clear_history()

@@ -11,6 +11,6 @@ class command:
         if 'error' in result:
         	h.info_error(result['error'])
         elif 'current_directory' in result:
-        	session.current_directory = result['current_directory']
+        	session.current_directory = result['current_directory'].encode('utf-8')
         else:
         	h.info_error('unable to get current directory')
