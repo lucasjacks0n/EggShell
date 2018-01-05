@@ -113,11 +113,13 @@ class EggShell:
                 selected_payload.run(server)
                 #run
                 self.prompt_run_server()
-                print selected_payload.name
+                break
             except KeyboardInterrupt:
+                print "shit"
                 break
             except Exception as e:
                 print e
+                break
 
 
     def menu(self,err=""):

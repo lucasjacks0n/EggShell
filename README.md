@@ -20,7 +20,7 @@ cd eggshell
 python eggshell.py
 ```
 
-### iOS (Jailbroken)
+### iOS (Jailbroken)teensy_macos
 Add Cydia source: http://lucasjackson.io/repo\
 Install python2.7\
 Install EggShell 3

@@ -20,7 +20,7 @@ class Session:
 		self.current_directory = device_info['current_directory'].encode("utf-8")
 		self.last_tab = None
 		self.needs_refresh = False
-
+		
 
 	def interact(self):
 		readline.clear_history()

