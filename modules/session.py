@@ -6,7 +6,10 @@ import time
 import binascii
 import os
 import modules.helper as h
-import readline
+try:
+	import readline
+except:
+	h.info_warning("readline module not found, tab completion not supported")
 
 class Session:
 	def __init__(self,server,conn,device_info):
@@ -16,17 +19,16 @@ class Session:
 		self.hostname = device_info['hostname'].encode("utf-8")
 		self.type = device_info['type']
 		self.uid = device_info['uid']
-		self.is_multi = device_info['is_multi']
 		self.current_directory = device_info['current_directory'].encode("utf-8")
 		self.last_tab = None
 		self.needs_refresh = False
-		
+
 
 	def interact(self):
 		readline.clear_history()
 		readline.set_completer(self.tab_complete)
 		readline.parse_and_bind('tab: complete')
-		command_modules = self.server.get_modules(self)
+		command_modules = self.server.get_modules(self.type)
 		while 1:
 			try:
 				#prepare command
@@ -35,15 +37,14 @@ class Session:
 					continue
 				cmd = raw.split()[0]
 				cmd_data = {"cmd": cmd, "args":raw[len(cmd) + 1:]}
-
-				# handle input
-				# don't do anything if we are in the middle of updating session
+				
 				if self.needs_refresh:
+					# don't do anything if we are in the middle of updating session
 					pass
 				elif cmd == "exit":
 					self.disconnect(True)
 					return
-				elif cmd == "back" and self.is_multi:
+				elif cmd == "back" and self.server.is_multi:
 					return
 				elif cmd == "help":
 					self.show_commands()
@@ -143,7 +144,7 @@ class Session:
 			h.show_command(self.server.modules_local[key])
 
 		print "\n"+h.WHITEBU+"Device Commands:"+h.ENDC
-		command_modules = self.server.get_modules(self)
+		command_modules = self.server.get_modules(self.type)
 		names = command_modules.keys()
 		names.sort()
 		for k in names:

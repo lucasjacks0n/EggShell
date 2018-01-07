@@ -1,6 +1,8 @@
 # [EggShell](http://lucas-jackson.me/eggshell)
 
-# About
+
+
+## About
 
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
@@ -12,11 +14,12 @@ Follow me on twitter: @neoneggplant
 
 <hr style="height:1px; background:#9EA4A9">
 
+
+
 ## Getting Started
 - Requires python 2.7
-- OpenSSL >= 0.9.8
 
-#### macOS/Linux
+#### macOS/Linux Installation
 ```sh
 git clone https://github.com/neoneggplant/eggshell
 cd eggshell
@@ -30,6 +33,8 @@ Install EggShell 3 -->
 
 <hr style="height:1px; background:#9EA4A9">
 
+
+
 ## Creating Payloads
 Eggshell payloads are executed on the target machine.  The payload first sends over instructions for getting and sending back device details to our server and then chooses the appropriate executable to establish a secure remote control session.
 
@@ -40,7 +45,6 @@ Selecting bash from the payload menu will give us a 1 liner that establishes an 
 
 <img src="http://lucasjackson.io/images/eggshell/bash-payload.png" alt="Bash payload" width="300px"/>
 
-
 #### teensy macOS (USB injection)
 Selecting teensy will give us an arduino based payload for the teensy microcontroller.  After uploading to the teensy, we can use the device to plug into a macOS usb port, and emulate keystrokes to run a bash payload.
 
@@ -48,15 +52,24 @@ Selecting teensy will give us an arduino based payload for the teensy microcontr
 
 <hr style="height:1px; background:#9EA4A9">
 
+
+
 ## Interacting with a session
-<img src="http://lucasjackson.io/images/eggshell/session-interaction.png" alt="Drawing" width="300"/>
+<img src="http://lucasjackson.io/images/eggshell/session-interaction.png" alt="Session interaction" width="300"/>
 
 After a session is established, we can execute commands on that device through the EggShell command line interface.
 We can show all the available commands by typing "help"
 
-<img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Drawing" width="400px"/>
+<img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Command help" width="400px"/>
+
+#### Tab Completion
+Similar to most command line interfaces, EggShell supports tab completion.  When you start typing the path to a directory or filename, we can complete the rest of the path using the tab key.
+
+<img src="http://lucasjackson.io/images/eggshell/tab-completion.png" alt="Tab completion" width="400px"/>
 
 <hr style="height:1px; background:#9EA4A9">
+
+
 
 ## Multihandler
 The Multihandler option lets us handle multiple sessions.  We can choose to interact with different devices while listening for new connections in the background.  
@@ -69,6 +82,8 @@ Similar to the session interface, we can type "help" to show Multihandler comman
 
 <hr style="height:1px; background:#9EA4A9">
 
+
+
 ## Featured
 Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnerability used to run EggShell
 
@@ -76,10 +91,14 @@ Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnera
 
 <hr style="height:1px; background:#9EA4A9">
 
+
+
 ## DISCLAMER
 By using EggShell, you agree to the GNU General Public License v2.0 included in the repository. For more details at http://www.gnu.org/licenses/gpl-2.0.html. Using EggShell for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
 
 <hr style="height:1px; background:#9EA4A9">
+
+
 
 ## Commands
 
