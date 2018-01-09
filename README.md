@@ -6,7 +6,7 @@
 
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
-<img src="http://lucasjackson.io/images/eggshell/main-menu.png?id=323" alt="Main menu" width="500px;"/>
+<img src="http://lucasjackson.io/images/eggshell/main-menu-skinny.png" alt="Main menu" width="500px;"/>
 
 For detailed information and how-to visit http://lucas-jackson.me/eggshell
 
@@ -25,11 +25,13 @@ git clone https://github.com/neoneggplant/eggshell
 cd eggshell
 python eggshell.py
 ```
-<!-- 
+
 ### iOS (Jailbroken)
 Add Cydia source: http://lucasjackson.io/repo\
 Install python2.7\
-Install EggShell 3 -->
+Install EggShell 3
+
+<img src="http://lucasjackson.io/images/eggshell/main-menu-ios.png" alt="Main menu" width="400px;"/>
 
 <hr style="height:1px; background:#9EA4A9">
 
@@ -38,7 +40,7 @@ Install EggShell 3 -->
 ## Creating Payloads
 Eggshell payloads are executed on the target machine.  The payload first sends over instructions for getting and sending back device details to our server and then chooses the appropriate executable to establish a secure remote control session.
 
-<img src="http://lucasjackson.io/images/eggshell/create-payload.png" alt="Creating payloads" width="300px"/>
+<img src="http://lucasjackson.io/images/eggshell/create-payload.png" alt="Creating payloads" width="400px"/>
 
 #### bash
 Selecting bash from the payload menu will give us a 1 liner that establishes an eggshell session upon execution on the target machine
@@ -48,24 +50,24 @@ Selecting bash from the payload menu will give us a 1 liner that establishes an 
 #### teensy macOS (USB injection)
 Selecting teensy will give us an arduino based payload for the teensy microcontroller.  After uploading to the teensy, we can use the device to plug into a macOS usb port, and emulate keystrokes to run a bash payload.
 
-<img src="http://lucasjackson.io/images/eggshell/teensy-macos-payload.png" alt="Teensy macOS payload" width="350px"/>
+<img src="http://lucasjackson.io/images/eggshell/teensy-macos-payload.png" alt="Teensy macOS payload" width="450px"/>
 
 <hr style="height:1px; background:#9EA4A9">
 
 
 
 ## Interacting with a session
-<img src="http://lucasjackson.io/images/eggshell/session-interaction.png" alt="Session interaction" width="300"/>
+<img src="http://lucasjackson.io/images/eggshell/session-interaction.png" alt="Session interaction" width="400"/>
 
 After a session is established, we can execute commands on that device through the EggShell command line interface.
 We can show all the available commands by typing "help"
 
-<img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Command help" width="400px"/>
+<img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Command help" width="500px"/>
 
 #### Tab Completion
 Similar to most command line interfaces, EggShell supports tab completion.  When you start typing the path to a directory or filename, we can complete the rest of the path using the tab key.
 
-<img src="http://lucasjackson.io/images/eggshell/tab-completion.png" alt="Tab completion" width="400px"/>
+<img src="http://lucasjackson.io/images/eggshell/tab-completion.png" alt="Tab completion" width="500px"/>
 
 <hr style="height:1px; background:#9EA4A9">
 
@@ -74,11 +76,11 @@ Similar to most command line interfaces, EggShell supports tab completion.  When
 ## Multihandler
 The Multihandler option lets us handle multiple sessions.  We can choose to interact with different devices while listening for new connections in the background.  
 
-<img src="http://lucasjackson.io/images/eggshell/multihandler-start.png" alt="Drawing" width="350px;"/>
+<img src="http://lucasjackson.io/images/eggshell/multihandler-start.png" alt="Drawing" width="450px;"/>
 
 Similar to the session interface, we can type "help" to show Multihandler commands
 
-<img src="http://lucasjackson.io/images/eggshell/multihandler-help.png" alt="Drawing" width="300"/>
+<img src="http://lucasjackson.io/images/eggshell/multihandler-help.png" alt="Drawing" width="400"/>
 
 <hr style="height:1px; background:#9EA4A9">
 

@@ -39,7 +39,7 @@ cydia-package:
 	cp eggshell.py .cydia-package/usr/local/EggShell
 	cp -R modules .cydia-package/usr/local/EggShell
 	cp -R resources .cydia-package/usr/local/EggShell
-	# debian files
+	# control file
 	echo "Name: EggShell" >> .cydia-package/DEBIAN/control
 	echo "Package: com.lucasjackson.eggshell" >> .cydia-package/DEBIAN/control
 	echo "Version: 3.0.0" >> .cydia-package/DEBIAN/control
@@ -47,7 +47,11 @@ cydia-package:
 	echo "Architecture: iphoneos-arm" >> .cydia-package/DEBIAN/control
 	echo "Author: Lucas Jackson <lucas@lucasjackson5815@gmail.com>" >> .cydia-package/DEBIAN/control
 	echo "Maintainer: Lucas Jackson <lucas@lucasjackson5815@gmail.com>" >> .cydia-package/DEBIAN/control
-	echo "Depends: python (>=2.7.8-1)" >> .cydia-package/DEBIAN/control
+	echo "Depends: python (>=2.7.8-1), com.lucasjackson.pysslfix (>=1.0)" >> .cydia-package/DEBIAN/control
+	#postinst
+	echo "#!/bin/bash" >> .cydia-package/DEBIAN/postinst
+	echo "ldid -S /usr/bin/python" >> .cydia-package/DEBIAN/postinst
+	chmod +x .cydia-package/DEBIAN/postinst
 	dpkg -b .cydia-package eggshell.deb
 
 all: ios macos iospro cydia-package
