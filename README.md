@@ -48,9 +48,17 @@ Selecting bash from the payload menu will give us a 1 liner that establishes an 
 <img src="http://lucasjackson.io/images/eggshell/bash-payload.png" alt="Bash payload" width="300px"/>
 
 #### teensy macOS (USB injection)
-Selecting teensy will give us an arduino based payload for the teensy microcontroller.  After uploading to the teensy, we can use the device to plug into a macOS usb port, and emulate keystrokes to run a bash payload.
+Teensy is a USB development board that can be programmed with the Arduino ide.  It emulates usb keyboard strokes extremely fast and can inject the EggShell payload just in a few seconds.
+
+<img src="http://lucasjackson.io/images/eggshell/teensy.jpg" alt="Teensy macOS payload" width="250px"/>
+
+Selecting teensy will give us an arduino based payload for the teensy board.
 
 <img src="http://lucasjackson.io/images/eggshell/teensy-macos-payload.png" alt="Teensy macOS payload" width="450px"/>
+
+After uploading to the teensy, we can use the device to plug into a macOS usb port.  Once connected to a computer, it will automatically emulate the keystrokes needed to execute a payload.
+
+<img src="http://lucasjackson.io/images/eggshell/arduino-ide.png" alt="Teensy macOS payload" width="450px"/>
 
 <hr style="height:1px; background:#9EA4A9">
 
