@@ -15,6 +15,15 @@ Follow me on twitter: @neoneggplant
 <hr style="height:1px; background:#9EA4A9">
 
 
+## New In Version 3.0.0
+ - More secure socket connection using SSL
+ - Linux support
+ - Tab completion
+ - Improved over all structure and efficiency of session handling
+ - Native iOS python support for 64 bit devices
+
+<hr style="height:1px; background:#9EA4A9">
+
 
 ## Getting Started
 - Requires python 2.7
