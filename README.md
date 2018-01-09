@@ -36,8 +36,7 @@ python eggshell.py
 ```
 
 ### iOS (Jailbroken)
-Add Cydia source: http://lucasjackson.io/repo\
-Install python2.7\
+Add Cydia source: http://lucasjackson.io/repo
 Install EggShell 3
 
 <img src="http://lucasjackson.io/images/eggshell/main-menu-ios.png" alt="Main menu" width="400px;"/>
@@ -48,8 +47,6 @@ Install EggShell 3
 
 ## Creating Payloads
 Eggshell payloads are executed on the target machine.  The payload first sends over instructions for getting and sending back device details to our server and then chooses the appropriate executable to establish a secure remote control session.
-
-<img src="http://lucasjackson.io/images/eggshell/create-payload.png" alt="Creating payloads" width="400px"/>
 
 ### bash
 Selecting bash from the payload menu will give us a 1 liner that establishes an eggshell session upon execution on the target machine
