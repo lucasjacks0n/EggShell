@@ -28,7 +28,7 @@ Follow me on twitter: @neoneggplant
 ## Getting Started
 - Requires python 2.7
 
-#### macOS/Linux Installation
+### macOS/Linux Installation
 ```sh
 git clone https://github.com/neoneggplant/eggshell
 cd eggshell
@@ -51,12 +51,12 @@ Eggshell payloads are executed on the target machine.  The payload first sends o
 
 <img src="http://lucasjackson.io/images/eggshell/create-payload.png" alt="Creating payloads" width="400px"/>
 
-#### bash
+### bash
 Selecting bash from the payload menu will give us a 1 liner that establishes an eggshell session upon execution on the target machine
 
 <img src="http://lucasjackson.io/images/eggshell/bash-payload.png" alt="Bash payload" width="300px"/>
 
-#### teensy macOS (USB injection)
+### teensy macOS (USB injection)
 Teensy is a USB development board that can be programmed with the Arduino ide.  It emulates usb keyboard strokes extremely fast and can inject the EggShell payload just in a few seconds.
 
 <img src="http://lucasjackson.io/images/eggshell/teensy.jpg" alt="Teensy macOS payload" width="250px"/>
@@ -81,7 +81,7 @@ We can show all the available commands by typing "help"
 
 <img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Command help" width="500px"/>
 
-#### Tab Completion
+### Tab Completion
 Similar to most command line interfaces, EggShell supports tab completion.  When you start typing the path to a directory or filename, we can complete the rest of the path using the tab key.
 
 <img src="http://lucasjackson.io/images/eggshell/tab-completion.png" alt="Tab completion" width="500px"/>
