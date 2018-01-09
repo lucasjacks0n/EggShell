@@ -16,6 +16,7 @@ Follow me on twitter: @neoneggplant
 
 
 ## New In Version 3.0.0
+ - Rewritten from scratch
  - More secure socket connection using SSL
  - Linux support
  - Tab completion
