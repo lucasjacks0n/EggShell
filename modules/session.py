@@ -9,7 +9,7 @@ import modules.helper as h
 try:
 	import readline
 except:
-	h.info_warning("readline module not found, tab completion not supported")
+	pass
 
 class Session:
 	def __init__(self,server,conn,device_info):
@@ -25,9 +25,13 @@ class Session:
 
 
 	def interact(self):
-		readline.clear_history()
-		readline.set_completer(self.tab_complete)
-		readline.parse_and_bind('tab: complete')
+		try:
+			readline.clear_history()
+			readline.set_completer(self.tab_complete)
+			readline.parse_and_bind('tab: complete')
+		except:
+			h.info_warning("readline not installed, tab completion not supported")
+
 		command_modules = self.server.get_modules(self.type)
 		while 1:
 			try:
@@ -60,9 +64,12 @@ class Session:
 					except KeyboardInterrupt:
 						self.send_command({"cmd":"killtask"})
 			except KeyboardInterrupt:
-				print ""
-				if readline.get_line_buffer():
-					continue
+				try:
+					print ""
+					if readline.get_line_buffer():
+						continue
+				except:
+					pass
 				self.disconnect(True)
 				return
 			except Exception as e:

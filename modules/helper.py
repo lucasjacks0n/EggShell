@@ -84,7 +84,7 @@ def generate_keys():
     os.system(
       "cd .keys;"+
       "openssl genrsa -out server.key 2048 2>/dev/null;"+
-      "openssl req -new -key server.key -subj \"/C=US/ST=EggShell/L=EggShell/O=EggShell/CN=EggShell\" -out server.csr;"+
+      "openssl req -new -key server.key -subj '/C=US/ST=EggShell/L=EggShell/O=EggShell/CN=EggShell' -out server.csr;"+
       "openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt 2>/dev/null")
 
     

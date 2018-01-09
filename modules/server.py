@@ -201,7 +201,7 @@ class Server:
         
 
     def update_session(self,old_session):
-        new_session = self.listen_for_stager(True)
+        new_session = self.listen_for_stager()
         old_session.conn = new_session.conn
         old_session.hostname = new_session.hostname
         old_session.username = new_session.username
