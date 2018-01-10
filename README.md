@@ -40,7 +40,7 @@ Add Cydia source: http://lucasjackson.io/repo
 Install EggShell 3
 Use any mobile terminal application and run the command eggshell
 
-<img src="http://lucasjackson.io/images/eggshell/main-menu-ios.png?2" alt="Main menu" width="400px;"/>
+<img src="http://lucasjackson.io/images/eggshell/main-menu-ios.png?3" alt="Main menu" width="400px;"/>
 
 <hr style="height:1px; background:#9EA4A9">
 
