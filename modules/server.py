@@ -205,7 +205,6 @@ class Server:
         old_session.conn = new_session.conn
         old_session.hostname = new_session.hostname
         old_session.username = new_session.username
-        old_session.name = new_session.get_name()
         old_session.type = new_session.type
 
    

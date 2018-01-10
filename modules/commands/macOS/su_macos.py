@@ -18,7 +18,7 @@ class command:
             h.info_general("Root Granted")
             time.sleep(0.2)
             h.info_general("Escalating Privileges")
-            if session.is_multi == False:
+            if session.server.is_multi == False:
                 session.server.update_session(session)
             else:
                 session.needs_refresh = True
