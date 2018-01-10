@@ -6,7 +6,7 @@
 
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
-<img src="http://lucasjackson.io/images/eggshell/main-menu.png?2" alt="Main menu" width="650px;"/>
+<img src="http://lucasjackson.io/images/eggshell/main-menu.png?3" alt="Main menu" width="650px;"/>
 
 For detailed information and how-to visit http://lucas-jackson.me/eggshell
 
