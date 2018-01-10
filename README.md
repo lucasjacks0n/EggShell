@@ -110,7 +110,7 @@ Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnera
 
 
 ## Special Thanks
-- Linus Yang / Riley Angus for the iOS Python package
+- Linus Yang / Ryley Angus for the iOS Python package
 - AlessandroZ for LaZagne
 
 
