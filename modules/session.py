@@ -25,6 +25,8 @@ class Session:
 
 
 	def interact(self):
+		"""Interact with an active session"""
+
 		try:
 			readline.clear_history()
 			readline.set_completer(self.tab_complete)
@@ -36,7 +38,7 @@ class Session:
 		while 1:
 			try:
 				#prepare command
-				raw = raw_input(self.get_name())
+				raw = raw_input(self.get_handle())
 				if not raw or raw.replace(" ","") == "":
 					continue
 				cmd = raw.split()[0]
@@ -76,7 +78,8 @@ class Session:
 				print e
 
 
-	def get_name(self):
+	def get_handle(self):
+		"""Interact with an active session"""
 		if self.needs_refresh:
 			return h.info_general_raw("Waiting for connection...")
 		return h.GREEN + self.hostname + ":" + h.UNDERLINE_GREEN + self.current_directory + h.ENDC + " " + h.GREEN + self.username + "> " + h.ENDC
@@ -138,7 +141,7 @@ class Session:
 				else:
 					print k
 				# back to where we are
-			sys.stdout.write(self.get_name() + current_text)		
+			sys.stdout.write(self.get_handle() + current_text)		
 		except Exception as e:
 			print "\n error - " + str(e)
 

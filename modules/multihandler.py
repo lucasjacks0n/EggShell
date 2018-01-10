@@ -17,11 +17,11 @@ class MultiHandler:
 		current_session.hostname = new_session.hostname
 		current_session.type = new_session.type
 		current_session.needs_refresh = False
-		sys.stdout.write("\n"+current_session.get_name())
+		sys.stdout.write("\n"+current_session.get_handle())
 		sys.stdout.flush()
 
 
-	def background_worker(self):
+	def background_listener(self):
 		self.server.is_multi = True
 		self.is_running = True
 		id_number = 1
@@ -45,51 +45,60 @@ class MultiHandler:
 
 
 	def start_background_server(self):
-		self.thread = threading.Thread(target=self.background_worker)
+		self.thread = threading.Thread(target=self.background_listener)
 		self.thread.setDaemon(False)
 		self.thread.start()
 
 
-	def close_all(self):
+	def close_all_sessions(self):
 		h.info_general("Cleaning up...")
 		for key in self.sessions_id.keys():
 			session = self.sessions_id[key]
 			session.disconnect(False)
 
 
+	def show_session(self,session):
+		try:
+			print str(session.id) + " | " +\
+			session.username + "@" + session.hostname + " | " + \
+			str(session.conn.getpeername()[0]) 
+		except Exception as e:
+			h.info_error(str(e))
+
+
 	def list_sessions(self):
 		if not self.sessions_id:
 			h.info_general("No active sessions")
-		for key in self.sessions_id:
-			session = self.sessions_id[key]
-			print str(session.id) + " " + session.username + " " + session.type
+		else:
+			for key in self.sessions_id:
+				self.show_session(self.sessions_id[key])
 
 
-	def interact_with_session(self,args):
-		if not args:
+	def interact_with_session(self,session_number):
+		if not session_number:
 			print "Usage: interact (session number)"
 			return
 		try:
-			self.sessions_id[int(args)].interact()
+			self.sessions_id[int(session_number)].interact()
 		except:
 			h.info_error("Invalid Session")
 
 
-	def close_session(self,args):
-		if not args:
+	def close_session(self,session_number):
+		if not session_number:
 			print "Usage: close (session number)"
 			return
 		try:
-			session = self.sessions_id[int(args)]
+			session = self.sessions_id[int(session_number)]
 			session.disconnect(False)
-			h.info_general('Closing session ' + args)
+			h.info_general('Closing session ' + session_number)
 		except Exception as e:
 			print e
 			h.info_error("Invalid Session")
 
 
-	def stop(self):
-		self.close_all()
+	def stop_server(self):
+		self.close_all_sessions()
 		self.is_running = False
 		if self.thread:
 			socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((self.server.host,self.server.port))
@@ -132,14 +141,14 @@ class MultiHandler:
 				elif cmd == "help":
 					self.show_commands()
 				elif cmd == "exit":
-					self.stop()
+					self.stop_server()
 					return
 				else:
 					h.info_error("Invalid Command: " + cmd)
 
 			except KeyboardInterrupt:
 				sys.stdout.write("\n")
-				self.stop()
+				self.stop_server()
 				return
 
 
