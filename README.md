@@ -109,6 +109,10 @@ Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnera
 <hr style="height:1px; background:#9EA4A9">
 
 
+## Special Thanks
+- Linus Yang / Riley Angus for the iOS Python package
+- AlessandroZ for LaZagne
+
 
 ## DISCLAMER
 By using EggShell, you agree to the GNU General Public License v2.0 included in the repository. For more details at http://www.gnu.org/licenses/gpl-2.0.html. Using EggShell for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
