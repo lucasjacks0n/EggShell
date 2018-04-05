@@ -26,13 +26,11 @@ class Session:
 
 	def interact(self):
 		"""Interact with an active session"""
-
-		try:
-			readline.clear_history()
-			readline.set_completer(self.tab_complete)
-			readline.parse_and_bind('tab: complete')
-		except:
-			h.info_warning("readline not installed, tab completion not supported")
+		readline.clear_history()
+		readline.set_completer(self.tab_complete)
+		readline.parse_and_bind("bind -e")
+		readline.parse_and_bind("bind '\t' rl_complete")
+		readline.parse_and_bind('tab: complete')
 
 		command_modules = self.server.get_modules(self.type)
 		while 1:
@@ -125,11 +123,13 @@ class Session:
 				if matched_keys[0] in results:
 					if results[matched_keys[0]] == 4 or results[matched_keys[0]] == 10:
 						readline.insert_text("/")
+				readline.redisplay()
 				return
 			elif not is_double_tab:
 				# lcp of multiple matched
 				find = h.find_longest_common_prefix(matched_keys)
 				readline.insert_text(find[len(search_text):])
+				readline.redisplay()
 				return
 
 			print ""

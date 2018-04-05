@@ -29,10 +29,10 @@
 /* Begin PBXFileReference section */
 		309948ED1FA674DE00C44E13 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		309948EF1FA6750B00C44E13 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		30A87704206DBBF8000D2CB2 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/libssl.a"; sourceTree = "<group>"; };
 		540EB0A31F36E06400A204CA /* esplmacos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = esplmacos; sourceTree = BUILT_PRODUCTS_DIR; };
 		540EB0A61F36E06400A204CA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		540EB0B41F381A4600A204CA /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		540EB0B61F381BAF00A204CA /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = ../../../EggShell/src/esplosx/libssl.a; sourceTree = "<group>"; };
 		540EB0B81F381DEA00A204CA /* header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
 		540EB0B91F391A1B00A204CA /* espl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = espl.h; sourceTree = "<group>"; };
 		540EB0BA1F391A1B00A204CA /* espl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = espl.m; sourceTree = "<group>"; };
@@ -84,10 +84,10 @@
 		540EB0B31F381A4600A204CA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				30A87704206DBBF8000D2CB2 /* libssl.a */,
 				309948EF1FA6750B00C44E13 /* CoreAudio.framework */,
 				309948ED1FA674DE00C44E13 /* AudioToolbox.framework */,
 				540EB0BC1F391B0D00A204CA /* AVFoundation.framework */,
-				540EB0B61F381BAF00A204CA /* libssl.a */,
 				540EB0B41F381A4600A204CA /* Security.framework */,
 			);
 			name = Frameworks;
@@ -254,8 +254,10 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
+				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/opt/openssl/lib/;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"";
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-lcrypto",
 					"-lssl",
@@ -272,8 +274,10 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
+				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/opt/openssl/lib/;
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"";
+				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-lcrypto",
 					"-lssl",
