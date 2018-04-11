@@ -18,7 +18,6 @@ class Server:
         self.is_multi = False
         self.modules_macos = self.import_modules("modules/commands/macOS")
         self.modules_ios = self.import_modules("modules/commands/iOS")
-        self.modules_python = self.import_modules("modules/commands/python")
         self.modules_local = self.import_modules("modules/commands/local")
         self.modules_universal = self.import_modules("modules/commands/universal")
         self.multihandler = MultiHandler(self)
@@ -42,8 +41,6 @@ class Server:
             result = self.modules_macos
         elif device_type == "iOS":
             result = self.modules_ios
-        else:
-            result = self.modules_python
         result.update(self.modules_universal)
         return result
 
