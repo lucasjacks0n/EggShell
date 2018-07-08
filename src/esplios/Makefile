@@ -10,6 +10,6 @@ esplios_PRIVATE_FRAMEWORKS = AppSupport SpringBoardServices IOSurface
 
 include $(THEOS_MAKE_PATH)/tool.mk
 
-export ARCHS = armv7
+export ARCHS = armv7 arm64
 
 CFLAGS = -Wall -g
