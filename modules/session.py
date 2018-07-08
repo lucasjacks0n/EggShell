@@ -28,8 +28,6 @@ class Session:
 		"""Interact with an active session"""
 		readline.clear_history()
 		readline.set_completer(self.tab_complete)
-		readline.parse_and_bind("bind -e")
-		readline.parse_and_bind("bind '\t' rl_complete")
 		readline.parse_and_bind('tab: complete')
 
 		command_modules = self.server.get_modules(self.type)
