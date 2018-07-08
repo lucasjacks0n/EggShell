@@ -1,4 +1,4 @@
-# [EggShell](http://lucas-jackson.me/eggshell)
+# [EggShell](http://lucasjackson.io/eggshell)
 
 
 
@@ -8,7 +8,7 @@ EggShell is a post exploitation surveillance tool written in Python. It gives yo
 
 <img src="http://lucasjackson.io/images/eggshell/main-menu.png?3" alt="Main menu" width="500px;"/>
 
-For detailed information and how-to visit http://lucas-jackson.me/eggshell
+For detailed information and how-to visit http://lucasjackson.io/eggshell
 
 Follow me on twitter: @neoneggplant
 
@@ -104,7 +104,7 @@ Similar to the session interface, we can type "help" to show Multihandler comman
 ## Featured
 Featured in EverythingApplePro's video demonstrating an iOS 9.3.3 Webkit vulnerability used to run EggShell
 
-[![EverythingApplePro](http://lucas-jackson.me/images/eggshell/2.2.1/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
+[![EverythingApplePro](http://lucasjackson.io/images/eggshell/featureeep.png)](https://www.youtube.com/embed/iko0bCVW-zk?start=209)
 
 <hr style="height:1px; background:#9EA4A9">
 
