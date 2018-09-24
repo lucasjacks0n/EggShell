@@ -79,6 +79,14 @@ We can show all the available commands by typing "help"
 
 <img src="http://lucasjackson.io/images/eggshell/help-command.png" alt="Command help" width="500px"/>
 
+
+## Taking Pictures
+<img src="http://lucasjackson.io/images/eggshell/macos-picture.png" alt="Session interaction" width="700px"/>
+
+Both iOS and macOS payloads have picture taking capability. The picture command lets you take a picture from the iSight on macOS as well as the front or back camera on iOS.
+
+
+
 ### Tab Completion
 Similar to most command line interfaces, EggShell supports tab completion.  When you start typing the path to a directory or filename, we can complete the rest of the path using the tab key.
 
@@ -176,7 +184,7 @@ By using EggShell, you agree to the GNU General Public License v2.0 included in 
 * **open**           : open apps
 * **openurl**        : open url on device
 * **persistence**    : attempts to re establish connection after close
-* **picture**        : take picture through iSight
+* **picture**        : take picture through the front or back camera
 * **pid**            : get process id
 * **respring**       : restart springboard
 * **safemode**       : put device into safe mode
