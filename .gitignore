@@ -4,3 +4,4 @@ src/esplios/.theos
 .keys
 downloads
 *.log
+.vagrant
