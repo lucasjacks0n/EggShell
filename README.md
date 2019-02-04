@@ -28,6 +28,11 @@ Follow me on twitter: @neoneggplant
 ## Getting Started
 - Requires python 2.7
 
+## Running Tests
+- Install [Vagrant](https://www.vagrantup.com/downloads.html)
+- Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+- `python test_eggshell.py`
+
 ### macOS/Linux Installation
 ```sh
 git clone https://github.com/neoneggplant/eggshell
