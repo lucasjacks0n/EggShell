@@ -16,5 +16,7 @@ def main():
     tests = unittest.TestLoader().discover('./test/')
     unittest.TextTestRunner().run( tests )
 
+    return 0
+
 if __name__ == "__main__":
     sys.exit(main())

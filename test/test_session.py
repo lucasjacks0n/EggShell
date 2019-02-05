@@ -28,7 +28,7 @@ class TestSession(unittest.TestCase):
         self.eggshell_proc.recvuntil("----------------------------------------")
         self.eggshell_proc.recvline()
         payload = self.eggshell_proc.recvline()[7:-5]
-        print "eggshell payload: {}".format(repr(payload))
+        # print "eggshell payload: {}".format(repr(payload))
 
         # Run payload
         # https://stackoverflow.com/a/28293101
@@ -55,19 +55,32 @@ interact
 
     def test_pid(self):
         # get payload pid from vagrant
-        get_pid = pwn.process(["./run_payload.sh", "vagrant", "ssh", "vagrant@127.0.0.1", "-p2222", "-o", "StrictHostKeyChecking no", "-C", "ps -ef | grep python | grep -v grep | awk '{print $2 }'"])
-        get_pid.recvuntil("password:")
-        get_pid.recvline()
-        vagrant_pid = int(get_pid.recvline())
-        # pwn.log.info("vagrant pid: {}".format(vagrant_pid))
-        get_pid.kill()
+        vagrant_pid = int(run_shell_command("ps -ef | grep python | grep -v grep | awk '{print $2 }'"))
 
         # get eggshell pid
         self.eggshell_proc.sendline("pid")
         self.eggshell_proc.recvuntil("Connection...\n")
         eggshell_pid = int(self.eggshell_proc.recvline().split(" ")[2][4:].strip())
-        # pwn.log.info("eggshell pid: {}".format(eggshell_pid))
 
         print "== Checking PID =="
         self.assertTrue(vagrant_pid == eggshell_pid)
         print "== PIDs Match =="
+
+    def test_pwd(self):
+        # get login pwd from vagrant
+        vagrant_pwd = run_shell_command("pwd")
+
+        # get eggshell pid
+        self.eggshell_proc.sendline("pwd")
+        self.eggshell_proc.recvuntil("Connection...\n")
+        eggshell_pwd = self.eggshell_proc.recvline().split(" ")[2][4:].strip()
+
+        print "== Checking PWD =="
+        self.assertTrue(vagrant_pwd == eggshell_pwd)
+        print "== PWDs Match =="
+
+def run_shell_command(command, timeout=0.5):
+    p = pwn.process(["./run_payload.sh", "vagrant", "ssh", "vagrant@127.0.0.1", "-p2222", "-o", "StrictHostKeyChecking no", "-C", command])
+    p.recvuntil("password:")
+    p.recvline()
+    return p.recvall(timeout=timeout).strip()
