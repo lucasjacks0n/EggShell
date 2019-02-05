@@ -31,6 +31,11 @@ Follow me on twitter: @neoneggplant
 ## Running Tests
 - Install [Vagrant](https://www.vagrantup.com/downloads.html)
 - Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+- Install `pwntools`: `pip install --user pwntools`
+- Install `expect`: (choose your package manager)
+  - `apt install expect`
+  - `yum install expect`
+  - `pacman -S expect`
 - `python test_eggshell.py`
 
 ### macOS/Linux Installation

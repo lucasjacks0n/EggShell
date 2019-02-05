@@ -4,13 +4,11 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/xenial64"
 
-  # config.vm.network "public_network"
+  # mount shared folder to test file upload/download with known hashes
+  config.vm.synced_folder "test/victim_files", "/home/vagrant/my_files"
 
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-  # config.vm.synced_folder "../data", "/vagrant_data"
+  # disable default file share
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provision "shell", inline: <<-SHELL
     # enable password auth (default vagrant:vagrant)

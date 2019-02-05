@@ -3,7 +3,7 @@ import sys
 import unittest
 
 def vagrant_up():
-    os.system("vagrant destroy")
+    #os.system("vagrant destroy -f")
     if os.system("vagrant up") != 0:
         print "error starting vagrant, exiting"
         return False
