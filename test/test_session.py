@@ -71,7 +71,7 @@ interact
         # get login pwd from vagrant
         vagrant_pwd = run_shell_command("pwd")
 
-        # get eggshell pid
+        # get eggshell pwd
         self.eggshell_proc.sendline("pwd")
         self.eggshell_proc.recvuntil("Connection...\n")
         eggshell_pwd = self.eggshell_proc.recvline().split(" ")[2][4:].strip()
