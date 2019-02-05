@@ -1,3 +1,4 @@
+import hashlib
 import os
 import pwn
 import sys
@@ -78,6 +79,43 @@ interact
         print "== Checking PWD =="
         self.assertTrue(vagrant_pwd == eggshell_pwd)
         print "== PWDs Match =="
+
+    def test_upload(self):
+        # remove file it it already exists on the remote (see issue #11)
+        run_shell_command("rm -f file1")
+
+        # upload file
+        self.eggshell_proc.sendline("upload test/victim_files/file1")
+
+        # get hash of local file
+        local_hash = hashlib.sha1(open("test/victim_files/file1").read()).hexdigest()
+
+        # get hash of remote file
+        remote_hash = run_shell_command("shasum file1").split(" ")[0]
+
+        print "== Checking file upload =="
+        self.assertTrue(local_hash == remote_hash)
+        print "== Uploaded file is good =="
+
+    def test_download(self):
+        # remove downloaded file
+        os.system("rm -f downloads/file2")
+
+        # download file
+        self.eggshell_proc.sendline("download my_files/file2")
+        # without this recvall call, the file doesn't actually get downloaded
+        # i haven't a clue why, probably something to do with an i/o lock blocking the download?
+        self.eggshell_proc.recvall(timeout=1)
+
+        # get hash of downloaded file
+        local_hash = hashlib.sha1(open("downloads/file2").read()).hexdigest()
+
+        # get hash of remote origin file
+        remote_hash = run_shell_command("shasum my_files/file2").split(" ")[0]
+        
+        print "== Checking file download =="
+        self.assertTrue(local_hash == remote_hash)
+        print "== Downloaded file is good =="
 
 def run_shell_command(command, timeout=0.5):
     p = pwn.process(["./run_payload.sh", "vagrant", "ssh", "vagrant@127.0.0.1", "-p2222", "-o", "StrictHostKeyChecking no", "-C", command])
