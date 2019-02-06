@@ -1,5 +1,6 @@
 import unittest
 from modules.payloads import bash_payload, teensy_payload
+import pwn
 
 class TestPayload(unittest.TestCase):
     @classmethod
