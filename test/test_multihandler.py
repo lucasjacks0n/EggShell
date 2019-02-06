@@ -7,7 +7,6 @@ class TestMultiHandler(unittest.TestCase):
    @classmethod
    def setUpClass(self):
       print "============ Testing Multihandler ============"
-      self.
    def test_multihandler_instance(self):
       server_obj = server.Server()
       multihandler_obj = multihandler.MultiHandler(server_obj)
