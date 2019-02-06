@@ -24,7 +24,7 @@ class TestMultiHandler(unittest.TestCase):
       print "== Testing Background Server Creation =="
       server_obj = server.Server()
       server_obj.port = 8192
-      server_obh.host = "dummy"
+      server_obj.host = "localhost"
       multihandler_obj = multihandler.MultiHandler(server_obj)
       multihandler_obj.start_background_server()
       print "== Created Background Server =="
