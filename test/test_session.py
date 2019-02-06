@@ -5,6 +5,10 @@ import sys
 import unittest
 
 class TestSession(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        print "============ Testing Session ============"
+
     def setUp(self):
         # disable pwntools log
         pwn.context.log_level = 'critical'
@@ -29,7 +33,6 @@ class TestSession(unittest.TestCase):
         self.eggshell_proc.recvuntil("----------------------------------------")
         self.eggshell_proc.recvline()
         payload = self.eggshell_proc.recvline()[7:-5]
-        # print "eggshell payload: {}".format(repr(payload))
 
         # Run payload
         # https://stackoverflow.com/a/28293101
@@ -45,10 +48,6 @@ interact
 """)
         os.system("chmod +x run_payload.sh")
         os.system("./run_payload.sh vagrant ssh vagrant@127.0.0.1 -p2222 -o \"StrictHostKeyChecking no\" -C '{}'".format(payload))
-
-        # Reset stdin
-        # print self.eggshell_proc.recvall(timeout=2)
-        # print self.eggshell_proc.recvuntil("ubuntu-xenial:/home/vagrant vagrant> ")
 
     def tearDown(self):
         self.eggshell_proc.kill()

@@ -2,6 +2,10 @@ import unittest
 from modules.payloads import bash_payload, teensy_payload
 
 class TestPayload(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        print "============ Testing Payload ============"
+
     def setUp(self):
         # setup bash and teensy payloads for further tests
         self.bp = bash_payload.payload()
