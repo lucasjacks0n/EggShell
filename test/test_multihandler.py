@@ -1,4 +1,5 @@
 import unittest
+import threading
 from modules import server
 from modules import multihandler
 
@@ -6,6 +7,7 @@ class TestMultiHandler(unittest.TestCase):
    @classmethod
    def setUpClass(self):
       print "============ Testing Multihandler ============"
+      self.
    def test_multihandler_instance(self):
       server_obj = server.Server()
       multihandler_obj = multihandler.MultiHandler(server_obj)
@@ -22,7 +24,8 @@ class TestMultiHandler(unittest.TestCase):
    def test_background_server(self):
       print "== Testing Background Server Creation =="
       server_obj = server.Server()
-      server_obj.port = 4444
+      server_obj.port = 8192
+      server_obh.host = "dummy"
       multihandler_obj = multihandler.MultiHandler(server_obj)
       multihandler_obj.start_background_server()
       print "== Created Background Server =="
