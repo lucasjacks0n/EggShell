@@ -2,6 +2,9 @@ import unittest
 from modules import server
 
 class TestServer(unittest.TestCase):
+   @classmethod
+   def setUpClass(self):
+      print "============ Testing Server ============"
    def test_server_instance(self):
       server_obj = server.Server()
       print "== Instantiated Server =="
