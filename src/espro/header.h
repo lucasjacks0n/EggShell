@@ -67,5 +67,3 @@
 +(id)sharedVolumeControl;
 -(void)toggleMute;
 @end
-
-

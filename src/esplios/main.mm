@@ -16,12 +16,12 @@ struct sockaddr_in serverAddress;
 
 NSArray *rocketCommands = [[NSArray alloc] initWithObjects:
     @"play",
-    @"pause", 
-    @"next", 
-    @"prev", 
-    @"home", 
-    @"doublehome", 
-    @"lock", 
+    @"pause",
+    @"next",
+    @"prev",
+    @"home",
+    @"doublehome",
+    @"lock",
     @"wake",
     @"mute",
     @"unmute",
@@ -100,7 +100,7 @@ void connectToServer(NSDictionary *arguments) {
         printf("Handshake Failed\n");
         return;
     }
-    
+
     //Send device name
     NSDictionary *deviceInfo = [[NSMutableDictionary alloc] init];
     [deviceInfo setValue:NSUserName() forKey:@"username"];
@@ -118,7 +118,7 @@ void connectToServer(NSDictionary *arguments) {
 void interact(NSDictionary *arguments) {
     espl *esCommand = [[espl alloc] init];
     esCommand->client_ssl = client_ssl;
-    
+
     //listen for input data
     char buffer[2048] = "";
     while (SSL_read(client_ssl, buffer, sizeof(buffer))) {

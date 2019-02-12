@@ -51,13 +51,13 @@ NSString *keyLog;
 			[(VolumeControl *)[%c(VolumeControl) sharedVolumeControl] toggleMute];
 	    	[mediaController setRingerMuted:!mediaController.ringerMuted];
 		}
-    } 
+    }
     // Location
     else if ([command isEqual:@"locationon"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:true];
     } else if ([command isEqual:@"locationoff"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:false];
-    }    
+    }
 }
 
 %new
@@ -67,7 +67,7 @@ NSString *keyLog;
 		NSString *result = @"";
 		if (passcode != NULL)
 			result = passcode;
-		else 
+		else
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}
@@ -78,7 +78,7 @@ NSString *keyLog;
 		return [NSDictionary dictionaryWithObject:@"none" forKey:@"returnStatus"];
 	}
 	else if ([command isEqual:@"islocked"]) {
-		if ([(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] isUILocked])  
+		if ([(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] isUILocked])
 			return [NSDictionary dictionaryWithObject:@"true" forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"false" forKey:@"returnStatus"];
 	}
@@ -94,10 +94,10 @@ NSString *keyLog;
 		NSString *result = @"";
 		if (passcode != NULL)
 			[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:passcode];
-		else 
+		else
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
-	}	
+	}
 	return [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:1] forKey:@"returnStatus"];
 }
 %end
@@ -145,11 +145,10 @@ NSString *keyLog;
 			}
             if (keyLog == NULL) {
 	            keyLog = @"";
-            }           	
+            }
 			keyLog = [[NSString alloc] initWithFormat:@"%@%@",keyLog,text];
 	});
 	%orig;
 }
 %end
 */
-

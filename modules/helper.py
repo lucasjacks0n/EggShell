@@ -1,13 +1,13 @@
-#Helper
-#created by lucas.py
-#3-5-17
-import sys
+# Helper
+# created by lucas.py
+# 3-5-17
 import base64
 import os
 import socket
+import sys
 
 WINDOWS = sys.platform.startswith('win')
-#colors
+# colors
 GREEN = '' if WINDOWS else '\033[1;92m'
 RED = '' if WINDOWS else '\033[1;91m'
 WHITE = '' if WINDOWS else '\033[0;97m'
@@ -18,8 +18,8 @@ ENDC = '' if WINDOWS else '\033[0m'
 UNDERLINE_GREEN = '' if WINDOWS else '\033[4;92m'
 WHITEBU = '' if WINDOWS else '\033[1;4m'
 COLOR_INFO = '' if WINDOWS else '\033[0;36m'
-NES = ('SELECT' if WINDOWS else '\033[0;32m')+"EggShell"+WHITE+"> "
-#cmds
+NES = ('SELECT' if WINDOWS else '\033[0;32m') + "EggShell" + WHITE + "> "
+# cmds
 CMD_CLEAR = 'cls' if WINDOWS else 'clear'
 CMD_PWD = 'cd' if WINDOWS else 'pwd'
 CMD_LS = 'dir' if WINDOWS else 'ls'
@@ -30,23 +30,23 @@ def clear():
 
 
 def info_general(string):
-    print "{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string)
+    print("{0}[*] {1}{2}".format(COLOR_INFO, WHITE, string))
 
 
 def info_general_raw(string):
-    return "{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string)
-    
+    return("{0}[*] {1}{2}".format(COLOR_INFO, WHITE, string))
+
 
 def info_error(string):
-    print "{0}[*] {1}{2}".format(RED,WHITE,string)
+    print("{0}[*] {1}{2}".format(RED, WHITE, string))
 
 
 def info_warning(string):
-    print "{0}[*] {1}{2}".format(YELLOW,WHITE,string)
+    print("{0}[*] {1}{2}".format(YELLOW, WHITE, string))
 
 
 def show_command(mod):
-    print mod.name + " " * (15 - len(mod.name)) + ": " + mod.description
+    print(mod.name + " " * (15 - len(mod.name)) + ": " + mod.description)
 
 
 def b64(s):
@@ -55,7 +55,10 @@ def b64(s):
 
 def getip():
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM);s.connect(("192.168.1.1",80));host = s.getsockname()[0];s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("192.168.1.1", 80))
+        host = s.getsockname()[0]
+        s.close()
         host = host
     except:
         host = "127.0.0.1"
@@ -79,13 +82,11 @@ def find_longest_common_prefix(values):
 
 
 def generate_keys():
-    print "Initializing server..."
+    print("Initializing server...")
     if not os.path.exists(".keys"):
         os.makedirs(".keys")
     os.system(
-      "cd .keys;"+
-      "openssl genrsa -out server.key 2048 2>/dev/null;"+
-      "openssl req -new -key server.key -subj '/C=US/ST=EggShell/L=EggShell/O=EggShell/CN=EggShell' -out server.csr;"+
-      "openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt 2>/dev/null")
-
-    
+        "cd .keys;" +
+        "openssl genrsa -out server.key 2048 2>/dev/null;" +
+        "openssl req -new -key server.key -subj '/C=US/ST=EggShell/L=EggShell/O=EggShell/CN=EggShell' -out server.csr;" +
+        "openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt 2>/dev/null")

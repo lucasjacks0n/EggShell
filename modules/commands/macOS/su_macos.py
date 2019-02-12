@@ -1,6 +1,8 @@
-import time
 import getpass
+import time
+
 import modules.helper as h
+
 
 class command:
     def __init__(self):
@@ -8,10 +10,10 @@ class command:
         self.description = "su login"
         self.type = "eggsu"
 
-    def run(self,session,cmd_data):
+    def run(self, session, cmd_data):
         password = getpass.getpass("Password: ")
         cmd_data['args'] = password
-        password = password.replace("\\","\\\\").replace("'","\\'")
+        password = password.replace("\\", "\\\\").replace("'", "\\'")
         cmd_data['cmd'] = "eggsu"
         result = session.send_command(cmd_data)
         if "root" in result:
@@ -23,4 +25,4 @@ class command:
             else:
                 session.needs_refresh = True
         else:
-            print "failed getting root"
+            print("failed getting root")
