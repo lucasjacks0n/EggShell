@@ -4,5 +4,5 @@ class command:
         self.description = "get the amount of time since the keyboard/cursor were touched"
         self.type = "native"
 
-    def run(self,session,cmd_data):
-        print session.send_command(cmd_data)
+    def run(self, session, cmd_data):
+        print(session.send_command(cmd_data))

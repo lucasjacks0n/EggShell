@@ -1,14 +1,15 @@
 import os
 from os.path import expanduser
 
+
 class command:
     def __init__(self):
         self.name = "local"
         self.description = "Run local shell commands"
-    
-    def run(self,session,cmd_data):
+
+    def run(self, session, cmd_data):
         if not cmd_data['args']:
-            print "Usage: local shell commands"
+            print("Usage: local shell commands")
             return
         else:
             split_args = cmd_data['args'].split()
@@ -18,5 +19,4 @@ class command:
                     path = expanduser("~")
                 os.chdir(path)
             else:
-            	os.system(cmd_data['args'])
-
+                os.system(cmd_data['args'])

@@ -4,19 +4,19 @@
  * Copyright (c) 1999-2005 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_APACHE_LICENSE_HEADER_START@
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * @APPLE_APACHE_LICENSE_HEADER_END@
  */
 
@@ -34,7 +34,7 @@
  *  it initiates other system tasks, and manages a table of name-port bindings
  *  for fundamental system services  (e.g. lookupd, Window Manager, etc...).
  *
- *  Name-port bindings can be established with the bootstrap server by either 
+ *  Name-port bindings can be established with the bootstrap server by either
  *  of two mechanisms:
  *
  *  1.  The binding can be indicated, in advance of the service that backs it
@@ -61,9 +61,9 @@
  *  The bootstrap server creates a "backup" port for each service that it
  *  creates.  This is used to detect when a checked out service is no longer
  *  being served.  The bootstrap server regains all rights to the port and
- *  it is marked available for check-out again.  This allows crashed servers to 
- *  resume service to previous clients.  Lookup's on this named port will 
- *  continue to be serviced by bootstrap while holding receive rights for the 
+ *  it is marked available for check-out again.  This allows crashed servers to
+ *  resume service to previous clients.  Lookup's on this named port will
+ *  continue to be serviced by bootstrap while holding receive rights for the
  *  bound port.  A client may detect that the service is inactive via the
  *  bootstrap status request.  If an inactive service re-registers rather
  *  than "checking-in" the original bound port is destroyed.
@@ -141,7 +141,7 @@ extern mach_port_t bootstrap_port;
  * will be associated with this particular server.
  *
  * Only a holder of the server_port privilege bootstrap port can
- * check in or register over those services.  
+ * check in or register over those services.
  *
  * When all services associated with a server are deleted, and the server
  * exits, it will automatically be deleted itself.
@@ -293,8 +293,8 @@ bootstrap_create_service(mach_port_t bp, name_t service_name, mach_port_t *sp);
  * bootstrap_check_in()
  *
  * Returns the receive right for the service named by service_name. The
- * service must have been declared in the launchd.plist(5) file associated 
- * with the job.  Attempts to check_in a service which is already active 
+ * service must have been declared in the launchd.plist(5) file associated
+ * with the job.  Attempts to check_in a service which is already active
  * are not allowed.
  *
  * If the service was declared as being associated with a server, the

