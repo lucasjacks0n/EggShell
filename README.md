@@ -36,7 +36,7 @@ Follow me on twitter: @neoneggplant
   - `apt install expect`
   - `yum install expect`
   - `pacman -S expect`
-- `python test_eggshell.py
+- `python test_eggshell.py`
 
 ## Running Fuzzer
 - Install `afl`
