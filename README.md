@@ -38,6 +38,11 @@ Follow me on twitter: @neoneggplant
   - `pacman -S expect`
 - `python test_eggshell.py`
 
+## Running Mutation Testing
+- Install 'cosmic-ray':
+  - 'pip install cosmic-ray'
+- 'cosmic-ray exec mut\_config.toml'
+
 ### macOS/Linux Installation
 ```sh
 git clone https://github.com/neoneggplant/eggshell
