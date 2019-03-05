@@ -1,0 +1,13 @@
+[cosmic-ray]
+module-path = "./modules"
+python-version = "2"
+timeout = 1.0
+excluded-modules = []
+test-command = "python2 ./test_eggshell.py"
+
+[cosmic-ray.execution-engine]
+name = "local"
+
+[cosmic-ray.cloning]
+method = "copy"
+commands = []
