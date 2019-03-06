@@ -36,7 +36,7 @@ Follow me on twitter: @neoneggplant
 
 ## Running Mutation Testing
 - Install `cosmic-ray`: `pip install cosmic-ray`
-- `cosmic-ray exec mut_config.toml`
+- `cosmic-ray exec mut_session.sqlite`
 
 ## Running Fuzzer
 - Install `afl` (see [afl website](/usr/local/share/doc/afl/perf_tips.txt) for instructions)
