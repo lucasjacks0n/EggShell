@@ -24,10 +24,6 @@ Follow me on twitter: @neoneggplant
 
 <hr style="height:1px; background:#9EA4A9">
 
-
-## Getting Started
-- Requires python 2.7
-
 ## Running Tests
 - Install [Vagrant](https://www.vagrantup.com/downloads.html)
 - Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
@@ -47,6 +43,11 @@ Follow me on twitter: @neoneggplant
 - Install `afl`
 - Install `python-afl`
 - `afl-fuzz -m 2000 -i fuzzing/in -o fuzzing/out -- python fuzz_eggshell.py`
+
+<hr style="height:1px; background:#9EA4A9">
+
+## Getting Started
+- Requires python 2.7
 
 ### macOS/Linux Installation
 ```sh
