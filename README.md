@@ -27,7 +27,7 @@ Follow me on twitter: @neoneggplant
 ## Running Tests
 - Install [Vagrant](https://www.vagrantup.com/downloads.html)
 - Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-- Install `pwntools`: `pip install --user pwntools`
+- Install `pwntools`: `pip install pwntools`
 - Install `expect`: (choose your package manager)
   - `apt install expect`
   - `yum install expect`
@@ -35,13 +35,12 @@ Follow me on twitter: @neoneggplant
 - `python test_eggshell.py`
 
 ## Running Mutation Testing
-- Install 'cosmic-ray':
-  - 'pip install cosmic-ray'
-- 'cosmic-ray exec mut\_config.toml'
+- Install `cosmic-ray`: `pip install cosmic-ray`
+- `cosmic-ray exec mut\_config.toml`
 
 ## Running Fuzzer
-- Install `afl`
-- Install `python-afl`
+- Install `afl` (see [afl website](/usr/local/share/doc/afl/perf_tips.txt) for instructions)
+- Install `python-afl`: `pip install python-afl`
 - `afl-fuzz -m 2000 -i fuzzing/in -o fuzzing/out -- python fuzz_eggshell.py`
 
 <hr style="height:1px; background:#9EA4A9">
