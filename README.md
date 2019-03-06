@@ -43,6 +43,11 @@ Follow me on twitter: @neoneggplant
   - 'pip install cosmic-ray'
 - 'cosmic-ray exec mut\_config.toml'
 
+## Running Fuzzer
+- Install `afl`
+- Install `python-afl`
+- `afl-fuzz -m 2000 -i fuzzing/in -o fuzzing/out -- python fuzz_eggshell.py`
+
 ### macOS/Linux Installation
 ```sh
 git clone https://github.com/neoneggplant/eggshell
