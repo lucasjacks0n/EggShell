@@ -7,14 +7,8 @@
 This fork is a actively updated and reviewed fork of the original eggshell project, which was abandoned and became outdated.
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
-<<<<<<< HEAD
 ## Getting Started
 - Python 3.0 or higher
-=======
-## Setup
-### Getting Started
-- Requires python 2.7
->>>>>>> 026848227a44086b92463eedef4012a30eb6ce0c
 
 ### macOS/Linux Installation
 ```sh
