@@ -352,26 +352,21 @@ bool sysTaskRunning = false;
     }
     
     AVCaptureConnection* videoConnection = nil;
-    for (AVCaptureConnection* connection in self.stillImageOutput.connections)
-    {
-        for (AVCaptureInputPort* port in [connection inputPorts])
-        {
-            if ([[port mediaType] isEqual:AVMediaTypeVideo])
-            {
+    for (AVCaptureConnection* connection in self.stillImageOutput.connections){
+        for (AVCaptureInputPort* port in [connection inputPorts]){
+            if ([[port mediaType] isEqual:AVMediaTypeVideo]){
                 videoConnection = connection;
                 break;
             }
         }
         if (videoConnection)
             break;
-    }
-    if (videoConnection == nil) {
+    } if (videoConnection == nil) {
         return imageData(nil);
     }
     
     //capture still image from video connection
-    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
-     {
+    [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error){
          dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void) {
              [self.session stopRunning];
              AVCaptureInput* input = [self.session.inputs objectAtIndex:0];

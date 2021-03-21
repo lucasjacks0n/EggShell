@@ -28,14 +28,12 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
-void DestroySSL()
-{
+void DestroySSL(){
     ERR_free_strings();
     EVP_cleanup();
 }
 
-void ShutdownSSL()
-{
+void ShutdownSSL(){
     SSL_shutdown(client_ssl);
     SSL_free(client_ssl);
 }

@@ -29,7 +29,6 @@
 /* Begin PBXFileReference section */
 		309948ED1FA674DE00C44E13 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		309948EF1FA6750B00C44E13 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		30A87704206DBBF8000D2CB2 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/libssl.a"; sourceTree = "<group>"; };
 		540EB0A31F36E06400A204CA /* esplmacos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = esplmacos; sourceTree = BUILT_PRODUCTS_DIR; };
 		540EB0A61F36E06400A204CA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		540EB0B41F381A4600A204CA /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -84,7 +83,6 @@
 		540EB0B31F381A4600A204CA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				30A87704206DBBF8000D2CB2 /* libssl.a */,
 				309948EF1FA6750B00C44E13 /* CoreAudio.framework */,
 				309948ED1FA674DE00C44E13 /* AudioToolbox.framework */,
 				540EB0BC1F391B0D00A204CA /* AVFoundation.framework */,
@@ -130,11 +128,11 @@
 			};
 			buildConfigurationList = 540EB09E1F36E06400A204CA /* Build configuration list for PBXProject "esplmacos" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
+				Base,
 			);
 			mainGroup = 540EB09A1F36E06400A204CA;
 			productRefGroup = 540EB0A41F36E06400A204CA /* Products */;
@@ -257,10 +255,7 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"",
-					"/usr/local/opt/openssl@1.1/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "/usr/local/opt/openssl@1.1/lib/";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -281,10 +276,7 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"",
-					"/usr/local/opt/openssl@1.1/lib/",
-				);
+				LIBRARY_SEARCH_PATHS = "/usr/local/opt/openssl@1.1/lib/";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
