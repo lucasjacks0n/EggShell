@@ -1,3 +1,6 @@
+
+![Unbenannt-1](https://user-images.githubusercontent.com/33968601/111917307-9201c000-8a7f-11eb-9a40-95f19f3507dd.png)
+
 # EggShell (Community fork)
 
 ## About
