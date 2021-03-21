@@ -1,6 +1,4 @@
-# [EggShell](http://lucasjackson.io/eggshell)
-
-
+# EggShell (Community fork)
 
 ## About
 
