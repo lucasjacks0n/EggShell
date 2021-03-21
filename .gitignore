@@ -17,3 +17,7 @@ src/*/build/
 !default.perspectivev3
 xcuserdata
 !xcshareddata
+*.deb
+.cydia-package
+resources/esplios
+resources/esplmacos
