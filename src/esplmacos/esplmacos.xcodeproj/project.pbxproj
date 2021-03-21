@@ -133,6 +133,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 540EB09A1F36E06400A204CA;
@@ -256,7 +257,11 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"",
+					"/usr/local/opt/openssl@1.1/lib/",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-lcrypto",
@@ -276,7 +281,11 @@
 				DEVELOPMENT_TEAM = "";
 				GCC_LINK_WITH_DYNAMIC_LIBRARIES = YES;
 				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"";
+				LIBRARY_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../../../../Downloads/eggshell_2.2.0.0_3-20-17/src/esplosx/\"",
+					"/usr/local/opt/openssl@1.1/lib/",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-lcrypto",
