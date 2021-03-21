@@ -52,8 +52,7 @@ int main(int argc, const char * argv[]) {
 }
 
 void DestroySSL() {
-    ERR_free_strings();
-    EVP_cleanup();
+
 }
 
 void ShutdownSSL() {
@@ -75,10 +74,8 @@ void connectToServer(NSDictionary *arguments) {
     if (!arguments) {
         return;
     }
-    SSL_load_error_strings();
-    SSL_library_init();
-    OpenSSL_add_all_algorithms();
-    ssl_client_ctx = SSL_CTX_new(SSLv23_client_method());
+    OPENSSL_init();
+    ssl_client_ctx = SSL_CTX_new(TLSv1_client_method());
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     serverAddress.sin_family = AF_INET;
     inet_aton([[arguments objectForKey:@"ip"] UTF8String], &serverAddress.sin_addr);
