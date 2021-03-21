@@ -4,30 +4,15 @@
 This fork is a actively updated and reviewed fork of the original eggshell project, which was abandoned and became outdated.
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
-
-## New In Version 3.0.0
- - More secure socket connection using SSL
- - Linux support
- - Tab completion
- - Improved over all structure and efficiency of session handling
- - Native iOS python support for 64 bit devices
-
-
-
 ## Getting Started
 - Requires python 2.7
 
 ### macOS/Linux Installation
 ```sh
-git clone https://github.com/neoneggplant/eggshell
+git clone https://github.com/rpwnage/eggshell-community-fork egshell
 cd eggshell
 python eggshell.py
 ```
-
-### iOS (Jailbroken)
-Add Cydia source: http://lucasjackson.io/repo
-Install EggShell 3
-Use any mobile terminal application and run the command eggshell
 
 ## Creating Payloads
 Eggshell payloads are executed on the target machine.  The payload first sends over instructions for getting and sending back device details to our server and then chooses the appropriate executable to establish a secure remote control session.
