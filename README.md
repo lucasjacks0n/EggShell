@@ -1,11 +1,20 @@
+
+![Unbenannt-1](https://user-images.githubusercontent.com/33968601/111917307-9201c000-8a7f-11eb-9a40-95f19f3507dd.png)
+
 # EggShell (Community fork)
 
 ## About
 This fork is a actively updated and reviewed fork of the original eggshell project, which was abandoned and became outdated.
 EggShell is a post exploitation surveillance tool written in Python. It gives you a command line session with extra functionality between you and a target machine. EggShell gives you the power and convenience of uploading/downloading files, tab completion, taking pictures, location tracking, shell command execution, persistence, escalating privileges, password retrieval, and much more.  This is project is a proof of concept, intended for use on machines you own.
 
+<<<<<<< HEAD
 ## Getting Started
 - Python 3.0 or higher
+=======
+## Setup
+### Getting Started
+- Requires python 2.7
+>>>>>>> 026848227a44086b92463eedef4012a30eb6ce0c
 
 ### macOS/Linux Installation
 ```sh
@@ -25,11 +34,12 @@ Teensy is a USB development board that can be programmed with the Arduino ide.  
 Selecting teensy will give us an arduino based payload for the teensy board.
 After uploading to the teensy, we can use the device to plug into a macOS usb port.  Once connected to a computer, it will automatically emulate the keystrokes needed to execute a payload.
 
-## Interacting with a session
+## Usage
+### Interacting with a session
 After a session is established, we can execute commands on that device through the EggShell command line interface.
 We can show all the available commands by typing "help"
 
-## Taking Pictures
+### Taking Pictures
 Both iOS and macOS payloads have picture taking capability. The picture command lets you take a picture from the iSight on macOS as well as the front or back camera on iOS.
 
 ### Tab Completion
