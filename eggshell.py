@@ -39,7 +39,7 @@ class EggShell:
                   ( |     /     /
                     " \_  (__   (__       
                         "-._,)--._,)
-            """+h.WHITE+"\nVersion: 3.1.1\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+            """+h.WHITE+"\nVersion: 3.1.2\nCommunity Fork\n"+h.ENDC
         self.main_menu_text = h.WHITE+"-"*40+"\n"+"""Menu:\n
                 1): Start Server
                 2): Start MultiHandler
