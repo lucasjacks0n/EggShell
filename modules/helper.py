@@ -7,7 +7,6 @@ import os
 import socket
 
 WINDOWS = sys.platform.startswith('win')
-#colors
 GREEN = '' if WINDOWS else '\033[1;92m'
 RED = '' if WINDOWS else '\033[1;91m'
 WHITE = '' if WINDOWS else '\033[0;97m'
@@ -19,7 +18,6 @@ UNDERLINE_GREEN = '' if WINDOWS else '\033[4;92m'
 WHITEBU = '' if WINDOWS else '\033[1;4m'
 COLOR_INFO = '' if WINDOWS else '\033[0;36m'
 NES = ('SELECT' if WINDOWS else '\033[0;32m')+"EggShell"+WHITE+"> "
-#cmds
 CMD_CLEAR = 'cls' if WINDOWS else 'clear'
 CMD_PWD = 'cd' if WINDOWS else 'pwd'
 CMD_LS = 'dir' if WINDOWS else 'ls'
@@ -30,7 +28,7 @@ def clear():
 
 
 def info_general(string):
-    print "{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string)
+    print("{0}[*] {1}{2}".format(COLOR_INFO,WHITE,string))
 
 
 def info_general_raw(string):
@@ -38,15 +36,15 @@ def info_general_raw(string):
     
 
 def info_error(string):
-    print "{0}[*] {1}{2}".format(RED,WHITE,string)
+    print("{0}[*] {1}{2}".format(RED,WHITE,string))
 
 
 def info_warning(string):
-    print "{0}[*] {1}{2}".format(YELLOW,WHITE,string)
+    print("{0}[*] {1}{2}".format(YELLOW,WHITE,string))
 
 
 def show_command(mod):
-    print mod.name + " " * (15 - len(mod.name)) + ": " + mod.description
+    print(mod.name + " " * (15 - len(mod.name)) + ": " + mod.description)
 
 
 def b64(s):
@@ -79,7 +77,7 @@ def find_longest_common_prefix(values):
 
 
 def generate_keys():
-    print "Initializing server..."
+    print("Initializing server...")
     if not os.path.exists(".keys"):
         os.makedirs(".keys")
     os.system(

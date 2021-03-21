@@ -9,7 +9,7 @@ class command:
         self.description = "record mic"
         
     def run(self,session,cmd_data):
-        # #print output        
+        # #print(output        )
         if cmd_data["args"] == "stop":
             # expect json
             result = json.loads(session.send_command(cmd_data))
@@ -29,4 +29,4 @@ class command:
         elif cmd_data["args"] == "record":
             h.info_general(session.send_command(cmd_data))
         else:
-            print "Usage: mic record/stop"
+            print("Usage: mic record/stop")

@@ -11,7 +11,7 @@ class command:
 
 	def run(self,session,cmd_data):
 		if not cmd_data['args']:
-			print self.usage
+			print(self.usage)
 			return
 		file_name = os.path.split(cmd_data['args'])[-1]
 		h.info_general("Downloading {0}".format(file_name))

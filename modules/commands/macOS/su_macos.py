@@ -23,4 +23,4 @@ class command:
             else:
                 session.needs_refresh = True
         else:
-            print "failed getting root"
+            print("failed getting root")

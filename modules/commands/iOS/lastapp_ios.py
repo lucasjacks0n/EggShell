@@ -4,4 +4,4 @@ class command:
         self.description = "get last opened application"
     
     def run(self,session,cmd_data):
-        print session.send_command(cmd_data)
+        print(session.send_command(cmd_data))

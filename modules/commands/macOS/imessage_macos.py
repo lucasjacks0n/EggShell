@@ -7,8 +7,8 @@ class command:
     def run(self,session,cmd_data):
         #do something with session if you want
         #we can prompt for input
-        phone = raw_input("[*] Enter iMessage recipient: ")
-        message = raw_input("[*] Enter message: ")
+        phone = input("[*] Enter iMessage recipient: ")
+        message = input("[*] Enter message: ")
         #send applescript payload
         payload = """tell application "Messages"
         set targetService to 1st service whose service type = iMessage
@@ -19,4 +19,4 @@ class command:
         cmd_data.update({"cmd":self.type})
         result = session.send_command(cmd_data)
         if result and result != "(null)":
-            print result
+            print(result)

@@ -102,14 +102,14 @@ above, provided that you also meet all of these conditions:
 
     c) If the modified program normally reads commands interactively
     when run, you must cause it, when started running for such
-    interactive use in the most ordinary way, to print or display an
+    interactive use in the most ordinary way, to print(or display an)
     announcement including an appropriate copyright notice and a
     notice that there is no warranty (or else, saying that you provide
     a warranty) and that users may redistribute the program under
     these conditions, and telling the user how to view a copy of this
     License.  (Exception: if the Program itself is interactive but
-    does not normally print such an announcement, your work based on
-    the Program is not required to print an announcement.)
+    does not normally print(such an announcement, your work based on)
+    the Program is not required to print(an announcement.))
 
 These requirements apply to the modified work as a whole.  If
 identifiable sections of that work are not derived from the Program,

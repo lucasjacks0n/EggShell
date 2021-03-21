@@ -59,9 +59,9 @@ class MultiHandler:
 
 	def show_session(self,session):
 		try:
-			print str(session.id) + " | " +\
-			session.username + "@" + session.hostname + " | " + \
-			str(session.conn.getpeername()[0]) 
+			print(str(session.id) + " | " +
+			  session.username + "@" + session.hostname + " | " +
+			  str(session.conn.getpeername()[0]))
 		except Exception as e:
 			h.info_error(str(e))
 
@@ -76,7 +76,7 @@ class MultiHandler:
 
 	def interact_with_session(self,session_number):
 		if not session_number:
-			print "Usage: interact (session number)"
+			print("Usage: interact (session number)")
 			return
 		try:
 			self.sessions_id[int(session_number)].interact()
@@ -86,14 +86,14 @@ class MultiHandler:
 
 	def close_session(self,session_number):
 		if not session_number:
-			print "Usage: close (session number)"
+			print("Usage: close (session number)")
 			return
 		try:
 			session = self.sessions_id[int(session_number)]
 			session.disconnect(False)
 			h.info_general('Closing session ' + session_number)
 		except Exception as e:
-			print e
+			print(e)
 			h.info_error("Invalid Session")
 
 
@@ -107,7 +107,7 @@ class MultiHandler:
 
 
 	def show_command(self,name,description):
-		print name + " " * (15 - len(name)) + ": " + description
+		print(name + " " * (15 - len(name)) + ": " + description)
 
 
 	def show_commands(self):
@@ -117,7 +117,7 @@ class MultiHandler:
 			("sessions","list sessions"),
 			("exit","close all sessions and exit to menu"),
 		]
-		print h.WHITEBU+"MultiHandler Commands:"+h.ENDC
+		print(h.WHITEBU + "MultiHandler Commands:" + h.ENDC)
 		for command in commands:
 			self.show_command(command[0],command[1])
 
@@ -127,7 +127,7 @@ class MultiHandler:
 		h.info_general("Type \"help\" for commands")
 		while 1:
 			try:
-				input_data = raw_input(self.handle)
+				input_data = input(self.handle)
 				if not input_data:
 					continue
 				cmd = input_data.split()[0]

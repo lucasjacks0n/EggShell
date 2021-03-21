@@ -15,42 +15,42 @@ class EggShell:
             self.server.debug = False
         self.payloads = self.import_payloads() 
         self.banner_text = h.GREEN+"""
-.---.          .-. .        . .       \\      `.
-|             (   )|        | |     o  \\       `.
-|--- .-.. .-.. `-. |--. .-. | |         \\        `.
-|   (   |(   |(   )|  |(.-' | |     o    \\      .`
-'---'`-`| `-`| `-' '  `-`--'`-`-          \\   .`
-     ._.' ._.'                               `"""+h.COLOR_INFO+"""
-                          .".
-                         /  |
-                        /  /
-                       / ,"
-           .-------.--- /
-          "._ __.-/ o. o\  
-             "   (    Y  )
-                  )     /
-                 /     (
-                /       I
-            .-"         |
-           /  _     \    \ 
-          /    `. ". ) /' )
-         Y       )( / /(,/
-        ,|      /     )
-       ( |     /     /
-        " \_  (__   (__       
-            "-._,)--._,)
-"""+h.WHITE+"\nVersion: 3.1.1\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
+            .---.          .-. .        . .       \\      `.
+            |             (   )|        | |     o  \\       `.
+            |--- .-.. .-.. `-. |--. .-. | |         \\        `.
+            |   (   |(   |(   )|  |(.-' | |     o    \\      .`
+            '---'`-`| `-`| `-' '  `-`--'`-`-          \\   .`
+                ._.' ._.'                               `"""+h.COLOR_INFO+"""
+                                      .".
+                                    /  |
+                                    /  /
+                                  / ,"
+                      .-------.--- /
+                      "._ __.-/ o. o\  
+                        "   (    Y  )
+                              )     /
+                            /     (
+                            /       I
+                        .-"         |
+                      /  _     \    \ 
+                      /    `. ". ) /' )
+                    Y       )( / /(,/
+                    ,|      /     )
+                  ( |     /     /
+                    " \_  (__   (__       
+                        "-._,)--._,)
+            """+h.WHITE+"\nVersion: 3.1.1\nCreated By Lucas Jackson (@neoneggplant)\n"+h.ENDC
         self.main_menu_text = h.WHITE+"-"*40+"\n"+"""Menu:\n
-    1): Start Server
-    2): Start MultiHandler
-    3): Create Payload
-    4): Exit
-""" + "\n"+h.NES
+                1): Start Server
+                2): Start MultiHandler
+                3): Create Payload
+                4): Exit
+            """ + "\n"+h.NES
 
 
     # Actions
     def print_payload(self,payload,number_option):
-        print " " * 4 + str(number_option) + "): " + payload.name
+        print(" " * 4 + str(number_option) + "): " + payload.name)
 
 
     def start_single_server(self):
@@ -66,10 +66,10 @@ class EggShell:
 
 
     def prompt_run_server(self):
-        if raw_input(h.NES+"Start Server? (Y/n): ") == "n":
+        if input(h.NES+"Start Server? (Y/n): ") == "n":
             return
         else:
-            if raw_input(h.NES+"MultiHandler? (y/N): ") == "y":
+            if input(h.NES+"MultiHandler? (y/N): ") == "y":
                 self.server.start_multi_handler()
             else:
                 self.server.start_single_handler()
@@ -93,18 +93,18 @@ class EggShell:
 
 
     def choose_payload(self):
-        print h.WHITE+"-"*40+h.ENDC
-        print "Payloads:\n"
+        print(h.WHITE+"-"*40+h.ENDC)
+        print("Payloads:\n")
         number_option = 1
         for key in self.payloads:
             payload = self.payloads[key]
             self.print_payload(payload,number_option)
             number_option += 1
-        print ""
+        print("")
         while 1:
             try:
                 # choose payload
-                option = raw_input(h.info_general_raw("Choose an payload> "))
+                option = input(h.info_general_raw("Choose an payload> "))
                 if not option:
                   continue
                 selected_payload = self.payloads[self.payloads.keys()[int(option) - 1]]
@@ -118,7 +118,7 @@ class EggShell:
             except KeyboardInterrupt:
                 break
             except Exception as e:
-                print e
+                print(e)
                 break
 
 
@@ -127,11 +127,11 @@ class EggShell:
             try:
                 h.clear()
                 if err:
-                    print err
+                    print(err)
                 if self.server.debug:
-                    print "Debug On"
+                    print("Debug On")
                 sys.stdout.write(self.banner_text)
-                option = raw_input(self.main_menu_text)
+                option = input(self.main_menu_text)
                 choose = {
                     "1" : self.start_single_server,
                     "2" : self.start_multi_handler,
@@ -150,7 +150,7 @@ class EggShell:
                     continue
                     # TODO: quit socket listener
             except KeyboardInterrupt:
-                print "\nBye!"
+                print("\nBye!")
                 exit()
 
 

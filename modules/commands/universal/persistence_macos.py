@@ -12,7 +12,7 @@ class command:
         elif cmd_data['args'] == "uninstall":
             h.info_general("Uninstalling...")
         else:
-            print self.usage
+            print(self.usage)
             return
         result = session.send_command(cmd_data)
         if result:

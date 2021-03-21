@@ -6,9 +6,9 @@ class command:
 
     def run(self,session,cmd_data):
     	if not cmd_data['args']:
-    		print self.usage
+    		print(self.usage)
     		return
     	if not cmd_data['args']:
-    		print usage
+    		print(usage)
     		return
     	session.send_command(cmd_data)

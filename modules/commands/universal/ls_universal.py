@@ -14,12 +14,12 @@ class command:
         try:
             contents = json.loads(data)
         except:
-            print data
+            print(data)
             return
         keys = contents.keys()
         keys.sort()
         for k in keys:
             if contents[k] == 4 or contents[k] == 10:
-                print h.COLOR_INFO + k + h.ENDC
+                print(h.COLOR_INFO + k + h.ENDC)
             else:
-                print k
+                print(k)

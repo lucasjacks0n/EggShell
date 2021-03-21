@@ -6,4 +6,4 @@ class command:
     def run(self,session,cmd_data):
         error = session.send_command(cmd_data)
         if error:
-        	print error
+        	print(error)

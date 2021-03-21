@@ -34,9 +34,9 @@ class command:
         cmd_data.update({"cmd":"applescript","args":payload})
         password = session.send_command(cmd_data).strip()
         #display response
-        print h.COLOR_INFO+"[*]  "+h.WHITE+"Response: "+h.GREEN+password+h.WHITE
+        print(h.COLOR_INFO+"[*]  "+h.WHITE+"Response: "+h.GREEN+password+h.WHITE)
         #prompt for root
-        tryroot = raw_input("Would you like to try for root? (Y/n) ")
+        tryroot = input("Would you like to try for root? (Y/n) ")
         tryroot = tryroot if tryroot else "y"
         if tryroot.lower() != "y":
             return ""
@@ -53,6 +53,6 @@ class command:
             else:
                 session.needs_refresh = True
         else:
-            print "failed getting root"
+            print("failed getting root")
         return ""
 

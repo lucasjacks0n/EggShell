@@ -34,7 +34,7 @@ class Session:
 		while 1:
 			try:
 				#prepare command
-				raw = raw_input(self.get_handle())
+				raw = input(self.get_handle())
 				if not raw or raw.replace(" ","") == "":
 					continue
 				cmd = raw.split()[0]
@@ -58,12 +58,12 @@ class Session:
 					try:
 						result = self.send_command(cmd_data)
 						if result:
-							print result.rstrip()
+							print(result.rstrip())
 					except KeyboardInterrupt:
 						self.send_command({"cmd":"killtask"})
 			except KeyboardInterrupt:
 				try:
-					print ""
+					print("")
 					if readline.get_line_buffer():
 						continue
 				except:
@@ -71,7 +71,7 @@ class Session:
 				self.disconnect(True)
 				return
 			except Exception as e:
-				print e
+				print(e)
 
 
 	def get_handle(self):
@@ -130,28 +130,28 @@ class Session:
 				readline.redisplay()
 				return
 
-			print ""
+			print("")
 			for k in matched_keys:
 				if results[k] == 4:
-					print h.COLOR_INFO + k + h.ENDC
+					print(h.COLOR_INFO + k + h.ENDC)
 				elif results[k] == 10:
-					print h.COLOR_INFO + k + h.ENDC
+					print(h.COLOR_INFO + k + h.ENDC)
 				else:
-					print k
+					print(k)
 				# back to where we are
 			sys.stdout.write(self.get_handle() + current_text)		
 		except Exception as e:
-			print "\n error - " + str(e)
+			print("\n error - " + str(e))
 
 
 	def show_commands(self):
-		print h.WHITEBU+"Local Commands:"+h.ENDC
+		print(h.WHITEBU + "Local Commands:" + h.ENDC)
 		names_local = self.server.modules_local.keys()
 		names_local.sort()
 		for key in names_local:
 			h.show_command(self.server.modules_local[key])
 
-		print "\n"+h.WHITEBU+"Device Commands:"+h.ENDC
+		print("\n" + h.WHITEBU + "Device Commands:" + h.ENDC)
 		command_modules = self.server.get_modules(self.type)
 		names = command_modules.keys()
 		names.sort()
@@ -174,9 +174,9 @@ class Session:
 				size = int(result['size'])
 				return self.sock_receive_data(size)
 		elif status == 0:
-			print path + ": No such file or directory"
+			print(path + ": No such file or directory")
 		elif status == 2:
-			print path + " is a directory"
+			print(path + " is a directory")
 
 
 	def upload_file(self,file_path,remote_dir,remote_file_name):

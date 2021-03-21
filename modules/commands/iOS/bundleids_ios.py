@@ -4,4 +4,4 @@ class command:
         self.description = "list bundle identifiers"
     
     def run(self,session,cmd_data):
-        print session.send_command(cmd_data).rstrip()
+        print(session.send_command(cmd_data).rstrip())

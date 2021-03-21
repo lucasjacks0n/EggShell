@@ -9,12 +9,12 @@ class command:
     
     def run(self,session,cmd_data):
         if not cmd_data['args']:
-            print self.usage
+            print(self.usage)
             return
         else:
             paths = re.split(r'(?<!\\) ', cmd_data['args'].rstrip())
             if len(paths) > 2:
-                print "USAGE"
+                print("USAGE")
                 return
             
             local_dir = os.path.split(paths[0])[0]

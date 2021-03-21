@@ -8,7 +8,7 @@ class command:
     
     def run(self,session,cmd_data):
         if not cmd_data['args']:
-            print "Usage: local shell commands"
+            print("Usage: local shell commands")
             return
         else:
             split_args = cmd_data['args'].split()

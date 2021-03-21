@@ -1,15 +1,13 @@
 include $(THEOS)/makefiles/common.mk
-export SYSROOT = /opt/theos/sdks/iPhoneOS9.3.sdk
 export TARGET_CODESIGN_FLAGS="-Ssign.plist"
-TOOL_NAME = esplios
 
-esplios_FILES = main.mm espl.m
-esplios_OBJ_FILES = libcrypto.a libssl.a
+TOOL_NAME = esplios
+esplios_OBJ_FILES = /Users/rpwnage/Downloads/OpenSSLStaticLibs/libssl.a 
+esplios_FILES = src/main.mm src/espl.m
 esplios_FRAMEWORKS = Foundation Security AudioToolbox CoreFoundation AVFoundation MediaPlayer UIKit
-esplios_PRIVATE_FRAMEWORKS = AppSupport SpringBoardServices IOSurface
+#esplios_PRIVATE_FRAMEWORKS = AppSupport SpringBoardServices IOSurface
 
 include $(THEOS_MAKE_PATH)/tool.mk
+ARCHS = arm64 arm64e
 
-export ARCHS = armv7 arm64
-
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -lssl -lcrypto

@@ -6,7 +6,7 @@ class command:
     
     def run(self,session,cmd_data):
        	if not cmd_data['args'] or not cmd_data['args'] in ['status','on','off']:
-       		print self.usage
+       		print(self.usage)
        		return
        	if cmd_data['args'] == "status":
        		cmd_data = {'cmd':'ismuted','args':''}
@@ -16,4 +16,4 @@ class command:
             cmd_data = {'cmd':'mute','args':''}
         error = session.send_command(cmd_data)
         if error:
-        	print error
+        	print(error)
