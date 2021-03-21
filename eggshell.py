@@ -107,7 +107,7 @@ class EggShell:
                 option = input(h.info_general_raw("Choose an payload> "))
                 if not option:
                   continue
-                selected_payload = self.payloads[self.payloads.keys()[int(option) - 1]]
+                selected_payload = self.payloads[list(self.payloads.keys())[int(option) - 1]]
                 # set host and port
                 self.server.set_host_port()
                 # generate payload

