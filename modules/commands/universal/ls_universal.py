@@ -16,7 +16,7 @@ class command:
         except:
             print(data)
             return
-        keys = contents.keys()
+        keys = list(contents.keys())
         keys.sort()
         for k in keys:
             if contents[k] == 4 or contents[k] == 10:
