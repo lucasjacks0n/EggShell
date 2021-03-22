@@ -61,7 +61,9 @@ By using EggShell, you agree to the GNU General Public License v2.0 included in 
 * **download**       : download file
 * **getfacebook**    : retrieve facebook session cookies
 * **getpaste**       : get pasteboard contents
-* **getvol**         : get speaker output volume
+* **Speaker output Volume**
+  * **getvol**         : get speaker output volume
+  * **setvol \<vol>**       : set the speaker output volume to \<vol>
 * **idletime**       : get the amount of time since the keyboard/cursor were touched
 * **imessage**       : send message through the messages app
 * **itunes**         : iTunes Controller
@@ -74,7 +76,6 @@ By using EggShell, you agree to the GNU General Public License v2.0 included in 
 * **pid**            : get process id
 * **prompt**         : prompt user to type password
 * **screenshot**     : take screenshot
-* **setvol**         : set output volume
 * **sleep**          : put device into sleep mode
 * **su**             : su login
 * **suspend**        : suspend current session (goes back to login screen)

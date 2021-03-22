@@ -194,12 +194,15 @@ class Session:
             h.info_error("Local file: " + file_path + " does not exist")
 
     def sock_send(self, data):
-        self.conn.send(data.encode())
+        try:
+            self.conn.send(data.encode())
+        except Exception:
+            self.conn.send(data)
 
     def sock_receive(self, term):
         result = ""
         while 1:
-            data = self.conn.recv(100).decode().strip("\x00")
+            data = self.conn.recv(100).decode()
             has_term = term in data
             data = data.replace(term, "")
             if data != "":
@@ -209,15 +212,13 @@ class Session:
 
     def sock_receive_data(self, size):
         term = binascii.hexlify(os.urandom(5))
-        # here is the string son, hope you'll give it back
         self.sock_send(term)
-        fdata = ""
+        fdata = "".encode()
         while 1:
-            chunk = self.conn.recv(1024).decode()
+            chunk = self.conn.recv(1024)
             if term in chunk:
-                # thank you son
-                chunk = chunk.replace(term, '')
-                fdata += chunk
+                chunk = chunk.decode().replace(term.decode(), '')
+                fdata += chunk.encode()
                 return fdata[:size]
             fdata += chunk
 

