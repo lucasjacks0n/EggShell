@@ -20,8 +20,8 @@ bool sysTaskRunning = false;
   [_thisUIDevice setBatteryMonitoringEnabled:YES];
   fileManager = [[NSFileManager alloc] init];
   [fileManager changeCurrentDirectoryPath:NSHomeDirectory()];
-  _messagingCenter =
-      [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
+  // _messagingCenter =
+  //     [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
   return self;
 }
 
