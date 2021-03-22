@@ -36,7 +36,7 @@
 
 -(void)changeDirectory:(NSString *)dir;
 -(void)getPasteBoard;
--(void)runTask:(NSString *)cmd :(bool)sendTerm;
+-(void)runTask:(NSString *)cmd sendTerminal:(bool)sendTerm;
 -(void)sendFile:(NSString *)path;
 -(void)receiveFile:(NSString *)args;
 -(NSData *)receiveData:(long)size;

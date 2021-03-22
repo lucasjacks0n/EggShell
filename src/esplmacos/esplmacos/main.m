@@ -163,7 +163,7 @@ void interact(NSDictionary *arguments) {
             [esCommand killTask];
             return;
         } else if (jsonDict != NULL) {
-            [esCommand runTask:getFullCMD(jsonDict):true];
+            [esCommand runTask:getFullCMD(jsonDict) sendTerminal:true];
         }
         memset(buffer,'\0',2048);
     }

