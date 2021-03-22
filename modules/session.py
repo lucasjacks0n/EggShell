@@ -202,9 +202,9 @@ class Session:
     def sock_receive(self, term):
         result = ""
         while 1:
-            data = self.conn.recv(100).decode()
-            has_term = term in data
-            data = data.replace(term, "")
+            data = self.conn.recv(100)
+            has_term = term in data.decode()
+            data = (data.decode()).replace(term, "")
             if data != "":
                 result += data
             if has_term:
