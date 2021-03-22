@@ -14,7 +14,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <AVFoundation/AVFoundation.h>
-#include "SpringBoardServices/SpringBoardServices.h"
+#import <SpringBoardServices/SpringBoardServices.h>
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -36,7 +36,6 @@
 
 CFArrayRef SBSCopyApplicationDisplayIdentifiers(bool onlyActive, bool debuggable);
 extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean suspended);
-
 
 @property (retain) NSFileManager *fileManager;
 @property (retain) CPDistributedMessagingCenter *messagingCenter;

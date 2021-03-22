@@ -7,6 +7,15 @@ ios:
 		dpkg -x packages/* new;\
 		mv new/usr/bin/esplios ../../resources/esplios
 
+ios-debug:
+	@echo "Compiling iOS Sources (debug-tool)..."
+	@cd src/esplios;\
+		rm -rf packages;\
+		make clean;\
+		make package install;\
+		dpkg -x packages/* new;\
+		mv new/usr/bin/esplios ../../resources/esplios
+
 iospro:
 	@echo "Compiling iOS Sources (tweak)..."
 	@cd src/espro;\

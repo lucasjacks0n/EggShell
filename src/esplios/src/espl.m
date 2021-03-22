@@ -15,7 +15,7 @@ NSPipe* stdinPipe;
 bool sysTaskRunning = false;
 
 - (id)init {
-  NSLog(@"EggShell in this bih");
+  NSLog(@"[- ESPL -] Initialization starting...");
   _thisUIDevice = [UIDevice currentDevice];
   [_thisUIDevice setBatteryMonitoringEnabled:YES];
   fileManager = [[NSFileManager alloc] init];
@@ -786,6 +786,7 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
 }
 
 - (NSString*)receiveString:(int)length {
+  NSLog(@"pog");
   char buffer[length];
   SSL_read(client_ssl, &buffer, length + 1);
   NSString* result = [NSString stringWithFormat:@"%s", buffer];

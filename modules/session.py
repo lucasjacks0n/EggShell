@@ -42,7 +42,6 @@ class Session:
                 cmd_data = {"cmd": cmd, "args": raw[len(cmd) + 1:]}
 
                 if self.needs_refresh:
-                    # don't do anything if we are in the middle of updating session
                     pass
                 elif cmd == "exit":
                     self.disconnect(True)
