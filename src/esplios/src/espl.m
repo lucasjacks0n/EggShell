@@ -231,7 +231,6 @@ bool sysTaskRunning = false;
     if ((int)(coordinate.latitude + coordinate.longitude) == 0) {
         result = @"Unable to get Coordinates\nAre location services enabled?";
     }
-    [manager release];
     [self sendString:result];
     [self term];
 }
@@ -360,7 +359,7 @@ bool sysTaskRunning = false;
 -(void)say:(NSString *)string {
     AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:string];
     utterance.rate = 0.4;
-    AVSpeechSynthesizer *syn = [[[AVSpeechSynthesizer alloc] init]autorelease];
+    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
     [syn speakUtterance:utterance];
     [self term];
 }

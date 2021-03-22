@@ -39,13 +39,11 @@ void connectToServer(NSDictionary *arguments);
 void interact(NSDictionary *arguments);
 
 int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        NSData *argData = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%s", argv[1]] options:0];
-        NSString *json = [[NSString alloc] initWithData:argData encoding:NSUTF8StringEncoding];
-        NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
-        NSMutableDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
-        connectToServer(jsonDict);
-    }
+    NSData *argData = [[NSData alloc] initWithBase64EncodedString:[NSString stringWithFormat:@"%s", argv[1]] options:0];
+    NSString *json = [[NSString alloc] initWithData:argData encoding:NSUTF8StringEncoding];
+    NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
+    NSMutableDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:NULL];
+    connectToServer(jsonDict);
     //delete self after connection close`
     remove(argv[0]);
     return 0;

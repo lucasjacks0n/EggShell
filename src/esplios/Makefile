@@ -12,6 +12,7 @@ esplios_PRIVATE_FRAMEWORKS 	= 	AppSupport SpringBoardServices IOSurface
 esplios_OBJ_FILES						=		lib/libssl.a lib/libcrypto.a
 esplios_LDFLAGS 						+= 	-L ./lib/ -lssl -lcrypto
 esplios_CODESIGN_FLAGS 			= 	-Ssign.plist
+esplios_CFLAGS							=		 -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tool.mk
 
