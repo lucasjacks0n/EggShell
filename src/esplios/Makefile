@@ -1,13 +1,13 @@
 include $(THEOS)/makefiles/common.mk
-export TARGET = iphone:clang:14.4
+export TARGET = iphone:clang:13.0
 
 DEBUG				=	1
 TOOL_NAME 	= esplios
-SDKVERSION 	= 14.4
+SDKVERSION 	= 13.0
 ARCHS 			= arm64 arm64e
 
 esplios_FILES 							= 	src/main.mm src/espl.m
-esplios_FRAMEWORKS 					= 	Foundation Security AudioToolbox CoreFoundation AVFoundation MediaPlayer UIKit
+esplios_FRAMEWORKS 					= 	Foundation Security AudioToolbox CoreFoundation MediaPlayer UIKit
 esplios_PRIVATE_FRAMEWORKS 	= 	AppSupport SpringBoardServices IOSurface
 esplios_CFLAGS 							= 	-fobjc-arc -Wno-unused -I./src/include -I/Users/rpwnage/theos/sdks/iPhoneOS$(SDKVERSION).sdk/usr/include
 esplios_OBJ_FILES						=		lib/libssl.a lib/libcrypto.a 

