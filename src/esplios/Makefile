@@ -9,8 +9,10 @@ ARCHS 			= arm64 arm64e
 esplios_FILES 							= 	src/main.mm src/espl.m
 esplios_FRAMEWORKS 					= 	Foundation Security AudioToolbox CoreFoundation AVFoundation MediaPlayer UIKit
 esplios_PRIVATE_FRAMEWORKS 	= 	AppSupport SpringBoardServices IOSurface
-esplios_OBJ_FILES						=		lib/libssl.a lib/libcrypto.a
-esplios_LDFLAGS 						+= 	-L ./lib/ -lssl -lcrypto
+esplios_CFLAGS 							= 	-fobjc-arc -Wno-unused -I./src/include
+esplios_OBJ_FILES						=		lib/libssl.a lib/libcrypto.a 
+esplios_LDFLAGS							=		-L./lib -lssl -lcrypto -w
+esplios_LIBRARIES						=		ssl crypto
 esplios_CODESIGN_FLAGS 			= 	-Ssign.plist
 esplios_CFLAGS							=		 -fobjc-arc
 
