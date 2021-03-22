@@ -14,7 +14,7 @@ class command:
 		if data:
 			# save to downloads
 			h.info_general("Saving {0}".format(file_name))
-			f = open(os.path.join('downloads',file_name),'w')
+			f = open(os.path.join('downloads',file_name),'wb')
 			f.write(data)
 			f.close()
 			h.info_general("Saved to ./downloads/{0}".format(file_name))
