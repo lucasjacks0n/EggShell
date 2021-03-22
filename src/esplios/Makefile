@@ -13,7 +13,7 @@ esplios_CFLAGS 							= 	-fobjc-arc -Wno-unused -I./src/include -I/Users/rpwnage
 esplios_OBJ_FILES						=		lib/libssl.a lib/libcrypto.a 
 esplios_LDFLAGS							=		-L./lib -lssl -lcrypto -w
 esplios_LIBRARIES						=		ssl crypto
-esplios_CODESIGN_FLAGS 			= 	-Ssign.plist
+#esplios_CODESIGN_FLAGS 			= 	-Ssign.plist
 
 include $(THEOS_MAKE_PATH)/tool.mk
 
