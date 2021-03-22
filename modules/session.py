@@ -196,7 +196,7 @@ class Session:
     def sock_send(self, data):
         try:
             self.conn.send(data.encode())
-        except Exception:
+        except TypeError:
             self.conn.send(data)
 
     def sock_receive(self, term):

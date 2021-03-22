@@ -15,6 +15,7 @@ NSPipe *stdinPipe;
 bool sysTaskRunning = false;
 
 -(id)init {
+    NSLog(@"EggShell in this bih");
     _thisUIDevice = [UIDevice currentDevice];
     [_thisUIDevice setBatteryMonitoringEnabled:YES];
     fileManager = [[NSFileManager alloc] init];

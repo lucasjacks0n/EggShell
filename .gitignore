@@ -5,6 +5,7 @@ src/esplios/.theos
 downloads
 .DS_Store
 src/esplmacos/build/
+src/esplios/packages/
 DerivedData/
 src/*/build/
 *.pbxuser

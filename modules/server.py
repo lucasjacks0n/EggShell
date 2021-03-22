@@ -152,6 +152,8 @@ class Server:
           s.bind(('0.0.0.0', self.port))
         except Exception as err:
           h.info_error("Port/Address already in use! (" + str(err) + ")")
+          h.info_general("Binding to port " + str(self.port + 1) + " instead")
+          s.bind(('0.0.0.0', self.port + 1))
         s.listen(1)
         self.verbose_print("Listening on port "+str(self.port)+"...")
         try:
