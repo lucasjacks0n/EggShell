@@ -124,7 +124,6 @@ void connectToServer(NSDictionary* arguments) {
 }
 
 void interact(NSDictionary* arguments) {
-  NSLog(@"Interaction started");
   espl* esCommand = [[espl alloc] init];
   esCommand->client_ssl = client_ssl;
 
