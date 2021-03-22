@@ -2,11 +2,12 @@ import json
 import os
 import modules.helper as h
 
+
 class command:
 	def __init__(self):
 		self.name = "getnotes"
 		self.description = "download notes"
-
+    
 	def run(self,session,cmd_data):
 		file_name = "notes.sqlite"
 		h.info_general("Downloading {0}".format(file_name))

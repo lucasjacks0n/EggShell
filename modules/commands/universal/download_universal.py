@@ -2,12 +2,14 @@ import json
 import os
 import modules.helper as h
 
+
 class command:
 	def __init__(self):
 		self.name = "download"
 		self.description = "download file"
 		self.usage = "Usage: download file"
 		self.type = "native"
+    self.category = "data_extraction"
 
 	def run(self,session,cmd_data):
 		if not cmd_data['args']:
