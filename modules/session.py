@@ -183,9 +183,9 @@ class Session:
             size = len(data)
             name = os.path.split(file_path)[-1]
             cmd_data = json.dumps({"cmd": "upload", "args": json.dumps(
-                {"size": size, "path": remote_dir, "filename": remote_file_name}), "term": term})
+                {"size": size, "path": remote_dir, "filename": remote_file_name}), "term": term.decode()})
             self.sock_send(cmd_data)
-            for i in range((size / 1024) + 1):
+            for i in range((size // 1024) + 1):
                 deltax = i * 1024
                 chunk = data[deltax:deltax + 1024]
                 self.sock_send(chunk)
@@ -195,9 +195,9 @@ class Session:
 
     def sock_send(self, data):
         try:
-            self.conn.send(data.encode())
-        except TypeError:
             self.conn.send(data)
+        except Exception:
+            self.conn.send(data.encode())
 
     def sock_receive(self, term):
         result = ""
@@ -212,7 +212,7 @@ class Session:
 
     def sock_receive_data(self, size):
         term = binascii.hexlify(os.urandom(5))
-        self.sock_send(term)
+        self.sock_send(term.decode())
         fdata = "".encode()
         while 1:
             chunk = self.conn.recv(1024)
