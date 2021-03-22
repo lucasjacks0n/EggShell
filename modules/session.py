@@ -154,7 +154,18 @@ class Session:
         names = list(command_modules.keys())
         names.sort()
         for k in names:
-            h.show_command(command_modules[k])
+            if not hasattr(command_modules[k], 'requiresPro'):
+                h.show_command(command_modules[k])
+            elif command_modules[k].requiresPro == False:
+                h.show_command(command_modules[k])
+
+        print("\n" + h.WHITEBU + "EggShell-Pro Commands:" + h.ENDC)
+        for command in command_modules:
+            if hasattr(command_modules[command], 'requiresPro'):
+                try:
+                    h.show_command(command_modules[command])
+                except:
+                    pass
 
     def send_command(self, cmd_data):
         cmd_data["term"] = binascii.hexlify(os.urandom(8)).decode()

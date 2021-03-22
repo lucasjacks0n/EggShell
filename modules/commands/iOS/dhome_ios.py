@@ -1,7 +1,8 @@
 class command:
     def __init__(self):
-        self.name = "dhome"
-        self.description = "simulate a double home button press"
+        self.name         = "dhome"
+        self.description  = "simulate a double home button press"
+        self.requiresPro  = True
 
     def run(self, session, cmd_data):
         cmd_data["cmd"] = "doublehome"
