@@ -19,7 +19,6 @@ NSString *keyLog;
 %new
 -(void)commandWithNoReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
 	NSString *command = [userInfo objectForKey:@"cmd"];
-	// Button Simulation
 	if ([command isEqual:@"home"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonSinglePressUp)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonSinglePressUp];
