@@ -9,7 +9,7 @@ class command:
 		self.description = "download file"
 		self.usage = "Usage: download file"
 		self.type = "native"
-    self.category = "data_extraction"
+		self.category = "data_extraction"
 
 	def run(self,session,cmd_data):
 		if not cmd_data['args']:

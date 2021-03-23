@@ -170,6 +170,16 @@ class Session:
                         print("err: " + str(err))
                         pass
 
+        print("\n" + h.WHITEBU + "Misc Commands:" + h.ENDC)
+        for command in command_modules:
+            if hasattr(command_modules[command], 'category'):
+                if command_modules[command].category == "misc":
+                    try:
+                        h.show_command(command_modules[command])
+                    except Exception as err:
+                        print("err: " + str(err))
+                        pass
+
         print("\n" + h.WHITEBU + "EggShell-Pro Commands:" + h.ENDC)
         for command in command_modules:
             if hasattr(command_modules[command], 'requiresPro'):
