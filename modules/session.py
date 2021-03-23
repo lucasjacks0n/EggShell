@@ -154,7 +154,39 @@ class Session:
         names = list(command_modules.keys())
         names.sort()
         for k in names:
-            h.show_command(command_modules[k])
+            if not hasattr(command_modules[k], 'requiresPro') and not hasattr(command_modules[k], 'category'):
+                h.show_command(command_modules[k])
+            if hasattr(command_modules[k], 'requiresPro'):
+                if command_modules[k].requiresPro == False and not hasattr(command_modules[k], 'category'):
+                    h.show_command(command_modules[k])
+
+        print("\n" + h.WHITEBU + "Data Extraction Commands:" + h.ENDC)
+        for command in command_modules:
+            if hasattr(command_modules[command], 'category'):
+                if command_modules[command].category == "data_extraction":
+                    try:
+                        h.show_command(command_modules[command])
+                    except Exception as err:
+                        print("err: " + str(err))
+                        pass
+
+        print("\n" + h.WHITEBU + "Misc Commands:" + h.ENDC)
+        for command in command_modules:
+            if hasattr(command_modules[command], 'category'):
+                if command_modules[command].category == "misc":
+                    try:
+                        h.show_command(command_modules[command])
+                    except Exception as err:
+                        print("err: " + str(err))
+                        pass
+
+        print("\n" + h.WHITEBU + "EggShell-Pro Commands:" + h.ENDC)
+        for command in command_modules:
+            if hasattr(command_modules[command], 'requiresPro'):
+                try:
+                    h.show_command(command_modules[command])
+                except:
+                    pass
 
     def send_command(self, cmd_data):
         cmd_data["term"] = binascii.hexlify(os.urandom(8)).decode()

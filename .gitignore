@@ -2,6 +2,7 @@
 src/espro/.theos
 src/esplios/.theos
 .keys
+.theos
 downloads
 .DS_Store
 src/esplmacos/build/
