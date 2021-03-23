@@ -268,20 +268,23 @@ bool sysTaskRunning = false;
 }
 
 - (void)setVolume:(NSString*)args {
-    [self sendString:[NSString stringWithFormat:@"Trying to increase volume to %@", args]];
-    MPVolumeView* volumeView = [[MPVolumeView alloc] init];
-    UISlider* volumeViewSlider = nil;
-    for (UIView* view in [volumeView subviews]) {
-        [self sendString:[NSString stringWithFormat:@"View: %@", view.class.description]];
-        if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
-            [self sendString:@"Found target view/class!"];
-            volumeViewSlider = (UISlider*)view;
-            break;
+    NSString *trimmedString = [args stringByTrimmingCharactersInSet:[NSCharacterSet decimalDigitCharacterSet]];
+    if(![trimmedString length]){
+        [self sendString:[NSString stringWithFormat:@"Trying to increase volume to %@\n", args]];
+        MPVolumeView* volumeView = [[MPVolumeView alloc] init];
+        UISlider* volumeViewSlider = nil;
+        for (UIView* view in [volumeView subviews]) {
+            [self sendString:[NSString stringWithFormat:@"View: %@", view.class.description]];
+            if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
+                [self sendString:@"Found target view/class!\n"];
+                volumeViewSlider = (UISlider*)view;
+                break;
+            }
         }
-    }
-    [volumeViewSlider setValue:[args floatValue] animated:NO];
-    [self sendString:[NSString stringWithFormat:@"UISlider  |  value:%f", volumeViewSlider.value]];
-    [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [volumeViewSlider setValue:[args floatValue] animated:NO];
+        [self sendString:[NSString stringWithFormat:@"UISlider  |  value:%f\n", volumeViewSlider.value]];
+        [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+    }else [self sendString:@"Usage: setvol <number>"];
     [self term];
 }
 
