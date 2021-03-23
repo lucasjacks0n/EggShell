@@ -104,7 +104,7 @@ class MultiHandler:
         time.sleep(0.5)
 
     def show_command(self, name, description):
-        print(name + " " * (15 - len(name)) + ": " + description)
+        print(name.ljust(20) + ": " + description)
 
     def show_commands(self):
         commands = [

@@ -44,7 +44,7 @@ def info_warning(string):
 
 
 def show_command(mod):
-    print(mod.name + " " * (15 - len(mod.name)) + ": " + mod.description)
+    print(mod.name.ljust(20) + ": " + mod.description)
 
 
 def b64(s):
