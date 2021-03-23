@@ -8,6 +8,7 @@
 
 #include "espl.h"
 
+
 @implementation espl
 
 @synthesize fileManager;
@@ -267,15 +268,19 @@ bool sysTaskRunning = false;
 }
 
 - (void)setVolume:(NSString*)args {
+    [self sendString:[NSString stringWithFormat:@"Trying to increase volume to %@", args]];
     MPVolumeView* volumeView = [[MPVolumeView alloc] init];
     UISlider* volumeViewSlider = nil;
     for (UIView* view in [volumeView subviews]) {
+        [self sendString:[NSString stringWithFormat:@"View: %@", view.class.description]];
         if ([view.class.description isEqualToString:@"MPVolumeSlider"]) {
+            [self sendString:@"Found target view/class!"];
             volumeViewSlider = (UISlider*)view;
             break;
         }
     }
-    [volumeViewSlider setValue:[args floatValue] animated:YES];
+    [volumeViewSlider setValue:[args floatValue] animated:NO];
+    [self sendString:[NSString stringWithFormat:@"UISlider  |  value:%f", volumeViewSlider.value]];
     [volumeViewSlider sendActionsForControlEvents:UIControlEventTouchUpInside];
     [self term];
 }
@@ -351,10 +356,17 @@ bool sysTaskRunning = false;
 }
 
 - (void)say:(NSString*)string {
+    AVSpeechSynthesizer *synthesizer = [[AVSpeechSynthesizer alloc] init];
     AVSpeechUtterance* utterance = [AVSpeechUtterance speechUtteranceWithString:string];
-    utterance.rate = 0.4;
-    AVSpeechSynthesizer* syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    utterance.rate = 0.5;
+    /* Getting the System's default language */
+    NSString *language = [[NSLocale currentLocale] localeIdentifier];
+    NSDictionary *languageDic = [NSLocale componentsFromLocaleIdentifier:language];
+    NSString *countryCode = [languageDic objectForKey:NSLocaleCountryCode];
+    NSString *languageCode = [languageDic objectForKey:NSLocaleLanguageCode];
+    NSString *languageForVoice = [[NSString stringWithFormat:@"%@-%@", [languageCode lowercaseString], countryCode] lowercaseString];
+    utterance.voice = [AVSpeechSynthesisVoice voiceWithLanguage:languageForVoice];
+    [synthesizer speakUtterance:utterance];
     [self term];
 }
 
