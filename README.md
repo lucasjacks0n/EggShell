@@ -58,4 +58,5 @@ By using EggShell, you agree to the GNU General Public License v2.0 included in 
 ## TODO
 ### Broken/WIP commands
 #### iOS
-lock - resprings the device(?)
+lock        - resprings the device(?)
+screenshot  - needs improvements (saving file, etc.)

