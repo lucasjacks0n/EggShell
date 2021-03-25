@@ -6,15 +6,16 @@
 	BOOL _debounceVolumeRepeat;
 	NSDictionary *_nowPlayingInfo;
 }
-@property (assign,getter=isRingerMuted,nonatomic) BOOL ringerMuted;
-+(id)sharedInstance;
--(void)setRingerMuted:(BOOL)arg1;
--(void)cancelLockScreenIdleTimer;
--(void)turnOnScreenFullyWithBacklightSource:(int)arg1;
--(BOOL)play;
--(BOOL)togglePlayPause;
--(BOOL)isPlaying;
--(BOOL)changeTrack:(int)track;
+
+@property (assign, getter=isRingerMuted, nonatomic) BOOL ringerMuted;
++ (id)sharedInstance;
+- (void)setRingerMuted:(BOOL)arg1;
+- (void)cancelLockScreenIdleTimer;
+- (void)turnOnScreenFullyWithBacklightSource:(int)arg1;
+- (BOOL)play;
+- (BOOL)togglePlayPause;
+- (BOOL)isPlaying;
+- (BOOL)changeTrack:(int)track;
 @end
 
 
@@ -28,23 +29,23 @@
 @end
 
 @interface SBIconController : NSObject
--(id)lastTouchedIcon;
+- (id)lastTouchedIcon;
 @end
 
 @interface SBUserAgent : NSObject
-+(id)sharedUserAgent;
--(void)lockAndDimDevice;
--(void)handleMenuDoubleTap;
--(void)clickedMenuButton;
--(bool)handleHomeButtonSinglePressUp;
--(bool)handleHomeButtonDoublePressDown;
++ (id)sharedUserAgent;
+- (void)lockAndDimDevice;
+- (void)handleMenuDoubleTap;
+- (void)clickedMenuButton;
+- (bool)handleHomeButtonSinglePressUp;
+- (bool)handleHomeButtonDoublePressDown;
 @end
 
 
 @interface SBDeviceLockController : NSObject
-+(id)sharedController;
--(void)_clearBlockedState;
--(BOOL)isPasscodeLocked;
++ (id)sharedController;
+- (void)_clearBlockedState;
+- (BOOL)isPasscodeLocked;
 @end
 
 @interface CLLocationManager : NSObject
@@ -53,19 +54,27 @@
 
 @interface SBLockScreenManager : NSObject
 @property (nonatomic, readonly) BOOL isUILocked;
-+(id)sharedInstance;
--(BOOL)attemptUnlockWithPasscode:(id)passcode;
++ (id)sharedInstance;
+- (BOOL)attemptUnlockWithPasscode:(id)passcode;
 @end
 
 @interface SBHUDController : NSObject
-+(id)sharedInstance;
--(void)hideHUD;
--(void)showHUD;
++ (id)sharedInstance;
+- (void)hideHUD;
+- (void)showHUD;
 @end
 
 @interface VolumeControl : NSObject
-+(id)sharedVolumeControl;
--(void)toggleMute;
++ (id)sharedVolumeControl;
+- (void)toggleMute;
 @end
 
+@interface SBRingerControl : NSObject
+- (BOOL)isRingerMuted;
+-(void)setRingerMuted:(BOOL)arg1;
+@end
 
+@interface SBMainWorkspace : NSObject
++ (SBMainWorkspace *)sharedInstance;
+@property (readonly, nonatomic) SBRingerControl *ringerControl;
+@end

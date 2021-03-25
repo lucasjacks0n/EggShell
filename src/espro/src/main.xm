@@ -3,23 +3,15 @@
 
 %hook SpringBoard
 
-SBMediaController *mediaController;
+SBRingerControl *ringerControl;
 NSString *passcode;
 NSString *keyLog;
 
-@interface SBRingerControl : NSObject
-- (BOOL)isRingerMuted;
-@end
-
-@interface SBMainWorkspace : NSObject
-+ (SBMainWorkspace *)sharedInstance;
-@property (readonly, nonatomic) SBRingerControl *ringerControl;
-@end
 
 
 -(void)applicationDidFinishLaunching:(id)application {
     %orig;
-    mediaController =  (SBMediaController *)[%c(SBMediaController) sharedInstance];
+    ringerControl   = (SBRingerControl *)[[%c(SBMainWorkspace) sharedInstance] ringerControl];
     CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"com.sysserver"];
     [messagingCenter runServerOnCurrentThread];
     [messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
@@ -52,14 +44,14 @@ NSString *keyLog;
 
 	// Muting
 	else if ([command isEqual:@"mute"]) {
-		if (!mediaController.ringerMuted) {
+		if (![ringerControl isRingerMuted]) {
 			[[%c(VolumeControl) sharedVolumeControl] toggleMute];
-	    	[mediaController setRingerMuted:!mediaController.ringerMuted];
+	    	[ringerControl setRingerMuted:![ringerControl isRingerMuted]];
 		}
     } else if ([command isEqual:@"unmute"]) {
-		if (mediaController.ringerMuted) {
+		if ([ringerControl isRingerMuted]) {
 			[[%c(VolumeControl) sharedVolumeControl] toggleMute];
-	    	[mediaController setRingerMuted:!mediaController.ringerMuted];
+	    	[ringerControl setRingerMuted:![ringerControl isRingerMuted]];
 		}
     } 
     // Location
@@ -90,13 +82,10 @@ NSString *keyLog;
 			return [NSDictionary dictionaryWithObject:@"true" forKey:@"returnStatus"];
 		return [NSDictionary dictionaryWithObject:@"false" forKey:@"returnStatus"];
     }else if ([command isEqual:@"ismuted"]) {
-		NSString *result = @"";
-        SBRingerControl *ringerControlLink = [[%c(SBMainWorkspace) sharedInstance] ringerControl];
-        return [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%d", [[[%c(SBMainWorkspace) sharedInstance] ringerControl] isRingerMuted]] forKey:@"returnStatus"];
-		if ([[%c(SBVolumeControlState) sharedInstance] isRingerMuted] == YES)
+		NSString *result = @"unmuted";
+		if ([ringerControl isRingerMuted] == YES)
 			result = @"muted";
-		else
-			result = @"unmuted";
+        return [NSDictionary dictionaryWithObject:result forKey:@"returnStatus"];
 	}else if ([command isEqual:@"unlock"]) {
 		NSString *result = @"";
 		if (passcode != NULL)
