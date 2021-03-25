@@ -1,7 +1,10 @@
 
+<center>
+  <h1 align="center">EggShell Community Version</h1>
+</center>
+
 ![Unbenannt-1](https://user-images.githubusercontent.com/33968601/111917307-9201c000-8a7f-11eb-9a40-95f19f3507dd.png)
 
-# EggShell (Community fork)
 
 ## About this fork
 This is the official community fork for the abandoned eggshell project. The current project is highly outdated, but if you have issues or want to contribute to EggShell feel free to do so here, instead of the original repository.
