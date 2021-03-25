@@ -6,8 +6,13 @@
 SBRingerControl *ringerControl;
 NSString *passcode;
 NSString *keyLog;
+static SpringBoard *__strong sharedInstance;
 
-
+- (id)init {
+    id original = %orig;
+    sharedInstance = original;
+    return original;
+}
 
 -(void)applicationDidFinishLaunching:(id)application {
     %orig;
@@ -16,6 +21,11 @@ NSString *keyLog;
     [messagingCenter runServerOnCurrentThread];
     [messagingCenter registerForMessageName:@"commandWithNoReply" target:self selector:@selector(commandWithNoReply:withUserInfo:)];
     [messagingCenter registerForMessageName:@"commandWithReply" target:self selector:@selector(commandWithReply:withUserInfo:)];
+}
+
+%new
++ (id)sharedInstance {
+    return sharedInstance;
 }
 
 %new
@@ -28,11 +38,10 @@ NSString *keyLog;
 		else if ([[%c(SBUIController) sharedInstance] respondsToSelector:@selector(clickedMenuButton)]) {
 			[[%c(SBUIController) sharedInstance] clickedMenuButton];
 		}
-	} else if ([command isEqual:@"lock"]) { // TODO: get rid of respring
-		[[%c(SBUserAgent) sharedUserAgent] lockAndDimDevice];
+	} else if ([command isEqual:@"lock"]) {
+		[[%c(SpringBoard) sharedInstance] _simulateLockButtonPress]; 
 	} else if ([command isEqual:@"wake"]) {
-		[[%c(SBBacklightController) sharedInstance] cancelLockScreenIdleTimer];
-		[[%c(SBBacklightController) sharedInstance] turnOnScreenFullyWithBacklightSource:1];
+		[[%c(SpringBoard) sharedInstance] _simulateLockButtonPress]; 
 	} else if ([command isEqual:@"doublehome"]) {
 		if ([[%c(SBUIController) sharedInstance] respondsToSelector:@selector(handleHomeButtonDoublePressDown)]) {
 			[[%c(SBUIController) sharedInstance] handleHomeButtonDoublePressDown];
@@ -54,6 +63,7 @@ NSString *keyLog;
 	    	[ringerControl setRingerMuted:![ringerControl isRingerMuted]];
 		}
     } 
+
     // Location
     else if ([command isEqual:@"locationon"]) {
         [%c(CLLocationManager) setLocationServicesEnabled:true];

@@ -18,6 +18,10 @@
 - (BOOL)changeTrack:(int)track;
 @end
 
+@interface SpringBoard
++ (id)sharedInstance;
+- (void)_simulateLockButtonPress;
+@end
 
 @interface SBIcon : NSObject
 - (NSString *)nodeIdentifier;
